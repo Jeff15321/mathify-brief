@@ -110,9 +110,9 @@ export function QuestionIntakeForm() {
           rows={5}
           maxLength={MAX_QUESTION_TEXT_LENGTH}
           placeholder="e.g. Solve $2(x + 3) = 14$."
-          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-slate-500">
           Submit one math question only. You may attach multiple images/PDFs of that same
           question and any work you tried.
         </p>
@@ -130,7 +130,7 @@ export function QuestionIntakeForm() {
           accept={ACCEPT}
           disabled={busy}
           onChange={(e) => addFiles(e.target.files)}
-          className="rounded-md border border-dashed border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm"
         />
         <FileAttachmentList files={files} onRemove={removeFile} />
       </div>
@@ -142,7 +142,7 @@ export function QuestionIntakeForm() {
       <button
         type="submit"
         disabled={busy}
-        className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+        className="rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
       >
         {status === "uploading" ? "Uploading…" : status === "analyzing" ? "Analyzing…" : "Begin Session"}
       </button>

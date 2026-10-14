@@ -1,4 +1,4 @@
-import type { PublicWorkspace } from '@/types/domain';
+import type { ProbeAnswers, PublicWorkspace, TutorBrief } from '@/types/domain';
 
 export class ApiClientError extends Error {
   constructor(
@@ -43,4 +43,17 @@ export async function startWorkspace(questionText: string, files: File[]): Promi
 export async function analyzeQuestion(): Promise<void> {
   const res = await fetch('/api/analyze', { method: 'POST' });
   if (!res.ok) await parseErrorResponse(res);
+}
+
+export async function submitBrief(answers: ProbeAnswers, whiteboardPng: Blob | null): Promise<TutorBrief> {
+  const formData = new FormData();
+  formData.set('answers', JSON.stringify(answers));
+  if (whiteboardPng) {
+    formData.set('whiteboard', whiteboardPng, 'whiteboard.png');
+  }
+
+  const res = await fetch('/api/brief', { method: 'POST', body: formData });
+  if (!res.ok) await parseErrorResponse(res);
+  const body = await res.json();
+  return body.brief;
 }
