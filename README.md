@@ -24,7 +24,7 @@ Open http://localhost:3000.
 | Variable | Purpose |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Server-only Claude Console key. Never exposed to the browser. |
-| `ANTHROPIC_MODEL` | Model id for both Mathify AI calls (default `claude-sonnet-5`). |
+| `ANTHROPIC_MODEL` | Model id for both Mathify AI calls (default `claude-sonnet-5-5`). |
 | `LOCAL_DATA_DIR` | Directory for the local workspace JSON + uploaded files (default `./data`). |
 | `AI_MOCK_MODE` | `true` (default) runs fully offline with a deterministic fake provider. Set `false` to call the real Anthropic API. |
 | `RUN_LIVE_AI_SMOKE` | Set to `1` (with a real key) to run one explicit, low-cost live Anthropic connectivity check. Never enabled in automated tests. |
