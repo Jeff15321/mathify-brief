@@ -1,9 +1,10 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
 const LOGICAL_WIDTH = 1200;
 const LOGICAL_HEIGHT = 800;
+const ASPECT_RATIO = LOGICAL_WIDTH / LOGICAL_HEIGHT;
 const PEN_WIDTH = 4;
 const ERASER_WIDTH = 28;
 
@@ -26,6 +27,16 @@ function mapToLogicalCoords(
   };
 }
 
+function fitContain(containerWidth: number, containerHeight: number): { width: number; height: number } {
+  let width = containerWidth;
+  let height = width / ASPECT_RATIO;
+  if (height > containerHeight) {
+    height = containerHeight;
+    width = height * ASPECT_RATIO;
+  }
+  return { width, height };
+}
+
 function hasInk(ctx: CanvasRenderingContext2D): boolean {
   const { data } = ctx.getImageData(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   for (let i = 3; i < data.length; i += 4) {
@@ -37,8 +48,38 @@ function hasInk(ctx: CanvasRenderingContext2D): boolean {
 export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: boolean }>(
   function SimpleWhiteboard({ disabled }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const drawingRef = useRef(false);
     const [tool, setTool] = useState<Tool>("pen");
+    const [displaySize, setDisplaySize] = useState({ width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT });
+
+    // Keep the canvas's CSS box at the correct 3:2 aspect ratio ("contain"-fit within the
+    // panel) instead of stretching width:100%/height:100% independently, which skews ink
+    // non-uniformly whenever the panel's own aspect ratio changes (e.g. on expand/restore).
+    // useLayoutEffect (not useEffect) + a synchronous initial measurement avoid ever painting
+    // a frame at the full 1200x800 fallback size, which would otherwise race with
+    // ResizeObserver's asynchronous first callback and let an early stroke land on a
+    // wrongly-scaled canvas.
+    useLayoutEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setDisplaySize(fitContain(rect.width, rect.height));
+      }
+
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        const { width: containerWidth, height: containerHeight } = entry.contentRect;
+        if (containerWidth <= 0 || containerHeight <= 0) return;
+        setDisplaySize(fitContain(containerWidth, containerHeight));
+      });
+
+      observer.observe(container);
+      return () => observer.disconnect();
+    }, []);
 
     useImperativeHandle(ref, () => ({
       async exportPng() {
@@ -127,7 +168,8 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
           </button>
         </div>
         <div
-          className="relative flex-1 overflow-hidden rounded-lg border border-slate-200"
+          ref={containerRef}
+          className="relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-slate-200"
           style={{
             backgroundImage:
               "radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)",
@@ -143,7 +185,12 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            style={{ width: "100%", height: "100%", touchAction: "none", display: "block" }}
+            style={{
+              width: `${displaySize.width}px`,
+              height: `${displaySize.height}px`,
+              touchAction: "none",
+              display: "block",
+            }}
           />
         </div>
       </div>
