@@ -2,8 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Disabled: conflicts with explicit `export const runtime = 'nodejs'` route segment config,
+  // which this app's filesystem/Anthropic SDK routes require (IMPLEMENTATION_PLAN.md Section 4).
+  cacheComponents: false,
   turbopack: {
     rules: {
       "*.css": {

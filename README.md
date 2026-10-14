@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mathify Tutor Brief MVP
 
-## Getting Started
+Local, single-user demo of diagnostic tutoring intake: a student submits one math question,
+Claude generates a student-safe breakdown and prerequisite multiple-choice probes, the student
+works in a three-panel workspace (whiteboard / probing / breakdown), and a Tutor Brief report is
+produced from the deterministic results plus an optional whiteboard snapshot.
 
-First, run the development server:
+See `CLAUDE_CODE_START_HERE.md`, `IMPLEMENTATION_PLAN.md`, and `MVP_DESCRIPTION.md` for the full
+specification, scope, and deferred future work (sessions, Supabase, Vercel deployment, auth).
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local
+# add ANTHROPIC_API_KEY to .env.local once you have one (optional while AI_MOCK_MODE=true)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables (`.env.local`)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Purpose |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Server-only Claude Console key. Never exposed to the browser. |
+| `ANTHROPIC_MODEL` | Model id for both Mathify AI calls (default `claude-sonnet-5`). |
+| `LOCAL_DATA_DIR` | Directory for the local workspace JSON + uploaded files (default `./data`). |
+| `AI_MOCK_MODE` | `true` (default) runs fully offline with a deterministic fake provider. Set `false` to call the real Anthropic API. |
+| `RUN_LIVE_AI_SMOKE` | Set to `1` (with a real key) to run one explicit, low-cost live Anthropic connectivity check. Never enabled in automated tests. |
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev         # start Next.js dev server
+npm run build        # production build
+npm run start         # start production server (after build)
+npm run typecheck   # tsc --noEmit
+npm run lint         # eslint
+npm run test          # vitest unit/component tests (always mocked AI, isolated temp storage)
+npm run test:e2e   # one Playwright happy-path end-to-end test (mocked AI)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Automated tests never call the paid Anthropic API, regardless of `.env.local`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Stage 0 checkpoint (platform smoke test)
 
-## Deploy on Vercel
+- `npm run dev` + `npm run build` + `npm run start`: homepage returns HTTP 200, `GET /api/workspace`
+  returns parseable JSON (`{ "workspace": null }`), browser fetch from the homepage succeeds — verified manually.
+- Node `fs/promises` read/write/delete in an isolated OS temp directory — verified by
+  `tests/stage0-fs.test.ts` (passing).
+- Deterministic mock Claude provider returns schema-valid output (Zod + structural checks) —
+  verified by `tests/stage0-mock-provider.test.ts` (passing).
+- `npm run typecheck`, `npm run lint`, `npm run build` — all pass.
+- Live Anthropic connectivity: **skipped (key/opt-in missing)** — no `ANTHROPIC_API_KEY` /
+  `RUN_LIVE_AI_SMOKE=1` configured in this environment. Not a failure; set both to enable one
+  real text-only smoke call via `runLiveTextSmokeTest()` in `src/server/ai/anthropic-provider.ts`.
+- Caveat: this app is Vercel-deployable in principle, but local JSON/file persistence and the
+  current upload path are **not** production-ready for Vercel — see `MVP_DESCRIPTION.md` Section 0.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Status
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Stage 0 complete. Stages 1-4 (intake/storage, Claude analysis, three-panel workspace, Tutor
+Brief) are not yet implemented.
