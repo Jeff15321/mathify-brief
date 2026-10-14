@@ -45,24 +45,24 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
 
       <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">Probing results</h2>
-        {brief.results.map((result) => (
-          <div key={result.probeId} className="flex flex-col gap-1 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{result.concept}</span>
-            <MathText text={result.questionMarkdown} className="text-sm text-slate-800" />
-            <p className="text-sm">
-              Selected:{" "}
-              <span className={result.isCorrect === false ? "text-red-600" : result.isCorrect ? "text-emerald-600" : "text-slate-500"}>
-                {result.selectedOptionText ?? "Unanswered"}
-              </span>
-              {result.selectedOptionId && (
-                <span className="ml-2 text-slate-500">
-                  ({result.isCorrect ? "correct" : "incorrect"} — correct answer: {result.correctOptionText})
-                </span>
-              )}
-            </p>
-            <p className="text-xs text-slate-500">{result.explanation}</p>
-          </div>
-        ))}
+        {brief.results.map((result) => {
+          const selectedLine =
+            `Selected: ${result.selectedOptionText ?? "Unanswered"}` +
+            (result.selectedOptionId
+              ? ` (${result.isCorrect ? "correct" : "incorrect"} — correct answer: ${result.correctOptionText})`
+              : "");
+          const selectedColor =
+            result.isCorrect === false ? "text-red-600" : result.isCorrect ? "text-emerald-600" : "text-slate-500";
+
+          return (
+            <div key={result.probeId} className="flex flex-col gap-1 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{result.concept}</span>
+              <MathText text={result.questionMarkdown} className="text-sm text-slate-800" />
+              <MathText text={selectedLine} className={`text-sm ${selectedColor}`} />
+              <MathText text={result.explanation} className="text-xs text-slate-500" />
+            </div>
+          );
+        })}
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -71,9 +71,9 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
           {brief.strengths.length === 0 && <p className="text-xs text-emerald-700">Not enough evidence.</p>}
           <ul className="flex flex-col gap-2">
             {brief.strengths.map((s, i) => (
-              <li key={i} className="text-sm text-emerald-800">
-                {s.observation}
-                <div className="text-xs text-emerald-700">{s.evidence}</div>
+              <li key={i}>
+                <MathText text={s.observation} className="text-sm text-emerald-800" />
+                <MathText text={s.evidence} className="text-xs text-emerald-700" />
               </li>
             ))}
           </ul>
@@ -83,9 +83,9 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
           {brief.possibleGaps.length === 0 && <p className="text-xs text-amber-700">Not enough evidence.</p>}
           <ul className="flex flex-col gap-2">
             {brief.possibleGaps.map((g, i) => (
-              <li key={i} className="text-sm text-amber-800">
-                {g.observation}
-                <div className="text-xs text-amber-700">{g.evidence}</div>
+              <li key={i}>
+                <MathText text={g.observation} className="text-sm text-amber-800" />
+                <MathText text={g.evidence} className="text-xs text-amber-700" />
               </li>
             ))}
           </ul>
@@ -95,9 +95,11 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       {workspace.whiteboardAsset && (
         <section className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Whiteboard observations</h2>
-          <ul className="list-inside list-disc text-sm text-slate-700">
+          <ul className="list-inside list-disc">
             {brief.whiteboardObservations.map((obs, i) => (
-              <li key={i}>{obs}</li>
+              <li key={i}>
+                <MathText text={obs} className="inline text-sm text-slate-700" />
+              </li>
             ))}
           </ul>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -111,9 +113,9 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
 
       <section className="rounded-xl border border-blue-200 bg-blue-50 p-4">
         <h2 className="mb-1 text-sm font-semibold text-blue-800">Grade-level assessment</h2>
-        <p className="text-sm text-blue-800">{brief.gradeAssessment}</p>
+        <MathText text={brief.gradeAssessment} className="text-sm text-blue-800" />
         <h3 className="mt-3 mb-1 text-sm font-semibold text-blue-800">Suggested starting point</h3>
-        <p className="text-sm text-blue-800">{brief.suggestedStartingPoint}</p>
+        <MathText text={brief.suggestedStartingPoint} className="text-sm text-blue-800" />
       </section>
 
       <Link
