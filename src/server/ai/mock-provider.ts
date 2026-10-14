@@ -1,5 +1,6 @@
 import type { ModelAnalysis } from '@/schemas/analysis';
-import type { AnalyzeQuestionInput, MathAnalysisProvider } from './provider';
+import type { ModelBrief } from '@/schemas/brief';
+import type { AnalyzeQuestionInput, GenerateTutorBriefInput, MathAnalysisProvider } from './provider';
 
 /**
  * Deterministic, schema-valid fixture provider. Used whenever AI_MOCK_MODE=true and in all
@@ -64,6 +65,29 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
           explanation: 'Dividing both sides by 2 gives x = 4.',
         },
       ],
+    };
+  }
+
+  async generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief> {
+    const answeredResults = input.results.filter((r) => r.selectedOptionId !== null);
+    const correctResults = answeredResults.filter((r) => r.isCorrect);
+
+    return {
+      summary: `Student attempted ${answeredResults.length} of ${input.results.length} prerequisite checks, getting ${correctResults.length} correct.`,
+      gradeAssessment: 'Responses are broadly consistent with on-grade Grade 9 expectations.',
+      strengths: correctResults.map((r) => ({
+        observation: `Correctly answered the "${r.concept}" check.`,
+        evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}.`,
+      })),
+      possibleGaps: answeredResults
+        .filter((r) => !r.isCorrect)
+        .map((r) => ({
+          observation: `May need review of "${r.concept}".`,
+          evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}, correct answer was ${r.correctOptionId}.`,
+        })),
+      whiteboardObservations: input.whiteboardPng ? ['Work shown is legible and follows the expected solution steps.'] : [],
+      suggestedStartingPoint: 'Review the distributive property before moving to multi-step equations.',
+      limitations: answeredResults.length < input.results.length ? ['Not enough evidence for unanswered probes.'] : [],
     };
   }
 }

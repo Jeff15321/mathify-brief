@@ -117,3 +117,27 @@ Basic input validation, server secrets, avoiding unsafe HTML, not leaking correc
 - The chosen storage/data contracts are not intended as a production generalized persistence framework. Keep them lean and change them deliberately when real sessions become a requirement.
 
 **Bottom line:** architect for clear boundaries, **not** speculative features. Implement the workflow described in `IMPLEMENTATION_PLAN.md`. Document future session, Supabase, and regeneration costs instead of coding them prematurely.
+
+## 7. Actual build notes (Stages 0-4, as implemented)
+
+Recorded after building the MVP, for whoever picks this up next:
+
+- **`output_config.format` + `zodOutputFormat()` are real and worked as specified.** The installed
+  `@anthropic-ai/sdk` (0.134.0) ships a `zodOutputFormat()` helper (`@anthropic-ai/sdk/helpers/zod`)
+  that converts a Zod v4 schema straight into the structured-output JSON Schema, matching this
+  document's Section 6.1/6.2 exactly. No deviation was needed from the spec here.
+- **`claude-sonnet-5-5` is a real, working model id**, confirmed against the live API (not just the
+  assistant's training knowledge, which only knew of `claude-sonnet-5`). Kept as the default per
+  this document's original `.env.example`.
+- **Next.js 16's new `cacheComponents` feature (on by default in a fresh `create-next-app` scaffold)
+  conflicts with `export const runtime = 'nodejs'`** on any route segment, which this app requires
+  for its filesystem/Anthropic SDK routes. Fixed by setting `cacheComponents: false` in
+  `next.config.ts`. Worth knowing if a future Next.js upgrade re-introduces the conflict.
+- **jsdom has no `window.matchMedia`**, which the three-panel layout's narrow-viewport logic (and
+  `prefers-reduced-motion` support) depends on. A small polyfill lives in `tests/setup.ts`.
+- **Vitest's default test glob also matches `*.spec.ts`**, which collided with the Playwright E2E
+  spec. `vitest.config.ts` explicitly excludes `tests/e2e/**` so `npm run test` and
+  `npm run test:e2e` stay independent.
+- No other deviations from this document or `IMPLEMENTATION_PLAN.md` were required. All four
+  stages' acceptance gates (typecheck/lint/test/build, plus one real live Anthropic analysis call)
+  passed as specified.

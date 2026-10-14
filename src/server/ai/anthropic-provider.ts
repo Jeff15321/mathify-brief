@@ -2,11 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { ModelAnalysis } from '@/schemas/analysis';
 import { modelAnalysisSchema, validateAnalysisStructure } from '@/schemas/analysis';
-import { ANALYSIS_SYSTEM_PROMPT } from './prompts';
+import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
+import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
-import type { AnalyzeQuestionInput, MathAnalysisProvider } from './provider';
+import type { AnalyzeQuestionInput, GenerateTutorBriefInput, MathAnalysisProvider } from './provider';
 
 const ANALYSIS_MAX_TOKENS = 8192;
+const BRIEF_MAX_TOKENS = 4096;
 
 export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   private client: Anthropic;
@@ -65,6 +67,73 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     }
 
     return parsed;
+  }
+
+  async generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief> {
+    const contentBlocks = filesToContentBlocks(input.files);
+    if (input.whiteboardPng) {
+      contentBlocks.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: input.whiteboardPng.toString('base64') },
+      });
+    }
+
+    const resultsSummary = input.results
+      .map((r) => {
+        const answer = r.selectedOptionId ? `selected ${r.selectedOptionId} (${r.selectedOptionText})` : 'unanswered';
+        return `- [${r.probeId}] concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; isCorrect=${r.isCorrect}`;
+      })
+      .join('\n');
+
+    const textSummary = input.questionText.trim().length > 0 ? input.questionText.trim() : null;
+
+    const message = await this.client.messages.create({
+      model: this.model,
+      max_tokens: BRIEF_MAX_TOKENS,
+      system: BRIEF_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: [
+                `Grade: ${input.grade}.`,
+                textSummary ? `Typed question: ${textSummary}` : 'No typed question was provided.',
+                `Parsed question: ${input.analysis.parsedQuestionMarkdown}`,
+                `Topic: ${input.analysis.topic}`,
+                `Probing question results:\n${resultsSummary}`,
+                input.whiteboardPng
+                  ? 'A final whiteboard image is attached as the last image content block.'
+                  : 'No whiteboard image was submitted.',
+              ].join('\n'),
+            },
+            ...contentBlocks,
+          ],
+        },
+      ],
+      output_config: {
+        format: zodOutputFormat(modelBriefSchema),
+      },
+    });
+
+    if (message.stop_reason === 'refusal') {
+      throw new Error('Model refused to generate a tutor brief for this input');
+    }
+
+    const textBlock = message.content.find((block) => block.type === 'text');
+    if (!textBlock || message.stop_reason === 'max_tokens') {
+      throw new Error('Model response was missing or truncated');
+    }
+
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(textBlock.text);
+    } catch {
+      throw new Error('Model did not return valid JSON');
+    }
+
+    return modelBriefSchema.parse(parsedJson);
   }
 }
 

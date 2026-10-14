@@ -30,6 +30,10 @@ export default function WorkspacePage() {
           router.replace("/");
           return;
         }
+        if (ws.brief) {
+          router.replace("/brief");
+          return;
+        }
         setWorkspace(ws);
         setAnswers(ws.answers);
         setLoading(false);
