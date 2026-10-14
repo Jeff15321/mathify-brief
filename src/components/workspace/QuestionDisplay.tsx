@@ -18,8 +18,11 @@ function AttachmentPreview({ asset }: { asset: StoredAsset }) {
       </a>
     );
   }
+  // Width always matches the panel (w-full); height is "auto" so the browser derives it from
+  // the image's own intrinsic aspect ratio - never stretched/distorted, and it reflows
+  // correctly whenever the panel itself resizes (e.g. on expand/restore).
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={url} alt={asset.fileName} className="max-h-80 w-auto rounded-lg border border-slate-200" />;
+  return <img src={url} alt={asset.fileName} className="block w-full h-auto rounded-lg border border-slate-200" />;
 }
 
 export function QuestionDisplay({
