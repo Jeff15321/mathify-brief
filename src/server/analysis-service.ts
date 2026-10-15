@@ -63,6 +63,7 @@ export async function analyzeCurrentWorkspace(stores: Stores = getStores()): Pro
   const stored: QuestionAnalysisStored = {
     parsedQuestionMarkdown: parsed.data.parsedQuestionMarkdown,
     topic: parsed.data.topic,
+    estimatedQuestionGrade: parsed.data.estimatedQuestionGrade,
     gradeDifficulty: parsed.data.gradeDifficulty,
     breakdown: parsed.data.breakdown,
     probingQuestions: parsed.data.probingQuestions.map((probe, index) => ({

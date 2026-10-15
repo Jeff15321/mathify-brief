@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MathText } from "@/components/shared/MathText";
+import { GRADE_DIFFICULTY_CLASS, GRADE_DIFFICULTY_LABEL } from "@/lib/grade-difficulty";
 import type { PublicWorkspace, TutorBrief } from "@/types/domain";
 
 export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspace; brief: TutorBrief }) {
@@ -11,9 +12,15 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
         <h1 className="text-2xl font-semibold text-slate-900">Tutor Brief</h1>
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-700">
-            Grade {workspace.profile.grade}
+            Student: Grade {workspace.profile.grade}
           </span>
-          <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
+          <span className="rounded-full bg-indigo-100 px-2 py-0.5 font-medium text-indigo-700">
+            Question: {analysis.estimatedQuestionGrade}
+          </span>
+          <span className={`rounded-full px-2 py-0.5 font-medium ${GRADE_DIFFICULTY_CLASS[analysis.gradeDifficulty]}`}>
+            {GRADE_DIFFICULTY_LABEL[analysis.gradeDifficulty]}
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
             {analysis.topic}
           </span>
         </div>

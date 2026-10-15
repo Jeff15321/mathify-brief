@@ -6,7 +6,14 @@ approach stages for a STUDENT-SAFE roadmap, each as ONE short sentence (under 15
 no multi-step derivations. The roadmap must not reveal the numerical answer, a complete
 worked solution, or the location of a student mistake. Generate 3-5 single-correct-answer
 multiple-choice diagnostic questions on important prerequisites, with four distinct
-options A-D, one verified correct answer, and a private explanation. The explanation is
+options A-D, one verified correct answer, and a private explanation. Also estimate
+estimatedQuestionGrade: the grade/curriculum level this problem's content is actually
+written at (a short label like "Grade 7", "Grade 9", "Grade 11", or "Grade 11 (SCH3U)"),
+independent of the student's own grade - your best judgment of what level of student could
+solve this, not what grade the student happens to be in. Then set gradeDifficulty by
+comparing that estimate against the student's actual grade given in the user message:
+below_grade if the problem's level is below the student's grade, on_grade if it matches,
+stretch if it exceeds the student's grade. The explanation is
 for a tutor skimming quickly: ONE short sentence (under 20 words) stating only why the
 correct answer is correct. Do NOT enumerate or explain why each individual wrong option
 is wrong - that level of detail is not needed. Questions should help a tutor distinguish

@@ -101,6 +101,7 @@ export default function WorkspacePage() {
           breakdown={
             <BreakdownPanel
               analysis={workspace.analysis}
+              studentGrade={workspace.profile.grade}
               questionText={workspace.questionText}
               attachments={workspace.attachments}
             />

@@ -12,6 +12,7 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
     return {
       parsedQuestionMarkdown: 'Solve $2(x + 3) = 14$.',
       topic: 'Linear equations',
+      estimatedQuestionGrade: 'Grade 9',
       gradeDifficulty: 'on_grade',
       breakdown: [
         {

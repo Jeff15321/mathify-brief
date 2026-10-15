@@ -27,6 +27,7 @@ export interface StudentBreakdownStep {
 export interface QuestionAnalysisPublic {
   parsedQuestionMarkdown: string;
   topic: string;
+  estimatedQuestionGrade: string;
   gradeDifficulty: GradeDifficulty;
   breakdown: StudentBreakdownStep[];
   probingQuestions: PublicProbe[];
@@ -47,6 +48,7 @@ export interface PrivateProbe extends PublicProbe {
 export interface QuestionAnalysisStored {
   parsedQuestionMarkdown: string;
   topic: string;
+  estimatedQuestionGrade: string;
   gradeDifficulty: GradeDifficulty;
   breakdown: StudentBreakdownStep[];
   probingQuestions: PrivateProbe[];
@@ -127,6 +129,7 @@ export function toPublicAnalysis(analysis: QuestionAnalysisStored): QuestionAnal
   return {
     parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
     topic: analysis.topic,
+    estimatedQuestionGrade: analysis.estimatedQuestionGrade,
     gradeDifficulty: analysis.gradeDifficulty,
     breakdown: analysis.breakdown,
     probingQuestions: analysis.probingQuestions.map(toPublicProbe),

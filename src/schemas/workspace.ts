@@ -30,6 +30,7 @@ export const privateProbeSchema = z.object({
 export const analysisStoredSchema = z.object({
   parsedQuestionMarkdown: z.string().min(1),
   topic: z.string().min(1),
+  estimatedQuestionGrade: z.string().min(1),
   gradeDifficulty: gradeDifficultySchema,
   breakdown: z.array(breakdownStepSchema),
   probingQuestions: z.array(privateProbeSchema),

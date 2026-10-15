@@ -1,27 +1,16 @@
 import { QuestionDisplay } from "./QuestionDisplay";
 import { MathText } from "@/components/shared/MathText";
+import { GRADE_DIFFICULTY_CLASS, GRADE_DIFFICULTY_LABEL } from "@/lib/grade-difficulty";
 import type { QuestionAnalysisPublic, StoredAsset } from "@/types/domain";
-
-const DIFFICULTY_LABEL: Record<QuestionAnalysisPublic["gradeDifficulty"], string> = {
-  below_grade: "Below grade",
-  on_grade: "On grade level",
-  stretch: "Stretch",
-  uncertain: "Uncertain",
-};
-
-const DIFFICULTY_CLASS: Record<QuestionAnalysisPublic["gradeDifficulty"], string> = {
-  below_grade: "bg-amber-50 text-amber-700",
-  on_grade: "bg-emerald-50 text-emerald-700",
-  stretch: "bg-purple-50 text-purple-700",
-  uncertain: "bg-slate-100 text-slate-600",
-};
 
 export function BreakdownPanel({
   analysis,
+  studentGrade,
   questionText,
   attachments,
 }: {
   analysis: QuestionAnalysisPublic;
+  studentGrade: number;
   questionText: string;
   attachments: StoredAsset[];
 }) {
@@ -31,13 +20,16 @@ export function BreakdownPanel({
         <h2 className="text-sm font-semibold text-slate-900">Question breakdown</h2>
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-700">
-            Grade 9
+            Student: Grade {studentGrade}
           </span>
-          <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
+          <span className="rounded-full bg-indigo-100 px-2 py-0.5 font-medium text-indigo-700">
+            Question: {analysis.estimatedQuestionGrade}
+          </span>
+          <span className={`rounded-full px-2 py-0.5 font-medium ${GRADE_DIFFICULTY_CLASS[analysis.gradeDifficulty]}`}>
+            {GRADE_DIFFICULTY_LABEL[analysis.gradeDifficulty]}
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
             {analysis.topic}
-          </span>
-          <span className={`rounded-full px-2 py-0.5 font-medium ${DIFFICULTY_CLASS[analysis.gradeDifficulty]}`}>
-            {DIFFICULTY_LABEL[analysis.gradeDifficulty]}
           </span>
         </div>
       </div>
