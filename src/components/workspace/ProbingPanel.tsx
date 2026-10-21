@@ -19,7 +19,7 @@ export function ProbingPanel({
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-semibold text-slate-900">Probing questions</h2>
+        <h2 className="text-sm font-semibold text-slate-900">Relevant Concepts</h2>
         <p className="text-xs text-slate-500">
           {answeredCount} of {probes.length} answered
         </p>

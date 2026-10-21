@@ -7,7 +7,7 @@ type PanelKey = "whiteboard" | "probing" | "breakdown";
 
 const PANEL_TITLES: Record<PanelKey, string> = {
   whiteboard: "Whiteboard",
-  probing: "Probing questions",
+  probing: "Relevant Concepts",
   breakdown: "Question breakdown",
 };
 

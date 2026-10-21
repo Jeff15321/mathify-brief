@@ -7,7 +7,7 @@ test("happy path: intake -> analysis -> workspace -> probes -> whiteboard -> sub
   await page.getByRole("button", { name: "Begin Session" }).click();
 
   await page.waitForURL("**/workspace");
-  await expect(page.getByRole("heading", { name: "Probing questions" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Relevant Concepts" })).toBeVisible();
 
   // Answer two of the three mocked probes (q1 correct=B, q2 correct=C), leave q3 unanswered.
   await page.locator('input[name="q1"][value="B"]').check();
