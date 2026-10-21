@@ -33,6 +33,20 @@ describe("ProbeCard", () => {
     expect((screen.getByDisplayValue("A") as HTMLInputElement).checked).toBe(false);
   });
 
+  it("offers an \"I don't know\" choice that stays selected", () => {
+    const onSelect = vi.fn();
+    const { rerender } = render(
+      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} />,
+    );
+
+    fireEvent.click(screen.getByLabelText("I don't know"));
+    expect(onSelect).toHaveBeenCalledWith("IDK");
+
+    rerender(<ProbeCard probe={PROBE} index={0} selected="IDK" onSelect={onSelect} />);
+    expect((screen.getByLabelText("I don't know") as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByDisplayValue("B") as HTMLInputElement).checked).toBe(false);
+  });
+
   it("renders long question/option text without truncation (no fixed-height card)", () => {
     const longProbe: PublicProbe = {
       ...PROBE,

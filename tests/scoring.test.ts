@@ -45,11 +45,35 @@ describe("Deterministic scoring (mocked AI provider, isolated temp storage)", ()
 
     const r0 = brief.results.find((r) => r.probeId === probes[0].id)!;
     expect(r0.isCorrect).toBe(true);
+    expect(r0.outcome).toBe("correct");
     const r1 = brief.results.find((r) => r.probeId === probes[1].id)!;
     expect(r1.isCorrect).toBe(false);
+    expect(r1.outcome).toBe("incorrect");
     const r2 = brief.results.find((r) => r.probeId === probes[2].id)!;
     expect(r2.isCorrect).toBeNull();
     expect(r2.selectedOptionId).toBeNull();
+  });
+
+  it("scores \"I don't know\" as its own outcome, distinct from incorrect and unanswered", async () => {
+    const probes = await getPrivateProbes();
+    const answers = {
+      [probes[0].id]: probes[0].correctOptionId, // correct
+      [probes[1].id]: "IDK" as const, // don't know
+      // probes[2] left unanswered
+    };
+
+    const brief = await submitBrief({ answers, whiteboardPng: null }, stores);
+
+    expect(brief.answeredCount).toBe(1);
+    expect(brief.correctCount).toBe(1);
+    expect(brief.dontKnowCount).toBe(1);
+    expect(brief.unansweredCount).toBe(probes.length - 2);
+
+    const idk = brief.results.find((r) => r.probeId === probes[1].id)!;
+    expect(idk.outcome).toBe("dont_know");
+    expect(idk.isCorrect).toBeNull();
+    expect(idk.selectedOptionId).toBeNull();
+    expect(brief.results.find((r) => r.probeId === probes[2].id)!.outcome).toBe("unanswered");
   });
 
   it("allows zero answers (all unanswered) and still produces deterministic counts", async () => {

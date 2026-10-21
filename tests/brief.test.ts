@@ -7,6 +7,7 @@ import { startWorkspace } from "@/server/workspace-service";
 import { analyzeCurrentWorkspace } from "@/server/analysis-service";
 import { submitBrief } from "@/server/brief-service";
 import { ApiError } from "@/server/errors";
+import { probeAnswersSchema, tutorBriefSchema } from "@/schemas/workspace";
 
 const TINY_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -28,7 +29,7 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
 
   it("persists phase: complete and the full brief, including answer keys in results", async () => {
     const brief = await submitBrief({ answers: {}, whiteboardPng: null }, stores);
-    expect(brief.promptVersion).toBe("brief-v1");
+    expect(brief.promptVersion).toBe("brief-v2");
 
     const workspace = await stores.workspaceStore.read();
     expect(workspace?.phase).toBe("complete");
@@ -61,5 +62,45 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
     await stores.workspaceStore.clear();
     await startWorkspace({ questionText: "No analysis yet", files: [] }, stores);
     await expect(submitBrief({ answers: {}, whiteboardPng: null }, stores)).rejects.toThrow(ApiError);
+  });
+});
+
+describe("Answer and brief schemas", () => {
+  it("accepts A-D and IDK answers, rejects anything else", () => {
+    expect(probeAnswersSchema.safeParse({ q1: "A", q2: "IDK" }).success).toBe(true);
+    expect(probeAnswersSchema.safeParse({ q1: "E" }).success).toBe(false);
+  });
+
+  it("still loads a brief-v1 brief stored before \"I don't know\" existed", () => {
+    const parsed = tutorBriefSchema.parse({
+      summary: "s",
+      gradeAssessment: "g",
+      strengths: [],
+      possibleGaps: [],
+      whiteboardObservations: [],
+      suggestedStartingPoint: "p",
+      limitations: [],
+      results: [
+        {
+          probeId: "q1",
+          concept: "c",
+          questionMarkdown: "q",
+          selectedOptionId: null,
+          selectedOptionText: null,
+          correctOptionId: "A",
+          correctOptionText: "a",
+          isCorrect: null,
+          explanation: "e",
+        },
+      ],
+      answeredCount: 0,
+      correctCount: 0,
+      unansweredCount: 1,
+      generatedAt: "2026-01-01T00:00:00.000Z",
+      model: "mock-provider",
+      promptVersion: "brief-v1",
+    });
+    expect(parsed.dontKnowCount).toBe(0);
+    expect(parsed.results[0].outcome).toBe("unanswered");
   });
 });

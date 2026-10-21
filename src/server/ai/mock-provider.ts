@@ -39,7 +39,7 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
             { id: 'D', textMarkdown: '$2x + 5$' },
           ],
           correctOptionId: 'B',
-          explanation: 'Distribute the 2 across both terms inside the brackets: 2*x and 2*3.',
+          explanation: 'Distribute the 2 across both terms inside the brackets: $2 \\cdot x$ and $2 \\cdot 3$.',
         },
         {
           concept: 'Inverse operations',
@@ -70,25 +70,31 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
   }
 
   async generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief> {
-    const answeredResults = input.results.filter((r) => r.selectedOptionId !== null);
-    const correctResults = answeredResults.filter((r) => r.isCorrect);
+    const correctResults = input.results.filter((r) => r.outcome === 'correct');
+    const incorrectResults = input.results.filter((r) => r.outcome === 'incorrect');
+    const dontKnowResults = input.results.filter((r) => r.outcome === 'dont_know');
+    const attemptedCount = correctResults.length + incorrectResults.length;
 
     return {
-      summary: `Student attempted ${answeredResults.length} of ${input.results.length} prerequisite checks, getting ${correctResults.length} correct.`,
+      summary: `Student attempted ${attemptedCount} of ${input.results.length} prerequisite checks, getting ${correctResults.length} correct.`,
       gradeAssessment: 'Responses are broadly consistent with on-grade Grade 9 expectations.',
       strengths: correctResults.map((r) => ({
         observation: `Correctly answered the "${r.concept}" check.`,
         evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}.`,
       })),
-      possibleGaps: answeredResults
-        .filter((r) => !r.isCorrect)
-        .map((r) => ({
+      possibleGaps: [
+        ...incorrectResults.map((r) => ({
           observation: `May need review of "${r.concept}".`,
           evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}, correct answer was ${r.correctOptionId}.`,
         })),
+        ...dontKnowResults.map((r) => ({
+          observation: `Reported being unsure about "${r.concept}".`,
+          evidence: `Probe ${r.probeId}: selected "I don't know".`,
+        })),
+      ],
       whiteboardObservations: input.whiteboardPng ? ['Work shown is legible and follows the expected solution steps.'] : [],
       suggestedStartingPoint: 'Review the distributive property before moving to multi-step equations.',
-      limitations: answeredResults.length < input.results.length ? ['Not enough evidence for unanswered probes.'] : [],
+      limitations: input.results.some((r) => r.outcome === 'unanswered') ? ['Not enough evidence for unanswered probes.'] : [],
     };
   }
 }

@@ -58,7 +58,13 @@ export interface QuestionAnalysisStored {
   analysisVersion: 1;
 }
 
-export type ProbeAnswers = Record<string, 'A' | 'B' | 'C' | 'D'>;
+/** A student's response to one probe: one of the generated options, or "I don't know". */
+export type ProbeAnswer = 'A' | 'B' | 'C' | 'D' | 'IDK';
+
+export type ProbeAnswers = Record<string, ProbeAnswer>;
+
+/** Deterministic per-probe outcome; "dont_know" is self-reported uncertainty, distinct from wrong or blank. */
+export type ProbeOutcome = 'correct' | 'incorrect' | 'dont_know' | 'unanswered';
 
 export interface ProbeResult {
   probeId: string;
@@ -68,7 +74,8 @@ export interface ProbeResult {
   selectedOptionText: string | null;
   correctOptionId: 'A' | 'B' | 'C' | 'D';
   correctOptionText: string;
-  isCorrect: boolean | null;
+  isCorrect: boolean | null;      // null for "I don't know" and unanswered
+  outcome: ProbeOutcome;
   explanation: string;
 }
 
@@ -83,10 +90,11 @@ export interface TutorBrief {
   results: ProbeResult[];
   answeredCount: number;
   correctCount: number;
+  dontKnowCount: number;
   unansweredCount: number;
   generatedAt: string;
   model: string;
-  promptVersion: 'brief-v1';
+  promptVersion: 'brief-v1' | 'brief-v2';
 }
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';

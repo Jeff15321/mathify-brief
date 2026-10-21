@@ -40,19 +40,31 @@ export const analysisStoredSchema = z.object({
   analysisVersion: z.literal(1),
 });
 
-export const probeAnswersSchema = z.record(z.string(), optionIdSchema);
+export const probeAnswerSchema = z.union([optionIdSchema, z.literal('IDK')]);
+export const probeAnswersSchema = z.record(z.string(), probeAnswerSchema);
 
-export const probeResultSchema = z.object({
-  probeId: z.string().min(1),
-  concept: z.string().min(1),
-  questionMarkdown: z.string().min(1),
-  selectedOptionId: optionIdSchema.nullable(),
-  selectedOptionText: z.string().nullable(),
-  correctOptionId: optionIdSchema,
-  correctOptionText: z.string().min(1),
-  isCorrect: z.boolean().nullable(),
-  explanation: z.string().min(1),
-});
+export const probeOutcomeSchema = z.enum(['correct', 'incorrect', 'dont_know', 'unanswered']);
+
+/** Outcome for briefs stored before "I don't know" existed (brief-v1), derived from isCorrect. */
+function legacyOutcome(isCorrect: boolean | null): z.infer<typeof probeOutcomeSchema> {
+  if (isCorrect === null) return 'unanswered';
+  return isCorrect ? 'correct' : 'incorrect';
+}
+
+export const probeResultSchema = z
+  .object({
+    probeId: z.string().min(1),
+    concept: z.string().min(1),
+    questionMarkdown: z.string().min(1),
+    selectedOptionId: optionIdSchema.nullable(),
+    selectedOptionText: z.string().nullable(),
+    correctOptionId: optionIdSchema,
+    correctOptionText: z.string().min(1),
+    isCorrect: z.boolean().nullable(),
+    outcome: probeOutcomeSchema.optional(),
+    explanation: z.string().min(1),
+  })
+  .transform((r) => ({ ...r, outcome: r.outcome ?? legacyOutcome(r.isCorrect) }));
 
 export const tutorBriefSchema = z.object({
   summary: z.string().min(1),
@@ -65,10 +77,11 @@ export const tutorBriefSchema = z.object({
   results: z.array(probeResultSchema),
   answeredCount: z.number().int().nonnegative(),
   correctCount: z.number().int().nonnegative(),
+  dontKnowCount: z.number().int().nonnegative().default(0),
   unansweredCount: z.number().int().nonnegative(),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.literal('brief-v1'),
+  promptVersion: z.enum(['brief-v1', 'brief-v2']),
 });
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);

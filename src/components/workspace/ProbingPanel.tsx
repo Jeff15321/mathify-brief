@@ -1,5 +1,5 @@
 import { ProbeCard } from "./ProbeCard";
-import type { ProbeAnswers, PublicProbe } from "@/types/domain";
+import type { ProbeAnswer, ProbeAnswers, PublicProbe } from "@/types/domain";
 
 export function ProbingPanel({
   probes,
@@ -10,7 +10,7 @@ export function ProbingPanel({
 }: {
   probes: PublicProbe[];
   answers: ProbeAnswers;
-  onAnswer: (probeId: string, optionId: "A" | "B" | "C" | "D") => void;
+  onAnswer: (probeId: string, answer: ProbeAnswer) => void;
   onSubmit: () => void;
   submitting: boolean;
 }) {
@@ -32,7 +32,7 @@ export function ProbingPanel({
               probe={probe}
               index={index}
               selected={answers[probe.id]}
-              onSelect={(optionId) => onAnswer(probe.id, optionId)}
+              onSelect={(answer) => onAnswer(probe.id, answer)}
             />
           ))}
         </div>

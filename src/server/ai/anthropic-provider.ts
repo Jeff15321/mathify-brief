@@ -80,8 +80,10 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
 
     const resultsSummary = input.results
       .map((r) => {
-        const answer = r.selectedOptionId ? `selected ${r.selectedOptionId} (${r.selectedOptionText})` : 'unanswered';
-        return `- [${r.probeId}] concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; isCorrect=${r.isCorrect}`;
+        let answer = 'unanswered';
+        if (r.outcome === 'dont_know') answer = 'selected "I don\'t know"';
+        else if (r.selectedOptionId) answer = `selected ${r.selectedOptionId} (${r.selectedOptionText})`;
+        return `- [${r.probeId}] concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
       })
       .join('\n');
 

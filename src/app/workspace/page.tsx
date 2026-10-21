@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiClientError, fetchWorkspace, submitBrief } from "@/lib/api-client";
-import type { PublicWorkspace, ProbeAnswers } from "@/types/domain";
+import type { PublicWorkspace, ProbeAnswer, ProbeAnswers } from "@/types/domain";
 import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
 import { WhiteboardPanel } from "@/components/workspace/WhiteboardPanel";
 import { ProbingPanel } from "@/components/workspace/ProbingPanel";
@@ -46,8 +46,8 @@ export default function WorkspacePage() {
     };
   }, [router]);
 
-  function handleAnswer(probeId: string, optionId: "A" | "B" | "C" | "D") {
-    setAnswers((prev) => ({ ...prev, [probeId]: optionId }));
+  function handleAnswer(probeId: string, answer: ProbeAnswer) {
+    setAnswers((prev) => ({ ...prev, [probeId]: answer }));
   }
 
   async function handleSubmit() {

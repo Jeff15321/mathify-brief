@@ -1,4 +1,4 @@
-import type { PrivateProbe, ProbeAnswers, ProbeResult, TutorBrief } from '@/types/domain';
+import type { PrivateProbe, ProbeAnswers, ProbeOutcome, ProbeResult, TutorBrief } from '@/types/domain';
 import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
 import { ApiError } from './errors';
@@ -11,11 +11,20 @@ export interface SubmitBriefInput {
   whiteboardPng: Buffer | null;
 }
 
+/**
+ * Joins stored answer keys with submitted answers into per-probe results.
+ * "I don't know" is scored as its own outcome: no selected option and isCorrect null, like unanswered.
+ */
 function computeResults(probingQuestions: PrivateProbe[], answers: ProbeAnswers): ProbeResult[] {
   return probingQuestions.map((probe) => {
-    const selectedOptionId = answers[probe.id] ?? null;
+    const answer = answers[probe.id] ?? null;
+    const selectedOptionId = answer && answer !== 'IDK' ? answer : null;
     const selectedOption = selectedOptionId ? probe.options.find((o) => o.id === selectedOptionId) : undefined;
     const correctOption = probe.options.find((o) => o.id === probe.correctOptionId)!;
+    const isCorrect = selectedOptionId ? selectedOptionId === probe.correctOptionId : null;
+    let outcome: ProbeOutcome = 'unanswered';
+    if (answer === 'IDK') outcome = 'dont_know';
+    else if (isCorrect !== null) outcome = isCorrect ? 'correct' : 'incorrect';
 
     return {
       probeId: probe.id,
@@ -25,7 +34,8 @@ function computeResults(probingQuestions: PrivateProbe[], answers: ProbeAnswers)
       selectedOptionText: selectedOption?.textMarkdown ?? null,
       correctOptionId: probe.correctOptionId,
       correctOptionText: correctOption.textMarkdown,
-      isCorrect: selectedOptionId ? selectedOptionId === probe.correctOptionId : null,
+      isCorrect,
+      outcome,
       explanation: probe.explanation,
     };
   });
@@ -83,8 +93,9 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
 
   const results = computeResults(workspace.analysis.probingQuestions, input.answers);
   const answeredCount = results.filter((r) => r.selectedOptionId !== null).length;
-  const correctCount = results.filter((r) => r.isCorrect === true).length;
-  const unansweredCount = results.length - answeredCount;
+  const correctCount = results.filter((r) => r.outcome === 'correct').length;
+  const dontKnowCount = results.filter((r) => r.outcome === 'dont_know').length;
+  const unansweredCount = results.filter((r) => r.outcome === 'unanswered').length;
 
   const files = [];
   for (const attachment of workspace.attachments) {
@@ -117,10 +128,11 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
     results,
     answeredCount,
     correctCount,
+    dontKnowCount,
     unansweredCount,
     generatedAt: new Date().toISOString(),
     model: process.env.AI_MOCK_MODE !== 'false' ? 'mock-provider' : process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
-    promptVersion: 'brief-v1',
+    promptVersion: 'brief-v2',
   };
 
   await workspaceStore.write({

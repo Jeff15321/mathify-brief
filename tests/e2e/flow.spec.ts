@@ -9,9 +9,9 @@ test("happy path: intake -> analysis -> workspace -> probes -> whiteboard -> sub
   await page.waitForURL("**/workspace");
   await expect(page.getByRole("heading", { name: "Relevant Concepts" })).toBeVisible();
 
-  // Answer two of the three mocked probes (q1 correct=B, q2 correct=C), leave q3 unanswered.
+  // Mocked probes: q1 correct=B, q2 correct=C. Answer q1, pick "I don't know" on q2, leave q3 unanswered.
   await page.locator('input[name="q1"][value="B"]').check();
-  await page.locator('input[name="q2"][value="C"]').check();
+  await page.locator('input[name="q2"][value="IDK"]').check();
   await expect(page.getByText("2 of 3 answered")).toBeVisible();
 
   // Draw on the whiteboard with the pen tool.
@@ -32,6 +32,8 @@ test("happy path: intake -> analysis -> workspace -> probes -> whiteboard -> sub
 
   await page.waitForURL("**/brief");
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
-  await expect(page.getByText(/2 correct \/ 2 answered/)).toBeVisible();
+  await expect(page.getByText(/1 correct \/ 1 answered/)).toBeVisible();
+  await expect(page.getByText(/1 don't know/)).toBeVisible();
   await expect(page.getByText(/1 unanswered/)).toBeVisible();
+  await expect(page.getByText(/Selected: I don't know/)).toBeVisible();
 });

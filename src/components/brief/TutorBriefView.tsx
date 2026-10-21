@@ -46,6 +46,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
         <h2 className="mb-2 text-sm font-semibold text-slate-900">At a glance</h2>
         <p className="text-sm text-slate-700">
           {brief.correctCount} correct / {brief.answeredCount} answered
+          {brief.dontKnowCount > 0 && <span className="text-amber-700"> · {brief.dontKnowCount} don&apos;t know</span>}
           {brief.unansweredCount > 0 && <span className="text-slate-500"> · {brief.unansweredCount} unanswered</span>}
         </p>
       </section>
@@ -53,13 +54,18 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">Probing results</h2>
         {brief.results.map((result) => {
-          const selectedLine =
-            `Selected: ${result.selectedOptionText ?? "Unanswered"}` +
-            (result.selectedOptionId
-              ? ` (${result.isCorrect ? "correct" : "incorrect"} — correct answer: ${result.correctOptionText})`
-              : "");
-          const selectedColor =
-            result.isCorrect === false ? "text-red-600" : result.isCorrect ? "text-emerald-600" : "text-slate-500";
+          const selectedLine = {
+            correct: `Selected: ${result.selectedOptionText} (correct)`,
+            incorrect: `Selected: ${result.selectedOptionText} (incorrect — correct answer: ${result.correctOptionText})`,
+            dont_know: `Selected: I don't know (correct answer: ${result.correctOptionText})`,
+            unanswered: "Selected: Unanswered",
+          }[result.outcome];
+          const selectedColor = {
+            correct: "text-emerald-600",
+            incorrect: "text-red-600",
+            dont_know: "text-amber-700",
+            unanswered: "text-slate-500",
+          }[result.outcome];
 
           return (
             <div key={result.probeId} className="flex flex-col gap-1 border-b border-slate-100 pb-3 last:border-0 last:pb-0">

@@ -31,7 +31,9 @@ never a list of reasons. Include at most 2 strengths and at most 2 possible gaps
 only the most important/highest-confidence ones; omit the rest rather than listing every
 observation. Ground each one in a concrete probe selection or visible written work; use
 "possible" or "may" for uncertain claims. An unanswered question is missing evidence, not
-an incorrect answer or evidence of low motivation. Distinguish observed work from
+an incorrect answer or evidence of low motivation. An "I don't know" response (outcome=dont_know)
+is the student's own report of uncertainty and a likely possible gap on that concept: stronger
+evidence than unanswered, but not an incorrect answer. Distinguish observed work from
 inference, but state it briefly rather than explaining your reasoning. Provide one
 practical first step for the tutor in one sentence. If no whiteboard image was provided,
 return an empty whiteboardObservations array; otherwise at most one short observation.
