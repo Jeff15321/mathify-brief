@@ -66,7 +66,6 @@ function probingState(overrides: Partial<PublicProbing> = {}): PublicProbing {
     waitingStatus: null,
     finished: false,
     needsPrefetch: false,
-    history: [],
     ...overrides,
   };
 }
@@ -109,18 +108,6 @@ describe("ProbingPanel", () => {
     expect(onRetry).toHaveBeenCalled();
   });
 
-  it("lists answered questions read-only, without correctness", () => {
-    renderPanel(
-      probingState({
-        history: [
-          { probeId: "s1-main", kind: "main", concept: "Distributive property", questionMarkdown: "Q", selectedText: "I don't know" },
-        ],
-      }),
-    );
-    expect(screen.getByText("Answered (1)")).toBeInTheDocument();
-    expect(screen.getByText(/Your answer: I don't know/)).toBeInTheDocument();
-    expect(screen.queryByText(/correct/i)).not.toBeInTheDocument();
-  });
 });
 
 describe("QuestionDisplay", () => {

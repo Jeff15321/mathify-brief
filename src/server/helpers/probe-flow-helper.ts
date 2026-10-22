@@ -1,5 +1,4 @@
 import type {
-  AnsweredProbe,
   PrivateProbe,
   ProbeAnswer,
   ProbeCursor,
@@ -141,25 +140,9 @@ function toResult(step: ProbeStep, probe: PrivateProbe, kind: ProbeKind, answer:
   };
 }
 
-/** Lists already-answered probes for read-only display, without revealing correctness. */
-function answeredHistory(steps: ProbeStep[]): AnsweredProbe[] {
-  const history: AnsweredProbe[] = [];
-  const push = (probe: PrivateProbe | null, kind: ProbeKind, answer: ProbeAnswer | null) => {
-    if (!probe || answer === null) return;
-    const selectedText =
-      answer === 'IDK' ? "I don't know" : probe.options.find((o) => o.id === answer)?.textMarkdown ?? answer;
-    history.push({ probeId: probe.id, kind, concept: probe.concept, questionMarkdown: probe.questionMarkdown, selectedText });
-  };
-  for (const step of steps) {
-    push(step.main, 'main', step.mainAnswer);
-    push(step.easier, 'easier', step.easierAnswer);
-  }
-  return history;
-}
-
 /**
- * Projects the private step list into the student-safe view: only the current probe (no key),
- * progress, and answered history. Buffered probes the student has not reached are never included.
+ * Projects the private step list into the student-safe view: only the current probe (no key)
+ * and progress. Buffered probes the student has not reached are never included.
  */
 export function toPublicProbing(steps: ProbeStep[], cursor: ProbeCursor | null, revision: string): PublicProbing {
   const probe = currentProbe(steps, cursor);
@@ -172,6 +155,5 @@ export function toPublicProbing(steps: ProbeStep[], cursor: ProbeCursor | null, 
     waitingStatus: cursor && !probe ? steps[cursor.stepIndex].status : null,
     finished: cursor === null,
     needsPrefetch: stepToGenerate(steps, cursor, { includeFailed: false }) !== null,
-    history: answeredHistory(steps),
   };
 }

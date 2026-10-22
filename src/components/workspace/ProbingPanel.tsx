@@ -1,10 +1,9 @@
 import { ProbeCard } from "./ProbeCard";
-import { MathText } from "@/components/shared/MathText";
 import { LoadingState } from "@/components/shared/LoadingState";
 import type { ProbeAnswer, PublicProbing } from "@/types/domain";
 
 /**
- * Middle panel: the current probe card, a read-only list of answered probes, and a Submit
+ * Middle panel: the current probe card (or a waiting/failed/finished message) and a Submit
  * button that works at any point.
  */
 export function ProbingPanel({
@@ -26,7 +25,7 @@ export function ProbingPanel({
   onSubmit: () => void;
   submitting: boolean;
 }) {
-  const { current, progress, history, finished, waitingStatus } = probing;
+  const { current, progress, finished, waitingStatus } = probing;
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden">
@@ -42,26 +41,6 @@ export function ProbingPanel({
       </div>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto pb-4">
-        {history.length > 0 && (
-          <details className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-            <summary className="cursor-pointer text-xs font-medium text-slate-600">
-              Answered ({history.length})
-            </summary>
-            <ol className="mt-2 flex flex-col gap-2">
-              {history.map((item) => (
-                <li key={item.probeId} className="flex flex-col gap-0.5 border-t border-slate-100 pt-2 text-xs">
-                  <span className="font-semibold uppercase tracking-wide text-slate-500">
-                    {item.concept}
-                    {item.kind === "easier" && " · easier"}
-                  </span>
-                  <MathText text={item.questionMarkdown} className="text-slate-700" />
-                  <MathText text={`Your answer: ${item.selectedText}`} className="text-slate-500" />
-                </li>
-              ))}
-            </ol>
-          </details>
-        )}
-
         {current && progress && (
           <ProbeCard
             key={current.id}

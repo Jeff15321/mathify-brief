@@ -152,15 +152,6 @@ export interface CurrentWorkspace {
   brief: TutorBrief | null;
 }
 
-/** A probe the student already answered, shown read-only (no correctness before the brief). */
-export interface AnsweredProbe {
-  probeId: string;
-  kind: ProbeKind;
-  concept: string;
-  questionMarkdown: string;
-  selectedText: string;
-}
-
 /** Student-safe view of the one-question-at-a-time flow. Never contains answer keys or unserved probes. */
 export interface PublicProbing {
   revision: string;               // workspace updatedAt; lets the client ignore stale responses
@@ -169,7 +160,6 @@ export interface PublicProbing {
   waitingStatus: StepStatus | null; // status of the step under the cursor when `current` is not ready
   finished: boolean;
   needsPrefetch: boolean;         // a pending step within the buffer window still needs generating
-  history: AnsweredProbe[];
 }
 
 export interface PublicWorkspace {
