@@ -85,30 +85,29 @@ export const probeResultSchema = z.object({
   explanation: z.string().min(1),
 });
 
+export const probeTallySchema = z.object({
+  total: z.number().int().nonnegative(),
+  attempted: z.number().int().nonnegative(),
+  correct: z.number().int().nonnegative(),
+  incorrect: z.number().int().nonnegative(),
+  dontKnow: z.number().int().nonnegative(),
+});
+
 export const tutorBriefSchema = z.object({
-  summary: z.string().min(1),
-  gradeAssessment: z.string().min(1),
-  strengths: z.array(z.object({ observation: z.string().min(1), evidence: z.string().min(1) })),
-  possibleGaps: z.array(z.object({ observation: z.string().min(1), evidence: z.string().min(1) })),
-  whiteboardObservations: z.array(z.string()),
-  suggestedStartingPoint: z.string().min(1),
-  limitations: z.array(z.string()),
   results: z.array(probeResultSchema),
   notReachedConcepts: z.array(z.string()),
-  answeredCount: z.number().int().nonnegative(),
-  correctCount: z.number().int().nonnegative(),
-  dontKnowCount: z.number().int().nonnegative(),
-  unansweredCount: z.number().int().nonnegative(),
-  retriesServed: z.number().int().nonnegative(),
-  retriesCorrect: z.number().int().nonnegative(),
+  core: probeTallySchema,
+  retries: probeTallySchema,
+  strengths: z.array(z.string()),
+  gaps: z.array(z.string()),
+  priorityStepIndex: z.number().int().nonnegative().nullable(),
   generatedAt: z.string().min(1),
-  model: z.string().min(1),
-  promptVersion: z.literal('brief-v3'),
+  briefVersion: z.literal(4),
 });
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export const currentWorkspaceSchema = z.object({
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),

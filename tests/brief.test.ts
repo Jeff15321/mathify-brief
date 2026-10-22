@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { submitBrief } from "@/server/brief-service";
 import { answerCurrentProbe } from "@/server/probe-service";
 import { startWorkspace } from "@/server/workspace-service";
 import { ApiError } from "@/server/errors";
+import { MockAnalysisProvider } from "@/server/ai/mock-provider";
 import { probeAnswerSchema } from "@/schemas/workspace";
 import { setupWorkspace, type Stores } from "./helpers";
 
@@ -17,12 +18,13 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await cleanup();
   });
 
   it("persists phase: complete and the full brief, including answer keys in results", async () => {
     const brief = await submitBrief({ whiteboardPng: null }, stores);
-    expect(brief.promptVersion).toBe("brief-v3");
+    expect(brief.briefVersion).toBe(4);
     expect(brief.results[0].correctOptionId).toMatch(/^[ABCD]$/);
 
     const workspace = await stores.workspaceStore.read();
@@ -37,14 +39,21 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
   });
 
   it("stores and serves the whiteboard asset only when a nonblank PNG is submitted", async () => {
-    const brief = await submitBrief({ whiteboardPng: TINY_PNG }, stores);
-    expect(brief.whiteboardObservations.length).toBeGreaterThan(0);
+    await submitBrief({ whiteboardPng: TINY_PNG }, stores);
 
     const workspace = await stores.workspaceStore.read();
     expect(workspace?.whiteboardAsset).not.toBeNull();
 
     const asset = await stores.assetStore.get(workspace!.whiteboardAsset!.id);
     expect(asset?.bytes.equals(TINY_PNG)).toBe(true);
+  });
+
+  it("builds the brief without any AI call", async () => {
+    const analyze = vi.spyOn(MockAnalysisProvider.prototype, "analyzeQuestion");
+    const pair = vi.spyOn(MockAnalysisProvider.prototype, "generateProbePair");
+    await submitBrief({ whiteboardPng: TINY_PNG }, stores);
+    expect(analyze).not.toHaveBeenCalled();
+    expect(pair).not.toHaveBeenCalled();
   });
 
   it("rejects a second brief submission once complete (no regeneration)", async () => {

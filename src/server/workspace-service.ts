@@ -81,7 +81,7 @@ export async function startWorkspace(
 
     const now = new Date().toISOString();
     const newWorkspace: CurrentWorkspace = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       demoProfile: DEMO_PROFILE,
       questionText,
       attachments: newAssets,

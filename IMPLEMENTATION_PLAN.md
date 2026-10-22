@@ -8,6 +8,9 @@
 > `probePlan` + first pair; new `generateProbePair` op), 6.2 (brief results per served probe), 8
 > (`POST /api/probes/generate`, `POST /api/probes/answer`; `POST /api/brief` takes only the
 > whiteboard) and 9 (answers persisted per question). See `MVP_DESCRIPTION.md` Section 8.
+> A later change replaced the Stage B brief call (Section 6.2) and the Screen 3 report with a
+> deterministic Tutor Brief dashboard computed from stored answers; see `MVP_DESCRIPTION.md`
+> Section 9.
 
 ## Non-negotiable architecture and Stage 0 gate (read before writing features)
 

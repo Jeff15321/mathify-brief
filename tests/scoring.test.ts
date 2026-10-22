@@ -36,12 +36,11 @@ describe("Deterministic scoring (mocked AI provider, isolated temp storage)", ()
       ["s2-easier", "unanswered"],
     ]);
     expect(brief.notReachedConcepts).toEqual(["Solving for x"]);
-    expect(brief.answeredCount).toBe(2);
-    expect(brief.correctCount).toBe(1);
-    expect(brief.dontKnowCount).toBe(1);
-    expect(brief.unansweredCount).toBe(2);
-    expect(brief.retriesServed).toBe(2);
-    expect(brief.retriesCorrect).toBe(1);
+    expect(brief.core).toEqual({ total: 3, attempted: 2, correct: 0, incorrect: 1, dontKnow: 1 });
+    expect(brief.retries).toEqual({ total: 2, attempted: 1, correct: 1, incorrect: 0, dontKnow: 0 });
+    expect(brief.strengths).toEqual(["Distributive property (easier)"]);
+    expect(brief.gaps).toEqual(["Inverse operations"]);
+    expect(brief.priorityStepIndex).toBe(0);
   });
 
   it("all-correct answers serve no retries", async () => {
@@ -51,15 +50,17 @@ describe("Deterministic scoring (mocked AI provider, isolated temp storage)", ()
 
     const brief = await submitBrief({ whiteboardPng: null }, stores);
     expect(brief.results).toHaveLength(3);
-    expect(brief.correctCount).toBe(3);
-    expect(brief.retriesServed).toBe(0);
-    expect(brief.unansweredCount).toBe(0);
+    expect(brief.core).toEqual({ total: 3, attempted: 3, correct: 3, incorrect: 0, dontKnow: 0 });
+    expect(brief.retries.total).toBe(0);
+    expect(brief.gaps).toEqual([]);
+    expect(brief.priorityStepIndex).toBeNull();
   });
 
   it("allows submitting before answering anything", async () => {
     const brief = await submitBrief({ whiteboardPng: null }, stores);
-    expect(brief.answeredCount).toBe(0);
+    expect(brief.core).toEqual({ total: 3, attempted: 0, correct: 0, incorrect: 0, dontKnow: 0 });
     expect(brief.results.map((r) => r.outcome)).toEqual(["unanswered"]);
-    expect(brief.unansweredCount).toBe(3);
+    expect(brief.strengths).toEqual([]);
+    expect(brief.priorityStepIndex).toBeNull();
   });
 });

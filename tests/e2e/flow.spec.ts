@@ -47,9 +47,32 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
 
   await page.waitForURL("**/brief");
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
-  await expect(page.getByText(/2 correct \/ 3 answered/)).toBeVisible();
-  await expect(page.getByText(/1 don't know/)).toBeVisible();
-  await expect(page.getByText(/1 unanswered/)).toBeVisible();
-  await expect(page.getByText(/2 easier retries \(2 correct\)/)).toBeVisible();
-  await expect(page.getByText("Easier retry")).toHaveCount(2);
+
+  // Core probes: s1 incorrect, s2 don't know, s3 on screen (unanswered). Retries: both correct.
+  const core = page.locator("section", { hasText: "Core probes" });
+  await expect(core.getByText("0/2")).toBeVisible();
+  await expect(core.getByText("2 of 3 attempted")).toBeVisible();
+  await expect(core.getByText("1 incorrect · 1 don't know")).toBeVisible();
+  const retries = page.locator("section", { hasText: "Easier retries" });
+  await expect(retries.getByText("2/2")).toBeVisible();
+
+  await expect(page.getByText("Distributive property (easier)")).toBeVisible();
+  await expect(page.getByText("Inverse operations (easier)")).toBeVisible();
+
+  // Priority: the first missed main question, with the student's pick vs the key.
+  const priority = page.locator("section", { hasText: "Key incorrect step" });
+  await expect(priority.getByText("Distributive property")).toBeVisible();
+  await expect(priority.getByText("Student selected · A")).toBeVisible();
+  await expect(priority.getByText("Correct · B")).toBeVisible();
+  await expect(priority.getByText(/Easier retry correct · 1\/2 correct for this concept/)).toBeVisible();
+
+  await expect(page.getByAltText("Student's whiteboard")).toBeVisible();
+
+  // Probing results start collapsed and expand to show every question asked.
+  const retryItems = page.getByText("Easier retry", { exact: true });
+  await expect(retryItems.first()).toBeHidden();
+  await page.getByText("Probing results").click();
+  await expect(retryItems).toHaveCount(2);
+  await expect(retryItems.first()).toBeVisible();
+  await expect(page.getByText("Not reached before submitting")).toHaveCount(0);
 });

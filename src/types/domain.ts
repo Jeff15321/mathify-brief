@@ -114,31 +114,32 @@ export interface ProbeResult {
   explanation: string;
 }
 
+/** Deterministic tally for one kind of probe (core = main questions, retries = easier ones). */
+export interface ProbeTally {
+  total: number;        // core: planned steps; retries: easier probes served
+  attempted: number;    // any answer, "I don't know" included
+  correct: number;
+  incorrect: number;
+  dontKnow: number;
+}
+
+/** The Tutor Brief dashboard, computed entirely from stored answers (no AI). */
 export interface TutorBrief {
-  summary: string;
-  gradeAssessment: string;
-  strengths: { observation: string; evidence: string }[];
-  possibleGaps: { observation: string; evidence: string }[];
-  whiteboardObservations: string[];
-  suggestedStartingPoint: string;
-  limitations: string[];
   results: ProbeResult[];         // one per probe actually served
   notReachedConcepts: string[];   // planned steps the student never reached before submitting
-  answeredCount: number;
-  correctCount: number;
-  dontKnowCount: number;
-  unansweredCount: number;        // served-but-unanswered probes plus steps not reached
-  retriesServed: number;
-  retriesCorrect: number;
+  core: ProbeTally;
+  retries: ProbeTally;
+  strengths: string[];            // concept names; "(easier)" when only the retry was correct
+  gaps: string[];                 // concepts missed on the main probe and not recovered on retry
+  priorityStepIndex: number | null; // first step whose main answer was incorrect or "I don't know"
   generatedAt: string;
-  model: string;
-  promptVersion: 'brief-v3';
+  briefVersion: 4;
 }
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
 export interface CurrentWorkspace {
-  schemaVersion: 2;
+  schemaVersion: 3;
   demoProfile: DemoProfile;
   questionText: string;
   attachments: StoredAsset[];
