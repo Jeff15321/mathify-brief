@@ -1,10 +1,9 @@
 import type { TutorBrief } from '@/types/domain';
 import { getStores, type createStores } from './storage';
-import { getAnalysisProvider } from './ai';
 import { ApiError } from './errors';
 import { MAX_WHITEBOARD_SIZE_BYTES } from '@/lib/constants';
 import { computeResults } from './helpers/probe-flow-helper';
-import { resolveModelLabel } from './analysis-service';
+import { summarizeBrief } from './helpers/brief-summary-helper';
 
 type Stores = ReturnType<typeof createStores>;
 
@@ -13,8 +12,8 @@ export interface SubmitBriefInput {
 }
 
 /**
- * Ends probing and generates the Tutor Brief. Answers are already stored per question, so the
- * client only sends the optional whiteboard. Allowed at any point (early submit): the probe on
+ * Ends probing and builds the Tutor Brief deterministically from the stored answers (no AI call).
+ * The client only sends the optional whiteboard. Allowed at any point (early submit): the probe on
  * screen counts as unanswered and steps not reached are listed separately.
  */
 export async function submitBrief(input: SubmitBriefInput, stores: Stores = getStores()): Promise<TutorBrief> {
@@ -35,8 +34,7 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
     throw new ApiError(400, 'INVALID_INPUT', `Whiteboard image exceeds ${MAX_WHITEBOARD_SIZE_BYTES} bytes`);
   }
 
-  // Persist the optional whiteboard before invoking the model, so a failed model call can be
-  // retried without losing what the student already submitted.
+  // Persist the optional whiteboard first; the brief only references it by asset id.
   if (input.whiteboardPng) {
     const newAsset = await assetStore.put({
       kind: 'whiteboard',
@@ -54,50 +52,12 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
   }
 
   const { results, notReachedConcepts } = computeResults(workspace.probeSteps, workspace.cursor);
-  const answeredCount = results.filter((r) => r.selectedOptionId !== null).length;
-  const correctCount = results.filter((r) => r.outcome === 'correct').length;
-  const dontKnowCount = results.filter((r) => r.outcome === 'dont_know').length;
-  const unansweredCount = results.filter((r) => r.outcome === 'unanswered').length + notReachedConcepts.length;
-  const retries = results.filter((r) => r.kind === 'easier');
-
-  const files = [];
-  for (const attachment of workspace.attachments) {
-    const loaded = await assetStore.get(attachment.id);
-    if (loaded) files.push({ fileName: loaded.meta.fileName, mimeType: loaded.meta.mimeType, bytes: loaded.bytes });
-  }
-
-  let modelBrief;
-  try {
-    modelBrief = await getAnalysisProvider().generateTutorBrief({
-      grade: workspace.demoProfile.grade,
-      questionText: workspace.questionText,
-      files,
-      analysis: workspace.analysis,
-      results,
-      notReachedConcepts,
-      whiteboardPng: input.whiteboardPng,
-    });
-  } catch (err) {
-    throw new ApiError(
-      502,
-      'AI_PROVIDER_ERROR',
-      `AI brief call failed: ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
-
   const brief: TutorBrief = {
-    ...modelBrief,
     results,
     notReachedConcepts,
-    answeredCount,
-    correctCount,
-    dontKnowCount,
-    unansweredCount,
-    retriesServed: retries.length,
-    retriesCorrect: retries.filter((r) => r.outcome === 'correct').length,
+    ...summarizeBrief(results, notReachedConcepts),
     generatedAt: new Date().toISOString(),
-    model: resolveModelLabel(),
-    promptVersion: 'brief-v3',
+    briefVersion: 4,
   };
 
   await workspaceStore.update((current) => {

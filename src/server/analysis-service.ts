@@ -9,7 +9,7 @@ import { probeIdFor } from './helpers/probe-flow-helper';
 type Stores = ReturnType<typeof createStores>;
 
 /** Model label stored with generated artifacts for provenance. */
-export function resolveModelLabel(): string {
+function resolveModelLabel(): string {
   if (process.env.AI_MOCK_MODE !== 'false') return 'mock-provider';
   return process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
 }

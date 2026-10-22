@@ -1,11 +1,5 @@
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
-import type { ModelBrief } from '@/schemas/brief';
-import type {
-  AnalyzeQuestionInput,
-  GenerateProbePairInput,
-  GenerateTutorBriefInput,
-  MathAnalysisProvider,
-} from './provider';
+import type { AnalyzeQuestionInput, GenerateProbePairInput, MathAnalysisProvider } from './provider';
 
 const MOCK_PLAN: ModelAnalysis['probePlan'] = [
   { concept: 'Distributive property', intent: 'Check that the student multiplies every term inside the brackets.' },
@@ -130,36 +124,5 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
     const pair = MOCK_PAIRS[input.stepIndex];
     if (!pair) throw new Error(`Mock provider has no probe pair for step ${input.stepIndex}`);
     return pair;
-  }
-
-  async generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief> {
-    const correctResults = input.results.filter((r) => r.outcome === 'correct');
-    const incorrectResults = input.results.filter((r) => r.outcome === 'incorrect');
-    const dontKnowResults = input.results.filter((r) => r.outcome === 'dont_know');
-    const attemptedCount = correctResults.length + incorrectResults.length;
-    const hasMissingEvidence =
-      input.notReachedConcepts.length > 0 || input.results.some((r) => r.outcome === 'unanswered');
-
-    return {
-      summary: `Student attempted ${attemptedCount} of ${input.results.length} prerequisite checks, getting ${correctResults.length} correct.`,
-      gradeAssessment: 'Responses are broadly consistent with on-grade Grade 9 expectations.',
-      strengths: correctResults.map((r) => ({
-        observation: `Correctly answered the "${r.concept}" check.`,
-        evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}.`,
-      })),
-      possibleGaps: [
-        ...incorrectResults.map((r) => ({
-          observation: `May need review of "${r.concept}".`,
-          evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}, correct answer was ${r.correctOptionId}.`,
-        })),
-        ...dontKnowResults.map((r) => ({
-          observation: `Reported being unsure about "${r.concept}".`,
-          evidence: `Probe ${r.probeId}: selected "I don't know".`,
-        })),
-      ],
-      whiteboardObservations: input.whiteboardPng ? ['Work shown is legible and follows the expected solution steps.'] : [],
-      suggestedStartingPoint: 'Review the distributive property before moving to multi-step equations.',
-      limitations: hasMissingEvidence ? ['Not enough evidence for unanswered or unreached probes.'] : [],
-    };
   }
 }

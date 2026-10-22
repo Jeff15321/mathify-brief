@@ -175,3 +175,31 @@ The middle panel ("Relevant Concepts") no longer shows every probe at once:
   unused, which costs a few hundred tokens per step and means a wrong answer never waits on the AI.
 - **"No AI regeneration" still holds:** each step's pair is generated once. Only a *failed*
   generation is retried.
+
+## 9. Change: the Tutor Brief is a deterministic dashboard (Stage B removed)
+
+Tutor feedback said the brief was too long. A tutor needs to skim it in 10-15 seconds when the
+student joins, and glance at it while the student works. The brief is now a dashboard (see
+`MockTutorBrief.png`) computed entirely from stored answers by `summarizeBrief()`
+(`src/server/helpers/brief-summary-helper.ts`):
+
+- **Core probes / Easier retries tallies:** correct of attempted, attempted of total, incorrect,
+  and don't know.
+- **Strengths and possible gaps:** concept names only. A concept recovered on its retry counts as
+  an easier strength, not a gap.
+- **Priority / key incorrect step:** the first step in plan order whose main answer was incorrect
+  or "I don't know", showing the student's pick vs the correct answer and the retry result.
+- **Whiteboard preview** (image only), and a collapsed **Probing results** list with every
+  question asked.
+
+**Removed: the Stage B Claude call** (`generateTutorBrief`, its prompt and output schema).
+Everything shown is derivable from the stored answer keys, so the brief is now:
+- instant;
+- free;
+- unable to fail on the AI at Submit;
+- impossible to contradict the scores.
+
+The app now has **two** model operations (analysis, probe pair). What's lost is interpreting
+the whiteboard and the student's uploaded attempts. Adding that back later means one small
+optional vision call that only returns a whiteboard observation. `CurrentWorkspace` is
+`schemaVersion: 3`, and older workspaces are ignored.
