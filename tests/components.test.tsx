@@ -22,14 +22,14 @@ describe("ProbeCard", () => {
   it("a selected radio choice stays checked and reports the selection", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
-      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} />,
+      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
     );
 
     const optionB = screen.getByDisplayValue("B") as HTMLInputElement;
     fireEvent.click(optionB);
     expect(onSelect).toHaveBeenCalledWith("B");
 
-    rerender(<ProbeCard probe={PROBE} index={0} selected="B" onSelect={onSelect} />);
+    rerender(<ProbeCard probe={PROBE} index={0} selected="B" onSelect={onSelect} onNext={() => {}} />);
     expect((screen.getByDisplayValue("B") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByDisplayValue("A") as HTMLInputElement).checked).toBe(false);
   });
@@ -37,13 +37,13 @@ describe("ProbeCard", () => {
   it("offers an \"I don't know\" choice that stays selected", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
-      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} />,
+      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
     );
 
     fireEvent.click(screen.getByLabelText("I don't know"));
     expect(onSelect).toHaveBeenCalledWith("IDK");
 
-    rerender(<ProbeCard probe={PROBE} index={0} selected="IDK" onSelect={onSelect} />);
+    rerender(<ProbeCard probe={PROBE} index={0} selected="IDK" onSelect={onSelect} onNext={() => {}} />);
     expect((screen.getByLabelText("I don't know") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByDisplayValue("B") as HTMLInputElement).checked).toBe(false);
   });
@@ -53,7 +53,7 @@ describe("ProbeCard", () => {
       ...PROBE,
       questionMarkdown: "A very long word problem. ".repeat(20),
     };
-    render(<ProbeCard probe={longProbe} index={0} selected={undefined} onSelect={() => {}} />);
+    render(<ProbeCard probe={longProbe} index={0} selected={undefined} onSelect={() => {}} onNext={() => {}} />);
     expect(screen.getByText(/A very long word problem\./)).toBeInTheDocument();
   });
 });

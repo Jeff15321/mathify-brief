@@ -4,8 +4,8 @@ import { LoadingState } from "@/components/shared/LoadingState";
 import type { ProbeAnswer, PublicProbing } from "@/types/domain";
 
 /**
- * Middle panel: one probe at a time with a Next button, a read-only list of answered probes,
- * and a Submit button that works at any point.
+ * Middle panel: the current probe card, a read-only list of answered probes, and a Submit
+ * button that works at any point.
  */
 export function ProbingPanel({
   probing,
@@ -63,23 +63,16 @@ export function ProbingPanel({
         )}
 
         {current && progress && (
-          <>
-            <ProbeCard
-              key={current.id}
-              probe={current}
-              index={progress.stepNumber - 1}
-              selected={selection}
-              onSelect={onSelect}
-            />
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={!selection || answering || submitting}
-              className="self-end rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
-            >
-              {answering ? "Saving…" : "Next"}
-            </button>
-          </>
+          <ProbeCard
+            key={current.id}
+            probe={current}
+            index={progress.stepNumber - 1}
+            selected={selection}
+            onSelect={onSelect}
+            onNext={onNext}
+            saving={answering}
+            disabled={submitting}
+          />
         )}
 
         {!current && !finished && waitingStatus !== "failed" && (

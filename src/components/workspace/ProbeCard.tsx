@@ -2,19 +2,28 @@ import { MathText } from "@/components/shared/MathText";
 import type { ProbeAnswer, PublicProbe } from "@/types/domain";
 
 /**
- * One multiple-choice probe: the generated options A-D followed by an "I don't know" choice.
- * "I don't know" looks like any other option; its meaning is handled by backend scoring.
+ * One multiple-choice probe: the generated options A-D followed by an "I don't know" choice,
+ * and a Next button that confirms the selection. "I don't know" looks like any other option;
+ * its meaning is handled by backend scoring.
+ * @param saving - True while the answer is being saved; shows "Saving…" on the button.
+ * @param disabled - Disables Next for reasons outside the card (e.g. the brief is submitting).
  */
 export function ProbeCard({
   probe,
   index,
   selected,
   onSelect,
+  onNext,
+  saving = false,
+  disabled = false,
 }: {
   probe: PublicProbe;
   index: number;
   selected: ProbeAnswer | undefined;
   onSelect: (answer: ProbeAnswer) => void;
+  onNext: () => void;
+  saving?: boolean;
+  disabled?: boolean;
 }) {
   const choices: { id: ProbeAnswer; textMarkdown: string }[] = [
     ...probe.options,
@@ -54,6 +63,14 @@ export function ProbeCard({
           </label>
         ))}
       </div>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={!selected || saving || disabled}
+        className="self-end rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+      >
+        {saving ? "Saving…" : "Next"}
+      </button>
     </div>
   );
 }
