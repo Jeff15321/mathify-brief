@@ -35,14 +35,14 @@ describe("summarizeBrief()", () => {
     expect(summary.retries).toEqual({ total: 2, attempted: 1, correct: 1, incorrect: 0, dontKnow: 0 });
   });
 
-  it("labels a concept recovered on retry as an easier strength, not a gap, using the main probe's name", () => {
+  it("treats a missed main question as a gap even when its easier retry was correct", () => {
     const summary = summarizeBrief(
       [result(0, "main", "correct"), result(1, "main", "incorrect"), result(1, "easier", "correct"), result(2, "main", "dont_know"), result(2, "easier", "incorrect")],
       [],
     );
 
-    expect(summary.strengths).toEqual(["Concept 1", "Concept 2 (easier)"]);
-    expect(summary.gaps).toEqual(["Concept 3"]);
+    expect(summary.strengths).toEqual(["Concept 1"]);
+    expect(summary.gaps).toEqual(["Concept 2", "Concept 3"]);
   });
 
   it("picks the first step in plan order whose main answer was incorrect or I don't know", () => {

@@ -18,7 +18,8 @@ function tally(results: ProbeResult[], kind: ProbeKind, total: number): ProbeTal
 
 /**
  * Derives every Tutor Brief dashboard figure from the deterministic per-probe results.
- * Concepts are labelled by each step's main probe, so a step's main and easier probes share one name.
+ * Strengths and gaps are judged on the main probe alone: a missed main question is a possible gap even
+ * when the easier retry was answered correctly (the retry outcome shows in `retries` and the priority card).
  * @param results - One result per served probe, in step order (see `computeResults`).
  * @param notReachedConcepts - Planned steps the student never reached; they count toward core `total`.
  */
@@ -29,11 +30,8 @@ export function summarizeBrief(results: ProbeResult[], notReachedConcepts: strin
   const strengths: string[] = [];
   const gaps: string[] = [];
   for (const main of mains) {
-    const easier = easierByStep.get(main.stepIndex);
     if (main.outcome === 'correct') {
       strengths.push(main.concept);
-    } else if (easier?.outcome === 'correct') {
-      strengths.push(`${main.concept} (easier)`);
     } else if (MISSED.has(main.outcome)) {
       gaps.push(main.concept);
     }

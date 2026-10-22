@@ -70,8 +70,11 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   const retries = page.locator("section", { hasText: "Easier retries" });
   await expect(retries.getByText("2/2")).toBeVisible();
 
-  await expect(page.getByText("Distributive property (easier)")).toBeVisible();
-  await expect(page.getByText("Inverse operations (easier)")).toBeVisible();
+  // Both main questions were missed, so both are gaps even though their retries were correct.
+  const gaps = page.locator("section", { hasText: "Possible gaps" });
+  await expect(gaps.getByText("Distributive property")).toBeVisible();
+  await expect(gaps.getByText("Inverse operations")).toBeVisible();
+  await expect(page.locator("section", { hasText: "Observed strengths" }).getByText("None observed.")).toBeVisible();
 
   // Priority: the first missed main question, with the student's pick vs the key.
   const priority = page.locator("section", { hasText: "Key incorrect step" });

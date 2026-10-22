@@ -129,8 +129,8 @@ export interface TutorBrief {
   notReachedConcepts: string[];   // planned steps the student never reached before submitting
   core: ProbeTally;
   retries: ProbeTally;
-  strengths: string[];            // concept names; "(easier)" when only the retry was correct
-  gaps: string[];                 // concepts missed on the main probe and not recovered on retry
+  strengths: string[];            // concepts answered correctly on the main probe
+  gaps: string[];                 // concepts missed on the main probe (incorrect or IDK), whatever the retry outcome
   priorityStepIndex: number | null; // first step whose main answer was incorrect or "I don't know"
   generatedAt: string;
   briefVersion: 4;

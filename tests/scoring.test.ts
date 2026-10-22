@@ -38,8 +38,8 @@ describe("Deterministic scoring (mocked AI provider, isolated temp storage)", ()
     expect(brief.notReachedConcepts).toEqual(["Solving for x"]);
     expect(brief.core).toEqual({ total: 3, attempted: 2, correct: 0, incorrect: 1, dontKnow: 1 });
     expect(brief.retries).toEqual({ total: 2, attempted: 1, correct: 1, incorrect: 0, dontKnow: 0 });
-    expect(brief.strengths).toEqual(["Distributive property (easier)"]);
-    expect(brief.gaps).toEqual(["Inverse operations"]);
+    expect(brief.strengths).toEqual([]);
+    expect(brief.gaps).toEqual(["Distributive property", "Inverse operations"]);
     expect(brief.priorityStepIndex).toBe(0);
   });
 
