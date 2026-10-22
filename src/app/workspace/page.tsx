@@ -7,7 +7,6 @@ import type { ProbeAnswer, PublicProbing, PublicWorkspace } from "@/types/domain
 import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
 import { WhiteboardPanel } from "@/components/workspace/WhiteboardPanel";
 import { ProbingPanel } from "@/components/workspace/ProbingPanel";
-import { BreakdownPanel } from "@/components/workspace/BreakdownPanel";
 import type { SimpleWhiteboardHandle } from "@/components/whiteboard/SimpleWhiteboard";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
 import { LoadingState } from "@/components/shared/LoadingState";
@@ -161,14 +160,6 @@ export default function WorkspacePage() {
               answering={answering}
               onSubmit={handleSubmit}
               submitting={submitting}
-            />
-          }
-          breakdown={
-            <BreakdownPanel
-              analysis={workspace.analysis}
-              studentGrade={workspace.profile.grade}
-              questionText={workspace.questionText}
-              attachments={workspace.attachments}
             />
           }
         />

@@ -3,18 +3,17 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 
-type PanelKey = "whiteboard" | "probing" | "breakdown";
+type PanelKey = "whiteboard" | "probing";
 
 const PANEL_TITLES: Record<PanelKey, string> = {
   whiteboard: "Whiteboard",
   probing: "Relevant Concepts",
-  breakdown: "Question breakdown",
 };
 
-const PANEL_ORDER: PanelKey[] = ["whiteboard", "probing", "breakdown"];
-const BASE_FR: Record<PanelKey, number> = { whiteboard: 50, probing: 25, breakdown: 25 };
+const PANEL_ORDER: PanelKey[] = ["whiteboard", "probing"];
+const BASE_FR: Record<PanelKey, number> = { whiteboard: 50, probing: 50 };
 const EXPANDED_FR = 70;
-const SHRUNK_FR = 15;
+const SHRUNK_FR = 30;
 
 function useIsNarrow(breakpointPx: number) {
   const [narrow, setNarrow] = useState(false);
@@ -52,14 +51,16 @@ function PanelHeader({
   );
 }
 
+/**
+ * Workspace layout: Whiteboard (left) and Relevant Concepts (right), 50/50 by default. Expanding
+ * one panel gives it 70% without unmounting either; narrow screens switch to tabs.
+ */
 export function ThreePanelLayout({
   whiteboard,
   probing,
-  breakdown,
 }: {
   whiteboard: ReactNode;
   probing: ReactNode;
-  breakdown: ReactNode;
 }) {
   const [expanded, setExpanded] = useState<PanelKey | "none">("none");
   const narrow = useIsNarrow(900);
@@ -69,7 +70,7 @@ export function ThreePanelLayout({
     setExpanded((current) => (current === panel ? "none" : panel));
   }
 
-  const content: Record<PanelKey, ReactNode> = { whiteboard, probing, breakdown };
+  const content: Record<PanelKey, ReactNode> = { whiteboard, probing };
 
   if (narrow) {
     return (

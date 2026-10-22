@@ -136,7 +136,6 @@ describe("ThreePanelLayout", () => {
       <ThreePanelLayout
         whiteboard={<input data-testid="wb-input" />}
         probing={<div>probing</div>}
-        breakdown={<div>breakdown</div>}
       />,
     );
 
