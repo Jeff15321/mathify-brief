@@ -40,8 +40,7 @@ export const analysisStoredSchema = z.object({
   analysisVersion: z.literal(1),
 });
 
-export const probeAnswerSchema = z.union([optionIdSchema, z.literal('IDK')]);
-export const probeAnswersSchema = z.record(z.string(), probeAnswerSchema);
+export const probeAnswersSchema = z.record(z.string(), z.union([optionIdSchema, z.literal('IDK')]));
 
 export const probeOutcomeSchema = z.enum(['correct', 'incorrect', 'dont_know', 'unanswered']);
 
