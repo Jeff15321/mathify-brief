@@ -2,6 +2,13 @@
 
 > **Execution instruction:** Implement this specification in the current repository. First inspect the repository and preserve any useful existing setup; if it is empty, scaffold a Next.js App Router application. Read **`MVP_DESCRIPTION.md` before editing code**: its opening sections identify the future session/Supabase/regeneration changes and the deliberate limitations of this MVP. Implement the entire MVP, not future features. If a technical dependency's current API differs from an example below, use the installed version's documented API while maintaining the contracts and behavior described here. Do not silently expand scope.
 
+> **Amendment (post-MVP):** probing is now one question at a time with one easier retry per step
+> after a wrong or "I don't know" answer, and next-step prefetching. This supersedes the parts of
+> Sections 3 (Screen 2 middle panel), 5 (`probingQuestions`, `answers`), 6.1 (Stage A returns a
+> `probePlan` + first pair; new `generateProbePair` op), 6.2 (brief results per served probe), 8
+> (`POST /api/probes/generate`, `POST /api/probes/answer`; `POST /api/brief` takes only the
+> whiteboard) and 9 (answers persisted per question). See `MVP_DESCRIPTION.md` Section 8.
+
 ## Non-negotiable architecture and Stage 0 gate (read before writing features)
 
 - **Runtime AI provider is Anthropic Claude, not OpenAI.** `ANTHROPIC_API_KEY` from Claude Console powers the two *Mathify backend* model calls through the server-only `@anthropic-ai/sdk` Messages API. The Claude Code CLI may use API billing as well, but **do not use the Claude Code CLI or Claude Agent SDK inside this app**: two controlled model calls are sufficient. Prefer a separate Console key for the app to track spending; the same credential type works for both. No key is ever exposed to browser code.

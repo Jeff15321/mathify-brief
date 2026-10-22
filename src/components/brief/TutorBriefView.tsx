@@ -1,10 +1,43 @@
 import Link from "next/link";
 import { MathText } from "@/components/shared/MathText";
 import { GRADE_DIFFICULTY_CLASS, GRADE_DIFFICULTY_LABEL } from "@/lib/grade-difficulty";
-import type { PublicWorkspace, TutorBrief } from "@/types/domain";
+import type { ProbeOutcome, ProbeResult, PublicWorkspace, TutorBrief } from "@/types/domain";
+
+const OUTCOME_COLOR: Record<ProbeOutcome, string> = {
+  correct: "text-emerald-600",
+  incorrect: "text-red-600",
+  dont_know: "text-amber-700",
+  unanswered: "text-slate-500",
+};
+
+/** One-line summary of what the student picked, with the key revealed for the tutor. */
+function selectedLine(result: ProbeResult): string {
+  return {
+    correct: `Selected: ${result.selectedOptionText} (correct)`,
+    incorrect: `Selected: ${result.selectedOptionText} (incorrect — correct answer: ${result.correctOptionText})`,
+    dont_know: `Selected: I don't know (correct answer: ${result.correctOptionText})`,
+    unanswered: "Selected: Unanswered",
+  }[result.outcome];
+}
+
+/** Renders one served probe; easier retries are indented under their main question. */
+function ResultItem({ result }: { result: ProbeResult }) {
+  const isEasier = result.kind === "easier";
+  return (
+    <div className={`flex flex-col gap-1 ${isEasier ? "ml-4 border-l-2 border-amber-200 pl-3" : ""}`}>
+      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {isEasier ? "Easier retry" : result.concept}
+      </span>
+      <MathText text={result.questionMarkdown} className="text-sm text-slate-800" />
+      <MathText text={selectedLine(result)} className={`text-sm ${OUTCOME_COLOR[result.outcome]}`} />
+      <MathText text={result.explanation} className="text-xs text-slate-500" />
+    </div>
+  );
+}
 
 export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspace; brief: TutorBrief }) {
   const analysis = workspace.analysis!;
+  const stepIndexes = [...new Set(brief.results.map((result) => result.stepIndex))];
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
@@ -48,34 +81,31 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
           {brief.correctCount} correct / {brief.answeredCount} answered
           {brief.dontKnowCount > 0 && <span className="text-amber-700"> · {brief.dontKnowCount} don&apos;t know</span>}
           {brief.unansweredCount > 0 && <span className="text-slate-500"> · {brief.unansweredCount} unanswered</span>}
+          {brief.retriesServed > 0 && (
+            <span className="text-slate-500">
+              {" "}
+              · {brief.retriesServed} easier {brief.retriesServed === 1 ? "retry" : "retries"} ({brief.retriesCorrect} correct)
+            </span>
+          )}
         </p>
       </section>
 
       <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">Relevant Concepts</h2>
-        {brief.results.map((result) => {
-          const selectedLine = {
-            correct: `Selected: ${result.selectedOptionText} (correct)`,
-            incorrect: `Selected: ${result.selectedOptionText} (incorrect — correct answer: ${result.correctOptionText})`,
-            dont_know: `Selected: I don't know (correct answer: ${result.correctOptionText})`,
-            unanswered: "Selected: Unanswered",
-          }[result.outcome];
-          const selectedColor = {
-            correct: "text-emerald-600",
-            incorrect: "text-red-600",
-            dont_know: "text-amber-700",
-            unanswered: "text-slate-500",
-          }[result.outcome];
-
-          return (
-            <div key={result.probeId} className="flex flex-col gap-1 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{result.concept}</span>
-              <MathText text={result.questionMarkdown} className="text-sm text-slate-800" />
-              <MathText text={selectedLine} className={`text-sm ${selectedColor}`} />
-              <MathText text={result.explanation} className="text-xs text-slate-500" />
-            </div>
-          );
-        })}
+        {stepIndexes.map((stepIndex) => (
+          <div key={stepIndex} className="flex flex-col gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+            {brief.results
+              .filter((result) => result.stepIndex === stepIndex)
+              .map((result) => (
+                <ResultItem key={result.probeId} result={result} />
+              ))}
+          </div>
+        ))}
+        {brief.notReachedConcepts.length > 0 && (
+          <p className="text-xs text-slate-500">
+            Not reached before submitting: {brief.notReachedConcepts.join(", ")}
+          </p>
+        )}
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">

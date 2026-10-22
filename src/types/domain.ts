@@ -24,25 +24,32 @@ export interface StudentBreakdownStep {
   description: string;
 }
 
+export type OptionId = 'A' | 'B' | 'C' | 'D';
+
 export interface QuestionAnalysisPublic {
   parsedQuestionMarkdown: string;
   topic: string;
   estimatedQuestionGrade: string;
   gradeDifficulty: GradeDifficulty;
   breakdown: StudentBreakdownStep[];
-  probingQuestions: PublicProbe[];
 }
 
 export interface PublicProbe {
   id: string;
   concept: string;
   questionMarkdown: string;
-  options: { id: 'A' | 'B' | 'C' | 'D'; textMarkdown: string }[];
+  options: { id: OptionId; textMarkdown: string }[];
 }
 
 export interface PrivateProbe extends PublicProbe {
-  correctOptionId: 'A' | 'B' | 'C' | 'D';
+  correctOptionId: OptionId;
   explanation: string;
+}
+
+/** One planned prerequisite step; the plan fixes how many main questions the student gets. */
+export interface ProbePlanItem {
+  concept: string;
+  intent: string;
 }
 
 export interface QuestionAnalysisStored {
@@ -51,28 +58,56 @@ export interface QuestionAnalysisStored {
   estimatedQuestionGrade: string;
   gradeDifficulty: GradeDifficulty;
   breakdown: StudentBreakdownStep[];
-  probingQuestions: PrivateProbe[];
+  probePlan: ProbePlanItem[];
   generatedAt: string;
   model: string;
-  promptVersion: 'analysis-v1';
+  promptVersion: 'analysis-v2';
   analysisVersion: 1;
 }
 
 /** A student's response to one probe: one of the generated options, or "I don't know". */
-export type ProbeAnswer = 'A' | 'B' | 'C' | 'D' | 'IDK';
+export type ProbeAnswer = OptionId | 'IDK';
 
-export type ProbeAnswers = Record<string, ProbeAnswer>;
+/** Which probe of a step: the main question, or its easier retry. */
+export type ProbeKind = 'main' | 'easier';
+
+/** Generation state of a step's probe pair. */
+export type StepStatus = 'pending' | 'generating' | 'ready' | 'failed';
+
+/**
+ * One planned step: its generated main/easier probes and the student's answers.
+ * `easier` is generated with `main` but only served after a wrong or "I don't know" main answer.
+ */
+export interface ProbeStep {
+  index: number;
+  concept: string;
+  status: StepStatus;
+  generationStartedAt: string | null;
+  main: PrivateProbe | null;
+  easier: PrivateProbe | null;
+  mainAnswer: ProbeAnswer | null;
+  easierAnswer: ProbeAnswer | null;
+  easierServed: boolean;
+}
+
+/** The probe currently in front of the student; null once every step is done. */
+export interface ProbeCursor {
+  stepIndex: number;
+  kind: ProbeKind;
+}
 
 /** Deterministic per-probe outcome; "dont_know" is self-reported uncertainty, distinct from wrong or blank. */
 export type ProbeOutcome = 'correct' | 'incorrect' | 'dont_know' | 'unanswered';
 
 export interface ProbeResult {
   probeId: string;
+  stepIndex: number;
+  kind: ProbeKind;
   concept: string;
   questionMarkdown: string;
-  selectedOptionId: 'A' | 'B' | 'C' | 'D' | null;
+  selectedOptionId: OptionId | null;
   selectedOptionText: string | null;
-  correctOptionId: 'A' | 'B' | 'C' | 'D';
+  correctOptionId: OptionId;
   correctOptionText: string;
   isCorrect: boolean | null;      // null for "I don't know" and unanswered
   outcome: ProbeOutcome;
@@ -87,20 +122,23 @@ export interface TutorBrief {
   whiteboardObservations: string[];
   suggestedStartingPoint: string;
   limitations: string[];
-  results: ProbeResult[];
+  results: ProbeResult[];         // one per probe actually served
+  notReachedConcepts: string[];   // planned steps the student never reached before submitting
   answeredCount: number;
   correctCount: number;
   dontKnowCount: number;
-  unansweredCount: number;
+  unansweredCount: number;        // served-but-unanswered probes plus steps not reached
+  retriesServed: number;
+  retriesCorrect: number;
   generatedAt: string;
   model: string;
-  promptVersion: 'brief-v1' | 'brief-v2';
+  promptVersion: 'brief-v3';
 }
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
 export interface CurrentWorkspace {
-  schemaVersion: 1;
+  schemaVersion: 2;
   demoProfile: DemoProfile;
   questionText: string;
   attachments: StoredAsset[];
@@ -108,9 +146,30 @@ export interface CurrentWorkspace {
   updatedAt: string;
   phase: WorkspacePhase;
   analysis: QuestionAnalysisStored | null;
-  answers: ProbeAnswers;
+  probeSteps: ProbeStep[];
+  cursor: ProbeCursor | null;
   whiteboardAsset: StoredAsset | null;
   brief: TutorBrief | null;
+}
+
+/** A probe the student already answered, shown read-only (no correctness before the brief). */
+export interface AnsweredProbe {
+  probeId: string;
+  kind: ProbeKind;
+  concept: string;
+  questionMarkdown: string;
+  selectedText: string;
+}
+
+/** Student-safe view of the one-question-at-a-time flow. Never contains answer keys or unserved probes. */
+export interface PublicProbing {
+  revision: string;               // workspace updatedAt; lets the client ignore stale responses
+  current: PublicProbe | null;
+  progress: { stepNumber: number; totalSteps: number; isEasier: boolean } | null;
+  waitingStatus: StepStatus | null; // status of the step under the cursor when `current` is not ready
+  finished: boolean;
+  needsPrefetch: boolean;         // a pending step within the buffer window still needs generating
+  history: AnsweredProbe[];
 }
 
 export interface PublicWorkspace {
@@ -119,7 +178,7 @@ export interface PublicWorkspace {
   attachments: StoredAsset[];
   phase: WorkspacePhase;
   analysis: QuestionAnalysisPublic | null;
-  answers: ProbeAnswers;
+  probing: PublicProbing | null;
   whiteboardAsset: StoredAsset | null;
   brief: TutorBrief | null;
 }
@@ -140,19 +199,5 @@ export function toPublicAnalysis(analysis: QuestionAnalysisStored): QuestionAnal
     estimatedQuestionGrade: analysis.estimatedQuestionGrade,
     gradeDifficulty: analysis.gradeDifficulty,
     breakdown: analysis.breakdown,
-    probingQuestions: analysis.probingQuestions.map(toPublicProbe),
-  };
-}
-
-export function toPublicWorkspace(workspace: CurrentWorkspace): PublicWorkspace {
-  return {
-    profile: workspace.demoProfile,
-    questionText: workspace.questionText,
-    attachments: workspace.attachments,
-    phase: workspace.phase,
-    analysis: workspace.analysis ? toPublicAnalysis(workspace.analysis) : null,
-    answers: workspace.answers,
-    whiteboardAsset: workspace.whiteboardAsset,
-    brief: workspace.brief,
   };
 }

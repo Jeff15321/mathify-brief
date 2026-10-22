@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiClientError, fetchWorkspace, submitBrief } from "@/lib/api-client";
-import type { PublicWorkspace, ProbeAnswer, ProbeAnswers } from "@/types/domain";
+import { ApiClientError, answerProbe, fetchWorkspace, generateNextProbes, submitBrief } from "@/lib/api-client";
+import type { ProbeAnswer, PublicProbing, PublicWorkspace } from "@/types/domain";
 import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
 import { WhiteboardPanel } from "@/components/workspace/WhiteboardPanel";
 import { ProbingPanel } from "@/components/workspace/ProbingPanel";
@@ -12,21 +12,59 @@ import type { SimpleWhiteboardHandle } from "@/components/whiteboard/SimpleWhite
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
 import { LoadingState } from "@/components/shared/LoadingState";
 
+/** How often to re-check a step another request is generating (e.g. after a page refresh). */
+const WAITING_POLL_MS = 1500;
+
 export default function WorkspacePage() {
   const router = useRouter();
   const whiteboardRef = useRef<SimpleWhiteboardHandle>(null);
+  const prefetchRef = useRef<Promise<void> | null>(null);
   const [workspace, setWorkspace] = useState<PublicWorkspace | null>(null);
-  const [answers, setAnswers] = useState<ProbeAnswers>({});
-  const [loading, setLoading] = useState(true);
+  const [probing, setProbing] = useState<PublicProbing | null>(null);
+  const [selection, setSelection] = useState<ProbeAnswer | undefined>(undefined);
+  const [answering, setAnswering] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** Keeps the newest server state; responses can arrive out of order, so older revisions are ignored. */
+  const applyProbing = useCallback((next: PublicProbing) => {
+    setProbing((prev) => (!prev || next.revision >= prev.revision ? next : prev));
+  }, []);
+
+  const refreshProbing = useCallback(async () => {
+    const ws = await fetchWorkspace().catch(() => null);
+    if (ws?.probing) applyProbing(ws.probing);
+  }, [applyProbing]);
+
+  /** Fills the buffer (next step's pair) in the background; concurrent callers share one request. */
+  const prefetch = useCallback((): Promise<void> => {
+    if (prefetchRef.current) return prefetchRef.current;
+    const run = (async () => {
+      try {
+        let next = await generateNextProbes();
+        applyProbing(next);
+        // The cursor may have moved while generating; top the buffer up once more if needed.
+        if (next.needsPrefetch) {
+          next = await generateNextProbes();
+          applyProbing(next);
+        }
+      } catch {
+        // The failed step is marked server-side; refresh so the panel can offer a retry.
+        await refreshProbing();
+      } finally {
+        prefetchRef.current = null;
+      }
+    })();
+    prefetchRef.current = run;
+    return run;
+  }, [applyProbing, refreshProbing]);
 
   useEffect(() => {
     let cancelled = false;
     fetchWorkspace()
       .then((ws) => {
         if (cancelled) return;
-        if (!ws || !ws.analysis) {
+        if (!ws || !ws.analysis || !ws.probing) {
           router.replace("/");
           return;
         }
@@ -35,8 +73,7 @@ export default function WorkspacePage() {
           return;
         }
         setWorkspace(ws);
-        setAnswers(ws.answers);
-        setLoading(false);
+        applyProbing(ws.probing);
       })
       .catch(() => {
         if (!cancelled) router.replace("/");
@@ -44,10 +81,35 @@ export default function WorkspacePage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, applyProbing]);
 
-  function handleAnswer(probeId: string, answer: ProbeAnswer) {
-    setAnswers((prev) => ({ ...prev, [probeId]: answer }));
+  // Keep the next pair buffered whenever the server reports a pending step in the window.
+  useEffect(() => {
+    if (probing?.needsPrefetch) void prefetch();
+  }, [probing, prefetch]);
+
+  // If we are waiting on a step that some other request is generating, poll until it is ready.
+  useEffect(() => {
+    if (!probing || probing.current || probing.waitingStatus !== "generating") return;
+    const timer = setTimeout(() => {
+      if (!prefetchRef.current) void refreshProbing();
+    }, WAITING_POLL_MS);
+    return () => clearTimeout(timer);
+  }, [probing, refreshProbing]);
+
+  async function handleNext() {
+    if (!probing?.current || !selection) return;
+    setAnswering(true);
+    setError(null);
+    try {
+      applyProbing(await answerProbe(probing.current.id, selection));
+      setSelection(undefined);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : "Could not save your answer. Please try again.");
+      await refreshProbing();
+    } finally {
+      setAnswering(false);
+    }
   }
 
   async function handleSubmit() {
@@ -55,7 +117,7 @@ export default function WorkspacePage() {
     setError(null);
     try {
       const whiteboardPng = (await whiteboardRef.current?.exportPng()) ?? null;
-      await submitBrief(answers, whiteboardPng);
+      await submitBrief(whiteboardPng);
       router.push("/brief");
     } catch (err) {
       setError(
@@ -65,7 +127,7 @@ export default function WorkspacePage() {
     }
   }
 
-  if (loading || !workspace || !workspace.analysis) {
+  if (!workspace || !workspace.analysis || !probing) {
     return (
       <div className="flex h-screen items-center justify-center">
         <LoadingState label="Loading your workspace…" />
@@ -91,9 +153,12 @@ export default function WorkspacePage() {
           whiteboard={<WhiteboardPanel ref={whiteboardRef} disabled={submitting} />}
           probing={
             <ProbingPanel
-              probes={workspace.analysis.probingQuestions}
-              answers={answers}
-              onAnswer={handleAnswer}
+              probing={probing}
+              selection={selection}
+              onSelect={setSelection}
+              onNext={handleNext}
+              onRetry={() => void prefetch()}
+              answering={answering}
               onSubmit={handleSubmit}
               submitting={submitting}
             />

@@ -1,6 +1,6 @@
-import type { ModelAnalysis } from '@/schemas/analysis';
+import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import type { ModelBrief } from '@/schemas/brief';
-import type { MimeType, ProbeResult, QuestionAnalysisStored } from '@/types/domain';
+import type { MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored } from '@/types/domain';
 
 export interface StoredFile {
   fileName: string;
@@ -14,16 +14,26 @@ export interface AnalyzeQuestionInput {
   files: StoredFile[];
 }
 
+/** Input for one step's main + easier probes. Deliberately excludes student answers: steps are independent. */
+export interface GenerateProbePairInput {
+  grade: number;
+  parsedQuestionMarkdown: string;
+  plan: ProbePlanItem[];
+  stepIndex: number;
+}
+
 export interface GenerateTutorBriefInput {
   grade: number;
   questionText: string;
   files: StoredFile[];
   analysis: QuestionAnalysisStored;
   results: ProbeResult[];
+  notReachedConcepts: string[];
   whiteboardPng: Buffer | null;
 }
 
 export interface MathAnalysisProvider {
   analyzeQuestion(input: AnalyzeQuestionInput): Promise<ModelAnalysis>;
+  generateProbePair(input: GenerateProbePairInput): Promise<ModelProbePair>;
   generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief>;
 }

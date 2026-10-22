@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ProbeCard } from "@/components/workspace/ProbeCard";
+import { ProbingPanel } from "@/components/workspace/ProbingPanel";
 import { QuestionDisplay } from "@/components/workspace/QuestionDisplay";
 import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
-import type { PublicProbe } from "@/types/domain";
+import type { PublicProbe, PublicProbing } from "@/types/domain";
 
 const PROBE: PublicProbe = {
   id: "q1",
@@ -54,6 +55,71 @@ describe("ProbeCard", () => {
     };
     render(<ProbeCard probe={longProbe} index={0} selected={undefined} onSelect={() => {}} />);
     expect(screen.getByText(/A very long word problem\./)).toBeInTheDocument();
+  });
+});
+
+function probingState(overrides: Partial<PublicProbing> = {}): PublicProbing {
+  return {
+    revision: "r1",
+    current: PROBE,
+    progress: { stepNumber: 1, totalSteps: 3, isEasier: false },
+    waitingStatus: null,
+    finished: false,
+    needsPrefetch: false,
+    history: [],
+    ...overrides,
+  };
+}
+
+function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" | "IDK") {
+  const handlers = { onSelect: vi.fn(), onNext: vi.fn(), onRetry: vi.fn(), onSubmit: vi.fn() };
+  render(
+    <ProbingPanel probing={probing} selection={selection} answering={false} submitting={false} {...handlers} />,
+  );
+  return handlers;
+}
+
+describe("ProbingPanel", () => {
+  it("shows one question with progress, and Next is disabled until a choice is selected", () => {
+    renderPanel(probingState());
+    expect(screen.getByText("Question 1 of 3")).toBeInTheDocument();
+    expect(screen.getAllByRole("radio")).toHaveLength(5);
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+  });
+
+  it("enables Next once selected and reports the click", () => {
+    const { onNext } = renderPanel(probingState(), "B");
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onNext).toHaveBeenCalled();
+  });
+
+  it("marks an easier retry with a badge", () => {
+    renderPanel(probingState({ progress: { stepNumber: 1, totalSteps: 3, isEasier: true } }));
+    expect(screen.getByText("Easier question")).toBeInTheDocument();
+  });
+
+  it("shows a waiting state while the next question is being generated", () => {
+    renderPanel(probingState({ current: null, waitingStatus: "generating" }));
+    expect(screen.getByText("Preparing your next question…")).toBeInTheDocument();
+  });
+
+  it("offers Retry when generation failed", () => {
+    const { onRetry } = renderPanel(probingState({ current: null, waitingStatus: "failed" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(onRetry).toHaveBeenCalled();
+  });
+
+  it("lists answered questions read-only, without correctness", () => {
+    renderPanel(
+      probingState({
+        history: [
+          { probeId: "s1-main", kind: "main", concept: "Distributive property", questionMarkdown: "Q", selectedText: "I don't know" },
+        ],
+      }),
+    );
+    expect(screen.getByText("Answered (1)")).toBeInTheDocument();
+    expect(screen.getByText(/Your answer: I don't know/)).toBeInTheDocument();
+    expect(screen.queryByText(/correct/i)).not.toBeInTheDocument();
   });
 });
 

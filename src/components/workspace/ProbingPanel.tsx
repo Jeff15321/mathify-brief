@@ -1,45 +1,123 @@
 import { ProbeCard } from "./ProbeCard";
-import type { ProbeAnswer, ProbeAnswers, PublicProbe } from "@/types/domain";
+import { MathText } from "@/components/shared/MathText";
+import { LoadingState } from "@/components/shared/LoadingState";
+import type { ProbeAnswer, PublicProbing } from "@/types/domain";
 
+/**
+ * Middle panel: one probe at a time with a Next button, a read-only list of answered probes,
+ * and a Submit button that works at any point.
+ */
 export function ProbingPanel({
-  probes,
-  answers,
-  onAnswer,
+  probing,
+  selection,
+  onSelect,
+  onNext,
+  onRetry,
+  answering,
   onSubmit,
   submitting,
 }: {
-  probes: PublicProbe[];
-  answers: ProbeAnswers;
-  onAnswer: (probeId: string, answer: ProbeAnswer) => void;
+  probing: PublicProbing;
+  selection: ProbeAnswer | undefined;
+  onSelect: (answer: ProbeAnswer) => void;
+  onNext: () => void;
+  onRetry: () => void;
+  answering: boolean;
   onSubmit: () => void;
   submitting: boolean;
 }) {
-  const answeredCount = Object.keys(answers).length;
+  const { current, progress, history, finished, waitingStatus } = probing;
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden">
-      <p className="text-xs text-slate-500">
-        {answeredCount} of {probes.length} answered
-      </p>
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-4 pb-4">
-          {probes.map((probe, index) => (
-            <ProbeCard
-              key={probe.id}
-              probe={probe}
-              index={index}
-              selected={answers[probe.id]}
-              onSelect={(answer) => onAnswer(probe.id, answer)}
-            />
-          ))}
-        </div>
+      <div className="flex items-center gap-2">
+        <p className="text-xs text-slate-500">
+          {progress ? `Question ${progress.stepNumber} of ${progress.totalSteps}` : "All questions answered"}
+        </p>
+        {progress?.isEasier && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+            Easier question
+          </span>
+        )}
       </div>
+
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto pb-4">
+        {history.length > 0 && (
+          <details className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+            <summary className="cursor-pointer text-xs font-medium text-slate-600">
+              Answered ({history.length})
+            </summary>
+            <ol className="mt-2 flex flex-col gap-2">
+              {history.map((item) => (
+                <li key={item.probeId} className="flex flex-col gap-0.5 border-t border-slate-100 pt-2 text-xs">
+                  <span className="font-semibold uppercase tracking-wide text-slate-500">
+                    {item.concept}
+                    {item.kind === "easier" && " · easier"}
+                  </span>
+                  <MathText text={item.questionMarkdown} className="text-slate-700" />
+                  <MathText text={`Your answer: ${item.selectedText}`} className="text-slate-500" />
+                </li>
+              ))}
+            </ol>
+          </details>
+        )}
+
+        {current && progress && (
+          <>
+            <ProbeCard
+              key={current.id}
+              probe={current}
+              index={progress.stepNumber - 1}
+              selected={selection}
+              onSelect={onSelect}
+            />
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!selection || answering || submitting}
+              className="self-end rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+            >
+              {answering ? "Saving…" : "Next"}
+            </button>
+          </>
+        )}
+
+        {!current && !finished && waitingStatus !== "failed" && (
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <LoadingState label="Preparing your next question…" />
+          </div>
+        )}
+
+        {!current && !finished && waitingStatus === "failed" && (
+          <div className="flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p>We couldn&apos;t load your next question.</p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="rounded-full border border-red-300 bg-white px-4 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {finished && (
+          <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+            You&apos;ve answered every question. Press Submit when you&apos;re ready.
+          </p>
+        )}
+      </div>
+
       <div className="sticky bottom-0 border-t border-slate-200 bg-slate-50 pt-3">
         <button
           type="button"
           onClick={onSubmit}
-          disabled={submitting}
-          className="w-full rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+          disabled={submitting || answering}
+          className={`w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm disabled:opacity-50 ${
+            finished
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "border border-blue-600 bg-white text-blue-700 hover:bg-blue-50"
+          }`}
         >
           {submitting ? "Submitting…" : "Submit"}
         </button>

@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { breakdownStepSchema, gradeDifficultySchema, optionIdSchema, probeOptionSchema } from './analysis';
+import {
+  breakdownStepSchema,
+  gradeDifficultySchema,
+  optionIdSchema,
+  probeOptionSchema,
+  probePlanItemSchema,
+} from './analysis';
 
 export const assetKindSchema = z.enum(['attachment', 'whiteboard']);
 export const mimeTypeSchema = z.enum(['image/png', 'image/jpeg', 'image/webp', 'application/pdf']);
@@ -33,37 +39,51 @@ export const analysisStoredSchema = z.object({
   estimatedQuestionGrade: z.string().min(1),
   gradeDifficulty: gradeDifficultySchema,
   breakdown: z.array(breakdownStepSchema),
-  probingQuestions: z.array(privateProbeSchema),
+  probePlan: z.array(probePlanItemSchema),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.literal('analysis-v1'),
+  promptVersion: z.literal('analysis-v2'),
   analysisVersion: z.literal(1),
 });
 
-export const probeAnswersSchema = z.record(z.string(), z.union([optionIdSchema, z.literal('IDK')]));
+/** One student answer: a generated option A-D, or "I don't know" (never part of the AI's output format). */
+export const probeAnswerSchema = z.union([optionIdSchema, z.literal('IDK')]);
+
+export const probeKindSchema = z.enum(['main', 'easier']);
+
+export const probeStepSchema = z.object({
+  index: z.number().int().nonnegative(),
+  concept: z.string().min(1),
+  status: z.enum(['pending', 'generating', 'ready', 'failed']),
+  generationStartedAt: z.string().nullable(),
+  main: privateProbeSchema.nullable(),
+  easier: privateProbeSchema.nullable(),
+  mainAnswer: probeAnswerSchema.nullable(),
+  easierAnswer: probeAnswerSchema.nullable(),
+  easierServed: z.boolean(),
+});
+
+export const probeCursorSchema = z.object({
+  stepIndex: z.number().int().nonnegative(),
+  kind: probeKindSchema,
+});
 
 export const probeOutcomeSchema = z.enum(['correct', 'incorrect', 'dont_know', 'unanswered']);
 
-/** Outcome for briefs stored before "I don't know" existed (brief-v1), derived from isCorrect. */
-function legacyOutcome(isCorrect: boolean | null): z.infer<typeof probeOutcomeSchema> {
-  if (isCorrect === null) return 'unanswered';
-  return isCorrect ? 'correct' : 'incorrect';
-}
-
-export const probeResultSchema = z
-  .object({
-    probeId: z.string().min(1),
-    concept: z.string().min(1),
-    questionMarkdown: z.string().min(1),
-    selectedOptionId: optionIdSchema.nullable(),
-    selectedOptionText: z.string().nullable(),
-    correctOptionId: optionIdSchema,
-    correctOptionText: z.string().min(1),
-    isCorrect: z.boolean().nullable(),
-    outcome: probeOutcomeSchema.optional(),
-    explanation: z.string().min(1),
-  })
-  .transform((r) => ({ ...r, outcome: r.outcome ?? legacyOutcome(r.isCorrect) }));
+export const probeResultSchema = z.object({
+  probeId: z.string().min(1),
+  stepIndex: z.number().int().nonnegative(),
+  kind: probeKindSchema,
+  concept: z.string().min(1),
+  questionMarkdown: z.string().min(1),
+  selectedOptionId: optionIdSchema.nullable(),
+  selectedOptionText: z.string().nullable(),
+  correctOptionId: optionIdSchema,
+  correctOptionText: z.string().min(1),
+  isCorrect: z.boolean().nullable(),
+  outcome: probeOutcomeSchema,
+  explanation: z.string().min(1),
+});
 
 export const tutorBriefSchema = z.object({
   summary: z.string().min(1),
@@ -74,19 +94,24 @@ export const tutorBriefSchema = z.object({
   suggestedStartingPoint: z.string().min(1),
   limitations: z.array(z.string()),
   results: z.array(probeResultSchema),
+  notReachedConcepts: z.array(z.string()),
   answeredCount: z.number().int().nonnegative(),
   correctCount: z.number().int().nonnegative(),
-  dontKnowCount: z.number().int().nonnegative().default(0),
+  dontKnowCount: z.number().int().nonnegative(),
   unansweredCount: z.number().int().nonnegative(),
+  retriesServed: z.number().int().nonnegative(),
+  retriesCorrect: z.number().int().nonnegative(),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.enum(['brief-v1', 'brief-v2']),
+  promptVersion: z.literal('brief-v3'),
 });
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
 
+export const CURRENT_SCHEMA_VERSION = 2;
+
 export const currentWorkspaceSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
   demoProfile: demoProfileSchema,
   questionText: z.string(),
   attachments: z.array(storedAssetSchema),
@@ -94,7 +119,8 @@ export const currentWorkspaceSchema = z.object({
   updatedAt: z.string().min(1),
   phase: workspacePhaseSchema,
   analysis: analysisStoredSchema.nullable(),
-  answers: probeAnswersSchema,
+  probeSteps: z.array(probeStepSchema),
+  cursor: probeCursorSchema.nullable(),
   whiteboardAsset: storedAssetSchema.nullable(),
   brief: tutorBriefSchema.nullable(),
 });

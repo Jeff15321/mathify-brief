@@ -1,11 +1,29 @@
-import { DEMO_PROFILE, toPublicWorkspace } from '@/types/domain';
+import { DEMO_PROFILE, toPublicAnalysis } from '@/types/domain';
 import type { CurrentWorkspace, PublicWorkspace, StoredAsset } from '@/types/domain';
 import { MAX_QUESTION_TEXT_LENGTH } from '@/lib/constants';
 import { validateFileBatch, type UploadCandidate } from './upload-validation';
 import { ApiError } from './errors';
 import { getStores, type createStores } from './storage';
+import { toPublicProbing } from './probe-flow';
 
 type Stores = ReturnType<typeof createStores>;
+
+/**
+ * Projects the stored workspace into the browser-safe view. Answer keys and unserved
+ * (buffered) probes are never included; the brief is only present after submission.
+ */
+export function toPublicWorkspace(workspace: CurrentWorkspace): PublicWorkspace {
+  return {
+    profile: workspace.demoProfile,
+    questionText: workspace.questionText,
+    attachments: workspace.attachments,
+    phase: workspace.phase,
+    analysis: workspace.analysis ? toPublicAnalysis(workspace.analysis) : null,
+    probing: workspace.analysis ? toPublicProbing(workspace.probeSteps, workspace.cursor, workspace.updatedAt) : null,
+    whiteboardAsset: workspace.whiteboardAsset,
+    brief: workspace.brief,
+  };
+}
 
 export async function getPublicWorkspace(stores: Stores = getStores()): Promise<PublicWorkspace | null> {
   const { workspaceStore } = stores;
@@ -63,7 +81,7 @@ export async function startWorkspace(
 
     const now = new Date().toISOString();
     const newWorkspace: CurrentWorkspace = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       demoProfile: DEMO_PROFILE,
       questionText,
       attachments: newAssets,
@@ -71,7 +89,8 @@ export async function startWorkspace(
       updatedAt: now,
       phase: 'intake',
       analysis: null,
-      answers: {},
+      probeSteps: [],
+      cursor: null,
       whiteboardAsset: null,
       brief: null,
     };

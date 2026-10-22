@@ -1,15 +1,28 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-import type { ModelAnalysis } from '@/schemas/analysis';
-import { modelAnalysisSchema, validateAnalysisStructure } from '@/schemas/analysis';
+import type { z } from 'zod';
+import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
+import {
+  modelAnalysisSchema,
+  modelProbePairSchema,
+  validateAnalysisStructure,
+  validateProbePair,
+} from '@/schemas/analysis';
 import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
-import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT } from './prompts';
+import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
-import type { AnalyzeQuestionInput, GenerateTutorBriefInput, MathAnalysisProvider } from './provider';
+import type {
+  AnalyzeQuestionInput,
+  GenerateProbePairInput,
+  GenerateTutorBriefInput,
+  MathAnalysisProvider,
+} from './provider';
 
 const ANALYSIS_MAX_TOKENS = 8192;
+const PROBE_PAIR_MAX_TOKENS = 4096;
 const BRIEF_MAX_TOKENS = 4096;
 
+/** The Anthropic Messages API implementation of the three Mathify model operations. */
 export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   private client: Anthropic;
   private model: string;
@@ -20,52 +33,57 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   }
 
   async analyzeQuestion(input: AnalyzeQuestionInput): Promise<ModelAnalysis> {
-    const contentBlocks = filesToContentBlocks(input.files);
     const textSummary = input.questionText.trim().length > 0 ? input.questionText.trim() : null;
 
-    const message = await this.client.messages.create({
-      model: this.model,
-      max_tokens: ANALYSIS_MAX_TOKENS,
+    const parsed = await this.createStructured({
       system: ANALYSIS_SYSTEM_PROMPT,
-      messages: [
+      maxTokens: ANALYSIS_MAX_TOKENS,
+      schema: modelAnalysisSchema,
+      operation: 'an analysis',
+      content: [
         {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Grade: ${input.grade}.${textSummary ? ` Typed question: ${textSummary}` : ' No typed question was provided; use the attached files.'}`,
-            },
-            ...contentBlocks,
-          ],
+          type: 'text',
+          text: `Grade: ${input.grade}.${textSummary ? ` Typed question: ${textSummary}` : ' No typed question was provided; use the attached files.'}`,
         },
+        ...filesToContentBlocks(input.files),
       ],
-      output_config: {
-        format: zodOutputFormat(modelAnalysisSchema),
-      },
     });
 
-    if (message.stop_reason === 'refusal') {
-      throw new Error('Model refused to generate an analysis for this input');
-    }
-
-    const textBlock = message.content.find((block) => block.type === 'text');
-    if (!textBlock || message.stop_reason === 'max_tokens') {
-      throw new Error('Model response was missing or truncated');
-    }
-
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(textBlock.text);
-    } catch {
-      throw new Error('Model did not return valid JSON');
-    }
-
-    const parsed = modelAnalysisSchema.parse(parsedJson);
     const structuralErrors = validateAnalysisStructure(parsed);
     if (structuralErrors.length > 0) {
       throw new Error(`Model output failed structural validation: ${structuralErrors.join('; ')}`);
     }
+    return parsed;
+  }
 
+  async generateProbePair(input: GenerateProbePairInput): Promise<ModelProbePair> {
+    const planText = input.plan
+      .map((item, index) => `${index + 1}. ${item.concept}: ${item.intent}`)
+      .join('\n');
+    const step = input.plan[input.stepIndex];
+
+    const parsed = await this.createStructured({
+      system: PROBE_PAIR_SYSTEM_PROMPT,
+      maxTokens: PROBE_PAIR_MAX_TOKENS,
+      schema: modelProbePairSchema,
+      operation: 'probe questions',
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Grade: ${input.grade}.`,
+            `Parsed problem: ${input.parsedQuestionMarkdown}`,
+            `Probe plan:\n${planText}`,
+            `Write the main and easier probes for step ${input.stepIndex + 1} ("${step.concept}").`,
+          ].join('\n'),
+        },
+      ],
+    });
+
+    const structuralErrors = validateProbePair(parsed);
+    if (structuralErrors.length > 0) {
+      throw new Error(`Model output failed structural validation: ${structuralErrors.join('; ')}`);
+    }
     return parsed;
   }
 
@@ -83,44 +101,66 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
         let answer = 'unanswered';
         if (r.outcome === 'dont_know') answer = 'selected "I don\'t know"';
         else if (r.selectedOptionId) answer = `selected ${r.selectedOptionId} (${r.selectedOptionText})`;
-        return `- [${r.probeId}] concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
+        return `- [${r.probeId}] step=${r.stepIndex + 1} kind=${r.kind} concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
       })
       .join('\n');
 
     const textSummary = input.questionText.trim().length > 0 ? input.questionText.trim() : null;
 
+    return this.createStructured({
+      system: BRIEF_SYSTEM_PROMPT,
+      maxTokens: BRIEF_MAX_TOKENS,
+      schema: modelBriefSchema,
+      operation: 'a tutor brief',
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Grade: ${input.grade}.`,
+            textSummary ? `Typed question: ${textSummary}` : 'No typed question was provided.',
+            `Parsed question: ${input.analysis.parsedQuestionMarkdown}`,
+            `Topic: ${input.analysis.topic}`,
+            `Probing question results:\n${resultsSummary || '(none)'}`,
+            input.notReachedConcepts.length > 0
+              ? `Steps not reached before submitting: ${input.notReachedConcepts.join('; ')}`
+              : 'All planned steps were reached.',
+            input.whiteboardPng
+              ? 'A final whiteboard image is attached as the last image content block.'
+              : 'No whiteboard image was submitted.',
+          ].join('\n'),
+        },
+        ...contentBlocks,
+      ],
+    });
+  }
+
+  /**
+   * Sends one structured-output Messages API request and parses the JSON result with `schema`.
+   * @throws Error on refusal, truncation, missing text, or invalid JSON/shape.
+   */
+  private async createStructured<T extends z.ZodType>({
+    system,
+    maxTokens,
+    schema,
+    content,
+    operation,
+  }: {
+    system: string;
+    maxTokens: number;
+    schema: T;
+    content: Anthropic.ContentBlockParam[];
+    operation: string;
+  }): Promise<z.infer<T>> {
     const message = await this.client.messages.create({
       model: this.model,
-      max_tokens: BRIEF_MAX_TOKENS,
-      system: BRIEF_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: [
-                `Grade: ${input.grade}.`,
-                textSummary ? `Typed question: ${textSummary}` : 'No typed question was provided.',
-                `Parsed question: ${input.analysis.parsedQuestionMarkdown}`,
-                `Topic: ${input.analysis.topic}`,
-                `Probing question results:\n${resultsSummary}`,
-                input.whiteboardPng
-                  ? 'A final whiteboard image is attached as the last image content block.'
-                  : 'No whiteboard image was submitted.',
-              ].join('\n'),
-            },
-            ...contentBlocks,
-          ],
-        },
-      ],
-      output_config: {
-        format: zodOutputFormat(modelBriefSchema),
-      },
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content }],
+      output_config: { format: zodOutputFormat(schema) },
     });
 
     if (message.stop_reason === 'refusal') {
-      throw new Error('Model refused to generate a tutor brief for this input');
+      throw new Error(`Model refused to generate ${operation} for this input`);
     }
 
     const textBlock = message.content.find((block) => block.type === 'text');
@@ -135,7 +175,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       throw new Error('Model did not return valid JSON');
     }
 
-    return modelBriefSchema.parse(parsedJson);
+    return schema.parse(parsedJson);
   }
 }
 

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createStores } from "@/server/storage";
 import { DEMO_PROFILE } from "@/types/domain";
@@ -9,7 +10,7 @@ import type { CurrentWorkspace } from "@/types/domain";
 function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorkspace {
   const now = new Date().toISOString();
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     demoProfile: DEMO_PROFILE,
     questionText: "Solve 2(x + 3) = 14.",
     attachments: [],
@@ -17,7 +18,8 @@ function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorksp
     updatedAt: now,
     phase: "intake",
     analysis: null,
-    answers: {},
+    probeSteps: [],
+    cursor: null,
     whiteboardAsset: null,
     brief: null,
     ...overrides,
@@ -57,6 +59,39 @@ describe("Local storage (isolated temp directory)", () => {
 
     const readBack = await workspaceStore.read();
     expect(readBack?.questionText).toBe("second");
+  });
+
+  it("read() treats a workspace from an older schema version as absent", async () => {
+    const { workspaceStore } = createStores(dataDir);
+    await writeFile(path.join(dataDir, "workspace.json"), JSON.stringify({ ...makeWorkspace(), schemaVersion: 1 }));
+    expect(await workspaceStore.read()).toBeNull();
+  });
+
+  it("update() serializes concurrent read-modify-write calls so no update is lost", async () => {
+    const { workspaceStore } = createStores(dataDir);
+    await workspaceStore.write(makeWorkspace({ questionText: "" }));
+
+    await Promise.all(
+      ["a", "b", "c", "d", "e"].map((letter) =>
+        workspaceStore.update(async (current) => {
+          await new Promise((resolve) => setTimeout(resolve, 5));
+          return { ...current!, questionText: current!.questionText + letter };
+        }),
+      ),
+    );
+
+    expect((await workspaceStore.read())?.questionText).toBe("abcde");
+  });
+
+  it("update() writes nothing when the updater throws, and later updates still run", async () => {
+    const { workspaceStore } = createStores(dataDir);
+    await workspaceStore.write(makeWorkspace({ questionText: "kept" }));
+
+    await expect(workspaceStore.update(() => Promise.reject(new Error("nope")))).rejects.toThrow("nope");
+    expect((await workspaceStore.read())?.questionText).toBe("kept");
+
+    await workspaceStore.update((current) => ({ ...current!, questionText: "next" }));
+    expect((await workspaceStore.read())?.questionText).toBe("next");
   });
 
   it("clear() removes the workspace file", async () => {

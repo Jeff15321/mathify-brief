@@ -1,4 +1,4 @@
-import type { ProbeAnswers, PublicWorkspace, TutorBrief } from '@/types/domain';
+import type { ProbeAnswer, PublicProbing, PublicWorkspace, TutorBrief } from '@/types/domain';
 
 export class ApiClientError extends Error {
   constructor(
@@ -45,9 +45,29 @@ export async function analyzeQuestion(): Promise<void> {
   if (!res.ok) await parseErrorResponse(res);
 }
 
-export async function submitBrief(answers: ProbeAnswers, whiteboardPng: Blob | null): Promise<TutorBrief> {
+/** Asks the server to prefetch the next probe pair; resolves with the latest probing state. */
+export async function generateNextProbes(): Promise<PublicProbing> {
+  const res = await fetch('/api/probes/generate', { method: 'POST' });
+  if (!res.ok) await parseErrorResponse(res);
+  const body = await res.json();
+  return body.probing;
+}
+
+/** Submits the answer to the probe on screen; resolves with the next probing state. */
+export async function answerProbe(probeId: string, answer: ProbeAnswer): Promise<PublicProbing> {
+  const res = await fetch('/api/probes/answer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ probeId, answer }),
+  });
+  if (!res.ok) await parseErrorResponse(res);
+  const body = await res.json();
+  return body.probing;
+}
+
+/** Ends probing and generates the Tutor Brief, attaching the whiteboard PNG when it is not blank. */
+export async function submitBrief(whiteboardPng: Blob | null): Promise<TutorBrief> {
   const formData = new FormData();
-  formData.set('answers', JSON.stringify(answers));
   if (whiteboardPng) {
     formData.set('whiteboard', whiteboardPng, 'whiteboard.png');
   }

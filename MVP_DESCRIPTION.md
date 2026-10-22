@@ -141,3 +141,37 @@ Recorded after building the MVP, for whoever picks this up next:
 - No other deviations from this document or `IMPLEMENTATION_PLAN.md` were required. All four
   stages' acceptance gates (typecheck/lint/test/build, plus one real live Anthropic analysis call)
   passed as specified.
+
+## 8. Change after the MVP: one-question-at-a-time probing with easier retries
+
+The middle panel ("Relevant Concepts") no longer shows every probe at once:
+
+- **Stage A** (`analysis-v2`) returns a 3-5 step `probePlan` plus the first step's `{ main, easier }`
+  pair. Each later step's pair comes from a new, text-only model op, `generateProbePair`
+  (`probe-pair-v1`). Its input is only the plan, parsed question and step index. Steps are
+  independent, so student answers are never sent to it. There are now **three** model operations.
+- **Flow:** the student answers one probe at a time. A wrong or "I don't know" main answer serves that
+  step's easier probe (at most one per step); otherwise the student moves to the next step. Answers
+  lock once the student moves on. Submit works at any point.
+- **Buffer:** the client calls `POST /api/probes/generate` to keep the next step's pair generated
+  one step ahead, so neither the easier retry nor the next main question waits on the AI. Answers go
+  through `POST /api/probes/answer`, which only accepts the probe currently on screen.
+- **Persistence:** answers are stored per question, not at Submit. `POST /api/brief` takes only the
+  optional whiteboard. `CurrentWorkspace` is `schemaVersion: 2`, with `probeSteps` + `cursor`
+  replacing `answers`. Older local `workspace.json` files are ignored.
+- **Brief** (`brief-v3`): results cover only probes actually served (tagged `main`/`easier`, with
+  their step). Unreached steps are listed separately. Counts add `retriesServed`/`retriesCorrect`.
+
+**Migration items this adds:**
+
+- **Concurrent writes.** Generation and answering can now update the workspace at the same time.
+  The local store serializes `update()` calls with an in-process lock (`globalThis`-scoped, single
+  Node process only). A remote store needs a real transaction or row-level lock, and per-step rows
+  are the natural Postgres shape (`probe_steps`, keyed by session).
+- **Request lifetime.** Prefetch is client-driven. Each AI call runs inside an ordinary request, with
+  no background jobs or `waitUntil`, so it ports to Vercel's request model. A step stuck in
+  `generating` for over 2 minutes (e.g. a server restart) is treated as retryable.
+- **Cost/latency.** One extra short text call per planned step. Easier probes are generated even when
+  unused, which costs a few hundred tokens per step and means a wrong answer never waits on the AI.
+- **"No AI regeneration" still holds:** each step's pair is generated once. Only a *failed*
+  generation is retried.

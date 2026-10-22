@@ -1,93 +1,65 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { createStores } from "@/server/storage";
-import { startWorkspace } from "@/server/workspace-service";
-import { analyzeCurrentWorkspace } from "@/server/analysis-service";
+import { answerCurrentProbe, generateNextProbePair } from "@/server/probe-service";
 import { submitBrief } from "@/server/brief-service";
-import { ApiError } from "@/server/errors";
+import { setupWorkspace, type Stores } from "./helpers";
 
+// Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
 describe("Deterministic scoring (mocked AI provider, isolated temp storage)", () => {
-  let dataDir: string;
-  let stores: ReturnType<typeof createStores>;
+  let stores: Stores;
+  let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    process.env.AI_MOCK_MODE = "true";
-    dataDir = await mkdtemp(path.join(tmpdir(), "mathify-scoring-"));
-    stores = createStores(dataDir);
-    await startWorkspace({ questionText: "Solve 2(x + 3) = 14.", files: [] }, stores);
-    await analyzeCurrentWorkspace(stores);
+    ({ stores, cleanup } = await setupWorkspace("scoring"));
   });
 
   afterEach(async () => {
-    await rm(dataDir, { recursive: true, force: true });
+    await cleanup();
   });
 
-  async function getPrivateProbes() {
-    const workspace = await stores.workspaceStore.read();
-    return workspace!.analysis!.probingQuestions;
+  async function answer(probeId: string, value: "A" | "B" | "C" | "D" | "IDK") {
+    await generateNextProbePair(stores);
+    await answerCurrentProbe({ probeId, answer: value }, stores);
   }
 
-  it("distinguishes correct, incorrect, and unanswered; computed counts are server-side, not model-invented", async () => {
-    const probes = await getPrivateProbes();
-    const answers = {
-      [probes[0].id]: probes[0].correctOptionId, // correct
-      [probes[1].id]: (["A", "B", "C", "D"] as const).find((id) => id !== probes[1].correctOptionId)!, // incorrect
-      // probes[2] left unanswered
-    };
+  it("scores served probes, retries and unreached steps; counts are computed server-side", async () => {
+    await answer("s1-main", "A"); // incorrect -> easier
+    await answer("s1-easier", "B"); // correct
+    await answer("s2-main", "IDK"); // don't know -> easier
+    // s2-easier is on screen and left unanswered; step 3 is never reached.
 
-    const brief = await submitBrief({ answers, whiteboardPng: null }, stores);
+    const brief = await submitBrief({ whiteboardPng: null }, stores);
 
+    expect(brief.results.map((r) => [r.probeId, r.outcome])).toEqual([
+      ["s1-main", "incorrect"],
+      ["s1-easier", "correct"],
+      ["s2-main", "dont_know"],
+      ["s2-easier", "unanswered"],
+    ]);
+    expect(brief.notReachedConcepts).toEqual(["Solving for x"]);
     expect(brief.answeredCount).toBe(2);
     expect(brief.correctCount).toBe(1);
-    expect(brief.unansweredCount).toBe(probes.length - 2);
-
-    const r0 = brief.results.find((r) => r.probeId === probes[0].id)!;
-    expect(r0.isCorrect).toBe(true);
-    expect(r0.outcome).toBe("correct");
-    const r1 = brief.results.find((r) => r.probeId === probes[1].id)!;
-    expect(r1.isCorrect).toBe(false);
-    expect(r1.outcome).toBe("incorrect");
-    const r2 = brief.results.find((r) => r.probeId === probes[2].id)!;
-    expect(r2.isCorrect).toBeNull();
-    expect(r2.selectedOptionId).toBeNull();
-  });
-
-  it("scores \"I don't know\" as its own outcome, distinct from incorrect and unanswered", async () => {
-    const probes = await getPrivateProbes();
-    const answers = {
-      [probes[0].id]: probes[0].correctOptionId, // correct
-      [probes[1].id]: "IDK" as const, // don't know
-      // probes[2] left unanswered
-    };
-
-    const brief = await submitBrief({ answers, whiteboardPng: null }, stores);
-
-    expect(brief.answeredCount).toBe(1);
-    expect(brief.correctCount).toBe(1);
     expect(brief.dontKnowCount).toBe(1);
-    expect(brief.unansweredCount).toBe(probes.length - 2);
-
-    const idk = brief.results.find((r) => r.probeId === probes[1].id)!;
-    expect(idk.outcome).toBe("dont_know");
-    expect(idk.isCorrect).toBeNull();
-    expect(idk.selectedOptionId).toBeNull();
-    expect(brief.results.find((r) => r.probeId === probes[2].id)!.outcome).toBe("unanswered");
+    expect(brief.unansweredCount).toBe(2);
+    expect(brief.retriesServed).toBe(2);
+    expect(brief.retriesCorrect).toBe(1);
   });
 
-  it("allows zero answers (all unanswered) and still produces deterministic counts", async () => {
-    const probes = await getPrivateProbes();
-    const brief = await submitBrief({ answers: {}, whiteboardPng: null }, stores);
+  it("all-correct answers serve no retries", async () => {
+    await answer("s1-main", "B");
+    await answer("s2-main", "C");
+    await answer("s3-main", "B");
 
+    const brief = await submitBrief({ whiteboardPng: null }, stores);
+    expect(brief.results).toHaveLength(3);
+    expect(brief.correctCount).toBe(3);
+    expect(brief.retriesServed).toBe(0);
+    expect(brief.unansweredCount).toBe(0);
+  });
+
+  it("allows submitting before answering anything", async () => {
+    const brief = await submitBrief({ whiteboardPng: null }, stores);
     expect(brief.answeredCount).toBe(0);
-    expect(brief.correctCount).toBe(0);
-    expect(brief.unansweredCount).toBe(probes.length);
-  });
-
-  it("rejects a forged/unknown probe id", async () => {
-    await expect(
-      submitBrief({ answers: { "not-a-real-probe": "A" }, whiteboardPng: null }, stores),
-    ).rejects.toThrow(ApiError);
+    expect(brief.results.map((r) => r.outcome)).toEqual(["unanswered"]);
+    expect(brief.unansweredCount).toBe(3);
   });
 });

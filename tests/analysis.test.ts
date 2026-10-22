@@ -1,56 +1,50 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { createStores } from "@/server/storage";
-import { startWorkspace } from "@/server/workspace-service";
 import { analyzeCurrentWorkspace } from "@/server/analysis-service";
+import { getPublicWorkspace } from "@/server/workspace-service";
 import { ApiError } from "@/server/errors";
+import { setupWorkspace, type Stores } from "./helpers";
 
 describe("Analysis service (mocked AI provider, isolated temp storage)", () => {
-  let dataDir: string;
-  let stores: ReturnType<typeof createStores>;
+  let stores: Stores;
+  let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    process.env.AI_MOCK_MODE = "true";
-    dataDir = await mkdtemp(path.join(tmpdir(), "mathify-analysis-"));
-    stores = createStores(dataDir);
-    await startWorkspace({ questionText: "Solve 2(x + 3) = 14.", files: [] }, stores);
+    ({ stores, cleanup } = await setupWorkspace("analysis", { analyze: false }));
   });
 
   afterEach(async () => {
-    await rm(dataDir, { recursive: true, force: true });
+    await cleanup();
   });
 
-  it("produces a public analysis with 3-5 four-option MCQs and canonicalized ids", async () => {
-    const analysis = await analyzeCurrentWorkspace(stores);
+  it("plans 3-5 steps, generates only the first pair, and puts the cursor on step 1", async () => {
+    await analyzeCurrentWorkspace(stores);
+    const workspace = (await stores.workspaceStore.read())!;
 
-    expect(analysis.probingQuestions.length).toBeGreaterThanOrEqual(3);
-    expect(analysis.probingQuestions.length).toBeLessThanOrEqual(5);
+    expect(workspace.phase).toBe("ready");
+    expect(workspace.probeSteps.length).toBeGreaterThanOrEqual(3);
+    expect(workspace.probeSteps.length).toBeLessThanOrEqual(5);
+    expect(workspace.cursor).toEqual({ stepIndex: 0, kind: "main" });
 
-    analysis.probingQuestions.forEach((probe, index) => {
-      expect(probe.id).toBe(`q${index + 1}`);
-      expect(probe.options).toHaveLength(4);
-      expect(new Set(probe.options.map((o) => o.id)).size).toBe(4);
+    const [first, ...rest] = workspace.probeSteps;
+    expect(first.status).toBe("ready");
+    expect(first.main?.id).toBe("s1-main");
+    expect(first.easier?.id).toBe("s1-easier");
+    expect(first.main?.options).toHaveLength(4);
+    rest.forEach((step) => {
+      expect(step.status).toBe("pending");
+      expect(step.main).toBeNull();
     });
   });
 
-  it("never exposes correctOptionId or explanation in the public projection", async () => {
+  it("the public view shows only the current probe: no keys, explanations or buffered probes", async () => {
     const analysis = await analyzeCurrentWorkspace(stores);
-    const serialized = JSON.stringify(analysis);
+    const publicWorkspace = (await getPublicWorkspace(stores))!;
+    const serialized = JSON.stringify({ analysis, publicWorkspace });
 
+    expect(publicWorkspace.probing?.current?.id).toBe("s1-main");
     expect(serialized).not.toContain("correctOptionId");
     expect(serialized).not.toContain("explanation");
-  });
-
-  it("GET-equivalent read (getPublicWorkspace) hides private fields after analysis too", async () => {
-    await analyzeCurrentWorkspace(stores);
-    const workspace = await stores.workspaceStore.read();
-
-    expect(workspace?.analysis).not.toBeNull();
-    // The stored (private) workspace legitimately has correctOptionId/explanation;
-    // the public-projection helper (exercised in domain tests) is what strips them.
-    expect(workspace?.analysis?.probingQuestions[0].correctOptionId).toMatch(/^[ABCD]$/);
+    expect(serialized).not.toContain("s1-easier");
   });
 
   it("rejects analyzing a workspace that was already analyzed (no silent re-analysis)", async () => {
