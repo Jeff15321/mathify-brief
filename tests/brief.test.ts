@@ -51,9 +51,11 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
   it("builds the brief without any AI call", async () => {
     const analyze = vi.spyOn(MockAnalysisProvider.prototype, "analyzeQuestion");
     const pair = vi.spyOn(MockAnalysisProvider.prototype, "generateProbePair");
+    const brief = vi.spyOn(MockAnalysisProvider.prototype, "generateTutorBrief");
     await submitBrief({ whiteboardPng: TINY_PNG }, stores);
     expect(analyze).not.toHaveBeenCalled();
     expect(pair).not.toHaveBeenCalled();
+    expect(brief).not.toHaveBeenCalled();
   });
 
   it("rejects a second brief submission once complete (no regeneration)", async () => {
