@@ -4,7 +4,7 @@ import { MAX_QUESTION_TEXT_LENGTH } from '@/lib/constants';
 import { validateFileBatch, type UploadCandidate } from './upload-validation';
 import { ApiError } from './errors';
 import { getStores, type createStores } from './storage';
-import { toPublicProbing } from './probe-flow';
+import { toPublicProbing } from './helpers/probe-flow-helper';
 
 type Stores = ReturnType<typeof createStores>;
 

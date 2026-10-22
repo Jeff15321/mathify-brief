@@ -3,7 +3,7 @@ import type { CurrentWorkspace, ProbeAnswer, PublicProbing } from '@/types/domai
 import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
 import { ApiError } from './errors';
-import { advance, currentProbe, stepToGenerate, toPublicProbing } from './probe-flow';
+import { advance, currentProbe, stepToGenerate, toPublicProbing } from './helpers/probe-flow-helper';
 import { toPrivateProbe } from './analysis-service';
 
 type Stores = ReturnType<typeof createStores>;

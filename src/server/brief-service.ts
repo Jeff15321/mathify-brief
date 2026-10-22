@@ -3,7 +3,7 @@ import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
 import { ApiError } from './errors';
 import { MAX_WHITEBOARD_SIZE_BYTES } from '@/lib/constants';
-import { computeResults } from './probe-flow';
+import { computeResults } from './helpers/probe-flow-helper';
 import { resolveModelLabel } from './analysis-service';
 
 type Stores = ReturnType<typeof createStores>;

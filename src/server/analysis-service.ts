@@ -4,7 +4,7 @@ import { toPublicAnalysis } from '@/types/domain';
 import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
 import { ApiError } from './errors';
-import { probeIdFor } from './probe-flow';
+import { probeIdFor } from './helpers/probe-flow-helper';
 
 type Stores = ReturnType<typeof createStores>;
 
