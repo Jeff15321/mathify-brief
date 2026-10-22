@@ -52,7 +52,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       </section>
 
       <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-900">Probing results</h2>
+        <h2 className="text-sm font-semibold text-slate-900">Relevant Concepts</h2>
         {brief.results.map((result) => {
           const selectedLine = {
             correct: `Selected: ${result.selectedOptionText} (correct)`,

@@ -39,7 +39,7 @@ function PanelHeader({
 }) {
   return (
     <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
-      <span className="text-xs font-semibold text-slate-500">{PANEL_TITLES[panel]}</span>
+      <h2 className="min-w-0 truncate text-sm font-semibold text-slate-900">{PANEL_TITLES[panel]}</h2>
       <button
         type="button"
         onClick={onToggle}

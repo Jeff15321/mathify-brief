@@ -17,7 +17,6 @@ export function BreakdownPanel({
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
       <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-900">Question breakdown</h2>
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-700">
             Student: Grade {studentGrade}
