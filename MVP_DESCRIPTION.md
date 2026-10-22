@@ -185,21 +185,22 @@ student joins, and glance at it while the student works. The brief is now a dash
 
 - **Core probes / Easier retries tallies:** correct of attempted, attempted of total, incorrect,
   and don't know.
-- **Strengths and possible gaps:** concept names only. A concept recovered on its retry counts as
-  an easier strength, not a gap.
+- **Strengths and possible gaps:** concept names only, judged on the main question. A missed main
+  question is a possible gap even when its easier retry was correct.
 - **Priority / key incorrect step:** the first step in plan order whose main answer was incorrect
   or "I don't know", showing the student's pick vs the correct answer and the retry result.
 - **Whiteboard preview** (image only), and a collapsed **Probing results** list with every
   question asked.
 
-**Removed: the Stage B Claude call** (`generateTutorBrief`, its prompt and output schema).
-Everything shown is derivable from the stored answer keys, so the brief is now:
+**Stage B Claude call no longer used at Submit.** `generateTutorBrief`, `BRIEF_SYSTEM_PROMPT` and
+`modelBriefSchema` stay in the provider but nothing calls them; they are the starting point for
+future whiteboard analysis. Everything shown is derivable from the stored answer keys, so the brief is now:
 - instant;
 - free;
 - unable to fail on the AI at Submit;
 - impossible to contradict the scores.
 
-The app now has **two** model operations (analysis, probe pair). What's lost is interpreting
-the whiteboard and the student's uploaded attempts. Adding that back later means one small
-optional vision call that only returns a whiteboard observation. `CurrentWorkspace` is
+The app now calls **two** model operations (analysis, probe pair). What's lost is interpreting
+the whiteboard and the student's uploaded attempts. Adding that back later means adapting
+`generateTutorBrief` into an optional vision call that complements the deterministic brief. `CurrentWorkspace` is
 `schemaVersion: 3`, and older workspaces are ignored.

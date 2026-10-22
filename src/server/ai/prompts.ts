@@ -43,3 +43,25 @@ stay within that step and do not overlap the other plan steps.
 ${PROBE_RULES}
 
 Never reveal the original problem's numerical answer. Return exactly the supplied schema.`;
+
+/** Not yet wired in: kept for the future whiteboard-analysis call (see `generateTutorBrief`). */
+export const BRIEF_SYSTEM_PROMPT = `Write a SHORT, SCANNABLE tutor-facing diagnostic brief, NOT a student-facing solution or
+chatbot reply, and NOT an exhaustive report. The tutor has only a minute or two before the
+session starts. The student grade and original problem, the prerequisite probes the student
+saw (one at a time), their answers, prior uploads and optional final whiteboard image are
+provided. Every field is ONE short sentence (roughly 10-20 words) - never a paragraph,
+never a list of reasons. Include at most 2 strengths and at most 2 possible gaps, choosing
+only the most important/highest-confidence ones; omit the rest rather than listing every
+observation. Ground each one in a concrete probe selection or visible written work; use
+"possible" or "may" for uncertain claims. An unanswered question or a step the student did
+not reach is missing evidence, not an incorrect answer or evidence of low motivation. An
+"I don't know" response (outcome=dont_know) is the student's own report of uncertainty and a
+likely possible gap on that concept: stronger evidence than unanswered, but not an incorrect
+answer. Each step has a main probe; after a wrong or "I don't know" main answer the student
+got one easier probe on the same concept (kind=easier). A wrong main answer followed by a
+correct easier answer suggests partial understanding at a lower difficulty; missing both is
+a stronger possible gap. Distinguish observed work from inference, but state it briefly
+rather than explaining your reasoning. Provide one practical first step for the tutor in one
+sentence. If no whiteboard image was provided, return an empty whiteboardObservations array;
+otherwise at most one short observation. Don't classify students by fixed learning styles.
+Don't invent prior sessions, grades, or performance. Return only the supplied schema.`;

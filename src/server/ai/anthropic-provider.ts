@@ -8,14 +8,24 @@ import {
   validateAnalysisStructure,
   validateProbePair,
 } from '@/schemas/analysis';
-import { ANALYSIS_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
+import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
+import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
-import type { AnalyzeQuestionInput, GenerateProbePairInput, MathAnalysisProvider } from './provider';
+import type {
+  AnalyzeQuestionInput,
+  GenerateProbePairInput,
+  GenerateTutorBriefInput,
+  MathAnalysisProvider,
+} from './provider';
 
 const ANALYSIS_MAX_TOKENS = 8192;
 const PROBE_PAIR_MAX_TOKENS = 4096;
+const BRIEF_MAX_TOKENS = 4096;
 
-/** The Anthropic Messages API implementation of the two Mathify model operations. */
+/**
+ * The Anthropic Messages API implementation of the Mathify model operations. Only `analyzeQuestion`
+ * and `generateProbePair` are called today; `generateTutorBrief` is kept for future whiteboard analysis.
+ */
 export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   private client: Anthropic;
   private model: string;
@@ -78,6 +88,53 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       throw new Error(`Model output failed structural validation: ${structuralErrors.join('; ')}`);
     }
     return parsed;
+  }
+
+  async generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief> {
+    const contentBlocks = filesToContentBlocks(input.files);
+    if (input.whiteboardPng) {
+      contentBlocks.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: input.whiteboardPng.toString('base64') },
+      });
+    }
+
+    const resultsSummary = input.results
+      .map((r) => {
+        let answer = 'unanswered';
+        if (r.outcome === 'dont_know') answer = 'selected "I don\'t know"';
+        else if (r.selectedOptionId) answer = `selected ${r.selectedOptionId} (${r.selectedOptionText})`;
+        return `- [${r.probeId}] step=${r.stepIndex + 1} kind=${r.kind} concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
+      })
+      .join('\n');
+
+    const textSummary = input.questionText.trim().length > 0 ? input.questionText.trim() : null;
+
+    return this.createStructured({
+      system: BRIEF_SYSTEM_PROMPT,
+      maxTokens: BRIEF_MAX_TOKENS,
+      schema: modelBriefSchema,
+      operation: 'a tutor brief',
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Grade: ${input.grade}.`,
+            textSummary ? `Typed question: ${textSummary}` : 'No typed question was provided.',
+            `Parsed question: ${input.analysis.parsedQuestionMarkdown}`,
+            `Topic: ${input.analysis.topic}`,
+            `Probing question results:\n${resultsSummary || '(none)'}`,
+            input.notReachedConcepts.length > 0
+              ? `Steps not reached before submitting: ${input.notReachedConcepts.join('; ')}`
+              : 'All planned steps were reached.',
+            input.whiteboardPng
+              ? 'A final whiteboard image is attached as the last image content block.'
+              : 'No whiteboard image was submitted.',
+          ].join('\n'),
+        },
+        ...contentBlocks,
+      ],
+    });
   }
 
   /**
