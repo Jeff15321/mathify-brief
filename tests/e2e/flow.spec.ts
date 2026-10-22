@@ -36,6 +36,20 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.mouse.down();
   await page.mouse.move(box.x + 200, box.y + 150);
   await page.mouse.up();
+
+  // Regression: the whole dotted area must be drawable, including its top-left corner.
+  const area = await canvas.locator("xpath=..").boundingBox();
+  if (!area) throw new Error("whiteboard area not found");
+  await page.mouse.move(area.x + 15, area.y + 15);
+  await page.mouse.down();
+  await page.mouse.move(area.x + 40, area.y + 18);
+  await page.mouse.up();
+  const cornerHasInk = await canvas.evaluate((el: HTMLCanvasElement) => {
+    const ratio = el.width / el.getBoundingClientRect().width;
+    const { data } = el.getContext("2d")!.getImageData(10 * ratio, 10 * ratio, 35 * ratio, 15 * ratio);
+    return data.some((value, i) => i % 4 === 3 && value !== 0);
+  });
+  expect(cornerHasInk).toBe(true);
   await page.getByLabel("Expand Whiteboard").click();
   await page.getByLabel("Restore Whiteboard").click();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
