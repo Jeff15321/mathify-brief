@@ -3,7 +3,8 @@ export type ApiErrorCode =
   | 'NOT_FOUND'
   | 'INVALID_STATE'
   | 'AI_PROVIDER_ERROR'
-  | 'INTERNAL_ERROR';
+  | 'INTERNAL_ERROR'
+  | 'FORBIDDEN';
 
 export class ApiError extends Error {
   constructor(
