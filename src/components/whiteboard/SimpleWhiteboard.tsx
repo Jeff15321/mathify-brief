@@ -36,6 +36,9 @@ function hasInk(canvas: HTMLCanvasElement): boolean {
  * The canvas is drawn 1:1 in CSS pixels, so ink is never stretched or rescaled when the panel
  * resizes. Its bitmap only grows: a larger panel extends the surface and keeps existing ink, while
  * a smaller one clips the overflow (it reappears when the panel grows again).
+ *
+ * Background images are rendered as a CSS background on the container (never on the canvas itself),
+ * so they never interfere with ink or get duplicated on resize.
  */
 export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: boolean; backgroundImages?: Array<{ id: string; url: string }> }>(
   function SimpleWhiteboard({ disabled, backgroundImages = [] }, ref) {
@@ -47,57 +50,9 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
     const [tool, setTool] = useState<Tool>("pen");
     // Background image state
     const [activeBgId, setActiveBgId] = useState<string | null>(backgroundImages[0]?.id ?? null);
-    const bgImagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
-    /** Draws the active background image onto the canvas, scaled to fit while centered. */
-    function drawBackgroundImage(canvas: HTMLCanvasElement, surface: { width: number; height: number; pixelRatio: number }) {
-      if (!activeBgId || !bgImagesRef.current.has(activeBgId)) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      const img = bgImagesRef.current.get(activeBgId)!;
-      const imgAspect = img.naturalWidth / img.naturalHeight;
-      const canvasAspect = surface.width / surface.height;
-      let drawW: number, drawH: number, drawX: number, drawY: number;
-      if (imgAspect > canvasAspect) {
-        // Image is wider — fit to width
-        drawW = surface.width;
-        drawH = surface.width / imgAspect;
-        drawX = 0;
-        drawY = (surface.height - drawH) / 2;
-      } else {
-        // Image is taller — fit to height
-        drawH = surface.height;
-        drawW = surface.height * imgAspect;
-        drawX = (surface.width - drawW) / 2;
-        drawY = 0;
-      }
-      ctx.save();
-      ctx.setTransform(surface.pixelRatio, 0, 0, surface.pixelRatio, 0, 0);
-      ctx.globalAlpha = 0.3; // Faded so ink is visible on top
-      ctx.drawImage(img, drawX, drawY, drawW, drawH);
-      ctx.restore();
-    }
-
-    /** Loads a background image by URL and caches it. */
-    function loadBackgroundImage(id: string, url: string) {
-      if (bgImagesRef.current.has(id)) return;
-      const img = document.createElement("img");
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        bgImagesRef.current.set(id, img);
-        // Redraw with the new background
-        const canvas = canvasRef.current;
-        const surface = surfaceRef.current;
-        if (canvas && surface.width > 0) {
-          const ctx = canvas.getContext("2d")!;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawBackgroundImage(canvas, surface);
-          // Restore ink on top
-          // (Ink was already lost on clear; the snapshot-restore in ensureSurfaceSize handles this)
-        }
-      };
-      img.src = url;
-    }
+    // Stable serialized key to avoid re-running on array reference changes
+    const bgKey = backgroundImages.map((bg) => `${bg.id}:${bg.url}`).join("|");
 
     /** Grows the drawing surface to at least the given CSS size, preserving existing ink. */
     function ensureSurfaceSize(minWidth: number, minHeight: number) {
@@ -121,18 +76,18 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
       canvas.height = Math.round(height * surface.pixelRatio);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      drawBackgroundImage(canvas, { width, height, pixelRatio: surface.pixelRatio });
+      // Restore ink — background is handled by CSS, never drawn on the canvas
       if (snapshot) canvas.getContext("2d")!.drawImage(snapshot, 0, 0);
 
       surfaceRef.current = { ...surface, width, height };
     }
 
-    // Load background images as they're provided
+    // Set initial active background when the list changes
     useEffect(() => {
-      for (const bg of backgroundImages) {
-        loadBackgroundImage(bg.id, bg.url);
+      if (backgroundImages.length > 0 && !backgroundImages.find((bg) => bg.id === activeBgId)) {
+        setActiveBgId(backgroundImages[0].id);
       }
-    }, [backgroundImages]);
+    }, [bgKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // useLayoutEffect sizes the surface before the first paint, so an early stroke never lands
     // on an unsized canvas; ResizeObserver then grows it as the panel expands.
@@ -158,7 +113,7 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
         const canvas = canvasRef.current;
         if (!canvas || !hasInk(canvas)) return null;
 
-        // Flatten ink over white at CSS-pixel size (the surface the student actually drew on).
+        // Flatten: white background + background image + ink
         const { width, height, pixelRatio } = surfaceRef.current;
         const flattened = document.createElement("canvas");
         flattened.width = width;
@@ -166,26 +121,30 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
         const flatCtx = flattened.getContext("2d")!;
         flatCtx.fillStyle = "#ffffff";
         flatCtx.fillRect(0, 0, width, height);
-        // Draw background image (full opacity for export)
-        if (activeBgId && bgImagesRef.current.has(activeBgId)) {
-          const img = bgImagesRef.current.get(activeBgId)!;
-          const imgAspect = img.naturalWidth / img.naturalHeight;
-          const canvasAspect = width / height;
-          let drawW: number, drawH: number, drawX: number, drawY: number;
-          if (imgAspect > canvasAspect) {
-            drawW = width;
-            drawH = width / imgAspect;
-            drawX = 0;
-            drawY = (height - drawH) / 2;
-          } else {
-            drawH = height;
-            drawW = height * imgAspect;
-            drawX = (width - drawW) / 2;
-            drawY = 0;
+
+        // Draw background image at 30% opacity for export
+        const activeBg = backgroundImages.find((bg) => bg.id === activeBgId);
+        if (activeBg) {
+          const img = await loadImage(activeBg.url);
+          if (img) {
+            const imgAspect = img.naturalWidth / img.naturalHeight;
+            const canvasAspect = width / height;
+            let drawW: number, drawH: number, drawX: number, drawY: number;
+            if (imgAspect > canvasAspect) {
+              drawW = width;
+              drawH = width / imgAspect;
+              drawX = 0;
+              drawY = (height - drawH) / 2;
+            } else {
+              drawH = height;
+              drawW = height * imgAspect;
+              drawX = (width - drawW) / 2;
+              drawY = 0;
+            }
+            flatCtx.globalAlpha = 0.3;
+            flatCtx.drawImage(img, drawX, drawY, drawW, drawH);
+            flatCtx.globalAlpha = 1;
           }
-          flatCtx.globalAlpha = 0.3;
-          flatCtx.drawImage(img, drawX, drawY, drawW, drawH);
-          flatCtx.globalAlpha = 1;
         }
         flatCtx.drawImage(canvas, 0, 0, width, height);
 
@@ -194,6 +153,17 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
         });
       },
     }));
+
+    /** Load an image from URL, returning the HTMLImageElement (or null on failure). */
+    function loadImage(url: string): Promise<HTMLImageElement | null> {
+      return new Promise((resolve) => {
+        const img = document.createElement("img");
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
 
     function getContext(): CanvasRenderingContext2D | null {
       const canvas = canvasRef.current;
@@ -240,6 +210,24 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
       canvasRef.current?.releasePointerCapture(e.pointerId);
     }
 
+    // Build CSS background for the active image
+    const activeBg = backgroundImages.find((bg) => bg.id === activeBgId);
+    const containerBgStyle: React.CSSProperties = activeBg
+      ? {
+          backgroundImage: `url(${activeBg.url})`,
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "contain",
+          // Low opacity via a pseudo-overlay approach: we use a slightly transparent
+          // background-color overlay via the dot grid, which naturally dims the image.
+          // Instead, let's use an opacity approach on a wrapper.
+        }
+      : {
+          backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+          backgroundColor: "#ffffff",
+        };
+
     return (
       <div className="flex h-full flex-col gap-2">
         <div className="flex gap-2">
@@ -278,16 +266,33 @@ export const SimpleWhiteboard = forwardRef<SimpleWhiteboardHandle, { disabled?: 
             </div>
           )}
         </div>
+        {/* Wrapper handles the background image with opacity control */}
         <div
           ref={containerRef}
           className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-slate-200"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-            backgroundColor: "#ffffff",
-          }}
+          style={{ backgroundColor: "#ffffff" }}
         >
+          {/* Background image layer with opacity */}
+          {activeBg && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `url(${activeBg.url})`,
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "contain",
+                opacity: 0.3,
+              }}
+            />
+          )}
+          {/* Dot grid (always visible, on top of background) */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
           {/* Sized imperatively by ensureSurfaceSize; anchored top-left so it covers the whole area. */}
           <canvas
             ref={canvasRef}
