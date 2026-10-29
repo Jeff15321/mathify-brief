@@ -1,10 +1,14 @@
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { ProbeCard } from "./ProbeCard";
+import { BreakdownDiagram } from "./BreakdownDiagram";
 import { LoadingState } from "@/components/shared/LoadingState";
-import type { ProbeAnswer, PublicProbing } from "@/types/domain";
+import type { ProbeAnswer, PublicProbing, QuestionAnalysisPublic } from "@/types/domain";
 
 /**
  * Middle panel: the current probe card (or a waiting/failed/finished message) and a Submit
- * button that works at any point.
+ * button that works at any point. Includes a collapsible section showing how the question
+ * was broken down and how probes map to concepts.
  */
 export function ProbingPanel({
   probing,
@@ -15,6 +19,7 @@ export function ProbingPanel({
   answering,
   onSubmit,
   submitting,
+  analysis,
 }: {
   probing: PublicProbing;
   selection: ProbeAnswer | undefined;
@@ -24,11 +29,54 @@ export function ProbingPanel({
   answering: boolean;
   onSubmit: () => void;
   submitting: boolean;
+  analysis?: QuestionAnalysisPublic | null;
 }) {
   const { current, progress, finished, waitingStatus } = probing;
+  const [metadataOpen, setMetadataOpen] = useState(false);
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden">
+      {/* Collapsible metadata: how we break down the question and probe plan */}
+      {analysis && (
+        <details
+          open={metadataOpen}
+          onToggle={(e) => setMetadataOpen((e.target as HTMLDetailsElement).open)}
+          className="group rounded-xl border border-slate-200 bg-white shadow-sm"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2.5 [&::-webkit-details-marker]:hidden">
+            <span className="text-xs font-semibold text-slate-700">How we break down this question</span>
+            <ChevronDown
+              size={14}
+              className="shrink-0 text-slate-400 transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
+          <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3">
+            <div className="flex flex-col gap-1.5">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Concepts to review</h4>
+              <ol className="flex flex-col gap-1.5">
+                {analysis.breakdown.map((step, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                    <span className="font-semibold text-blue-500">{i + 1}.</span>
+                    <span>
+                      <span className="font-medium">{step.title}</span>
+                      <span className="text-slate-500"> — {step.description}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {analysis.probePlan.length > 0 && (
+              <BreakdownDiagram
+                breakdown={analysis.breakdown}
+                probePlan={analysis.probePlan}
+                currentStepIndex={probing.progress ? probing.progress.stepNumber - 1 : null}
+              />
+            )}
+          </div>
+        </details>
+      )}
+
       {/* m-auto centers the question block both ways but still lets tall content scroll from the top. */}
       <div className="flex flex-1 overflow-y-auto pb-4">
         <div className="m-auto flex w-full max-w-xl flex-col gap-3">
