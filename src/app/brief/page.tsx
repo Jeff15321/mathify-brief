@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { fetchWorkspace } from "@/lib/api-client";
 import type { PublicWorkspace } from "@/types/domain";
 import { TutorBriefView } from "@/components/brief/TutorBriefView";
+import { BriefLayout } from "@/components/brief/BriefLayout";
 import { LoadingState } from "@/components/shared/LoadingState";
 
 export default function BriefPage() {
@@ -45,8 +46,11 @@ export default function BriefPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <TutorBriefView workspace={workspace} brief={workspace.brief} />
-    </div>
+    <BriefLayout
+      whiteboardAssetId={workspace.whiteboardAsset?.id ?? null}
+      attachments={workspace.attachments}
+      whiteboard={null}
+      report={<TutorBriefView workspace={workspace} brief={workspace.brief} />}
+    />
   );
 }
