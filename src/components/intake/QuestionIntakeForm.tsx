@@ -166,7 +166,9 @@ export function QuestionIntakeForm() {
           </p>
         </div>
 
-        {/* Hidden file input — triggered by the drop zone or the Add More button */}
+        {/* Visually hidden file input — triggered by the drop zone or the Add More button.
+            Uses sr-only instead of hidden so .click() works reliably across browsers
+            (display:none inputs may not open the file picker on subsequent clicks). */}
         <input
           ref={inputRef}
           type="file"
@@ -174,7 +176,7 @@ export function QuestionIntakeForm() {
           accept={ACCEPT}
           disabled={busy}
           onChange={(e) => addFiles(e.target.files)}
-          className="hidden"
+          className="sr-only"
         />
 
         {/* Show attached files + add more button */}
