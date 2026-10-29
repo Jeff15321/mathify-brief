@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { analyzeQuestion, ApiClientError, startWorkspace } from "@/lib/api-client";
 import {
@@ -12,6 +12,7 @@ import {
 import { FileAttachmentList } from "./FileAttachmentList";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
 import { LoadingState } from "@/components/shared/LoadingState";
+import { Upload, Plus } from "lucide-react";
 
 const ACCEPT = "image/png,image/jpeg,image/webp,application/pdf";
 
@@ -44,17 +45,40 @@ export function QuestionIntakeForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<"idle" | "uploading" | "analyzing">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const busy = status !== "idle";
 
-  function addFiles(newFiles: FileList | null) {
-    if (!newFiles) return;
-    setFiles((prev) => [...prev, ...Array.from(newFiles)]);
+  const addFiles = useCallback((newFiles: FileList | File[] | null) => {
+    if (!newFiles || newFiles.length === 0) return;
+    setFiles((prev) => {
+      const combined = [...prev, ...Array.from(newFiles)];
+      // Enforce max files
+      return combined.slice(0, MAX_FILES);
+    });
+    // Reset the file input so the same file can be re-selected
     if (inputRef.current) inputRef.current.value = "";
-  }
+  }, []);
 
   function removeFile(index: number) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    if (busy) return;
+    addFiles(e.dataTransfer.files);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    if (!busy) setDragOver(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
   }
 
   async function runAnalysis() {
@@ -119,20 +143,57 @@ export function QuestionIntakeForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="fileInput" className="text-sm font-medium">
-          Upload files
-        </label>
+        <label className="text-sm font-medium">Upload files</label>
+
+        {/* Drop zone */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => !busy && inputRef.current?.click()}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 transition-colors ${
+            dragOver
+              ? "border-blue-400 bg-blue-50"
+              : "border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50"
+          } ${busy ? "pointer-events-none opacity-50" : ""}`}
+        >
+          <Upload size={28} className="text-slate-400" />
+          <p className="text-sm text-slate-600">
+            Drag & drop images or PDFs here, or <span className="font-medium text-blue-600">click to browse</span>
+          </p>
+          <p className="text-xs text-slate-400">
+            PNG, JPEG, WebP, or PDF · up to {MAX_FILES} files
+          </p>
+        </div>
+
+        {/* Hidden file input — triggered by the drop zone or the Add More button */}
         <input
           ref={inputRef}
-          id="fileInput"
           type="file"
           multiple
           accept={ACCEPT}
           disabled={busy}
           onChange={(e) => addFiles(e.target.files)}
-          className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm"
+          className="hidden"
         />
-        <FileAttachmentList files={files} onRemove={removeFile} />
+
+        {/* Show attached files + add more button */}
+        {files.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <FileAttachmentList files={files} onRemove={removeFile} />
+            {files.length < MAX_FILES && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => inputRef.current?.click()}
+                className="flex items-center gap-1.5 self-start rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <Plus size={14} />
+                Add more files
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {error && <ErrorBanner message={error} />}
