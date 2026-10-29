@@ -18,6 +18,7 @@ export default function WorkspacePage() {
   const router = useRouter();
   const whiteboardRef = useRef<SimpleWhiteboardHandle>(null);
   const prefetchRef = useRef<Promise<void> | null>(null);
+  const shownAtRef = useRef<string | null>(null);
   const [workspace, setWorkspace] = useState<PublicWorkspace | null>(null);
   const [probing, setProbing] = useState<PublicProbing | null>(null);
   const [selection, setSelection] = useState<ProbeAnswer | undefined>(undefined);
@@ -82,6 +83,15 @@ export default function WorkspacePage() {
     };
   }, [router, applyProbing]);
 
+  // Track when the current probe is first displayed (for timing/confidence scoring).
+  useEffect(() => {
+    if (probing?.current) {
+      shownAtRef.current = new Date().toISOString();
+    } else {
+      shownAtRef.current = null;
+    }
+  }, [probing?.current?.id]);
+
   // Keep the next pair buffered whenever the server reports a pending step in the window.
   useEffect(() => {
     if (probing?.needsPrefetch) void prefetch();
@@ -101,7 +111,7 @@ export default function WorkspacePage() {
     setAnswering(true);
     setError(null);
     try {
-      applyProbing(await answerProbe(probing.current.id, selection));
+      applyProbing(await answerProbe(probing.current.id, selection, shownAtRef.current));
       setSelection(undefined);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Could not save your answer. Please try again.");
@@ -149,7 +159,7 @@ export default function WorkspacePage() {
       )}
       <div className="min-h-0 flex-1">
         <ThreePanelLayout
-          whiteboard={<WhiteboardPanel ref={whiteboardRef} disabled={submitting} />}
+          whiteboard={<WhiteboardPanel ref={whiteboardRef} disabled={submitting} attachments={workspace.attachments} />}
           probing={
             <ProbingPanel
               probing={probing}
@@ -160,6 +170,7 @@ export default function WorkspacePage() {
               answering={answering}
               onSubmit={handleSubmit}
               submitting={submitting}
+              analysis={workspace.analysis}
             />
           }
         />

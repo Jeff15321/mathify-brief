@@ -109,7 +109,7 @@ export async function generateNextProbePair(stores: Stores = getStores()): Promi
  * @throws ApiError 409 when `probeId` is not the current probe.
  */
 export async function answerCurrentProbe(
-  input: { probeId: string; answer: ProbeAnswer },
+  input: { probeId: string; answer: ProbeAnswer; shownAt?: string | null },
   stores: Stores = getStores(),
 ): Promise<PublicProbing> {
   const saved = await stores.workspaceStore.update((current) => {
@@ -118,7 +118,7 @@ export async function answerCurrentProbe(
     if (!probe || !workspace.cursor || probe.id !== input.probeId) {
       throw new ApiError(409, 'INVALID_STATE', `Probe ${input.probeId} is not the current question`);
     }
-    const { steps, cursor } = advance(workspace.probeSteps, workspace.cursor, input.answer);
+    const { steps, cursor } = advance(workspace.probeSteps, workspace.cursor, input.answer, input.shownAt ?? null);
     return { ...workspace, probeSteps: steps, cursor, updatedAt: new Date().toISOString() };
   });
   return publicProbing(saved);

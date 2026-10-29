@@ -54,11 +54,11 @@ export async function generateNextProbes(): Promise<PublicProbing> {
 }
 
 /** Submits the answer to the probe on screen; resolves with the next probing state. */
-export async function answerProbe(probeId: string, answer: ProbeAnswer): Promise<PublicProbing> {
+export async function answerProbe(probeId: string, answer: ProbeAnswer, shownAt?: string | null): Promise<PublicProbing> {
   const res = await fetch('/api/probes/answer', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ probeId, answer }),
+    body: JSON.stringify({ probeId, answer, shownAt: shownAt ?? null }),
   });
   if (!res.ok) await parseErrorResponse(res);
   const body = await res.json();

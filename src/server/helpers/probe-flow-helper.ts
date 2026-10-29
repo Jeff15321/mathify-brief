@@ -38,17 +38,20 @@ export function outcomeFor(probe: PrivateProbe, answer: ProbeAnswer | null): Pro
  * Main correct goes to the next step; main wrong or "I don't know" serves that step's easier
  * probe (at most once per step); any easier answer goes to the next step. Past the last step
  * the cursor becomes null.
+ * @param shownAt - ISO timestamp when the probe was first displayed to the student (from client).
  * @returns New steps and cursor; inputs are not mutated.
  */
 export function advance(
   steps: ProbeStep[],
   cursor: ProbeCursor,
   answer: ProbeAnswer,
+  shownAt: string | null = null,
 ): { steps: ProbeStep[]; cursor: ProbeCursor | null } {
   const step = steps[cursor.stepIndex];
   const probe = cursor.kind === 'main' ? step.main : step.easier;
   if (!probe) throw new Error(`Step ${cursor.stepIndex} has no ${cursor.kind} probe to answer`);
 
+  const now = new Date().toISOString();
   const nextMain: ProbeCursor | null =
     cursor.stepIndex + 1 < steps.length ? { stepIndex: cursor.stepIndex + 1, kind: 'main' } : null;
 
@@ -56,10 +59,21 @@ export function advance(
   let next: ProbeCursor | null;
   if (cursor.kind === 'main') {
     const needsRetry = outcomeFor(probe, answer) !== 'correct';
-    updated = { ...step, mainAnswer: answer, easierServed: needsRetry };
+    updated = {
+      ...step,
+      mainAnswer: answer,
+      easierServed: needsRetry,
+      mainShownAt: shownAt ?? step.mainShownAt,
+      mainAnsweredAt: now,
+    };
     next = needsRetry ? { stepIndex: cursor.stepIndex, kind: 'easier' } : nextMain;
   } else {
-    updated = { ...step, easierAnswer: answer };
+    updated = {
+      ...step,
+      easierAnswer: answer,
+      easierShownAt: shownAt ?? step.easierShownAt,
+      easierAnsweredAt: now,
+    };
     next = nextMain;
   }
 

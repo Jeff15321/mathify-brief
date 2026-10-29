@@ -1,9 +1,10 @@
-import type { TutorBrief } from '@/types/domain';
+import type { ProbeStep, TutorBrief } from '@/types/domain';
 import { getStores, type createStores } from './storage';
 import { ApiError } from './errors';
 import { MAX_WHITEBOARD_SIZE_BYTES } from '@/lib/constants';
 import { computeResults } from './helpers/probe-flow-helper';
 import { summarizeBrief } from './helpers/brief-summary-helper';
+import { computeConfidence } from './helpers/confidence-helper';
 
 type Stores = ReturnType<typeof createStores>;
 
@@ -52,12 +53,20 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
   }
 
   const { results, notReachedConcepts } = computeResults(workspace.probeSteps, workspace.cursor);
+  const summary = summarizeBrief(results, notReachedConcepts);
+  const { level, factors, earlyExit } = computeConfidence(
+    workspace.probeSteps,
+    workspace.cursor,
+  );
   const brief: TutorBrief = {
     results,
     notReachedConcepts,
-    ...summarizeBrief(results, notReachedConcepts),
+    ...summary,
+    confidence: level,
+    confidenceFactors: factors,
+    earlyExit,
     generatedAt: new Date().toISOString(),
-    briefVersion: 4,
+    briefVersion: 5,
   };
 
   await workspaceStore.update((current) => {
