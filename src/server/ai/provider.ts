@@ -1,6 +1,7 @@
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import type { ModelBrief } from '@/schemas/brief';
 import type { MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored } from '@/types/domain';
+import type { ValidationIssue } from '@/types/domain';
 
 export interface StoredFile {
   fileName: string;
@@ -36,8 +37,26 @@ export interface GenerateTutorBriefInput {
   whiteboardPng: Buffer | null;
 }
 
+export interface ValidateBreakdownInput {
+  questionText: string;
+  analysis: QuestionAnalysisStored;
+  files: StoredFile[];
+}
+
+export interface ValidateProbesInput {
+  questionText: string;
+  steps: import('@/types/domain').ProbeStep[];
+  files: StoredFile[];
+}
+
+export interface ValidationOutput {
+  issues: ValidationIssue[];
+}
+
 export interface MathAnalysisProvider {
   analyzeQuestion(input: AnalyzeQuestionInput): Promise<ModelAnalysis>;
   generateProbePair(input: GenerateProbePairInput): Promise<ModelProbePair>;
   generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief>;
+  validateBreakdown(input: ValidateBreakdownInput): Promise<ValidationOutput>;
+  validateProbes(input: ValidateProbesInput): Promise<ValidationOutput>;
 }

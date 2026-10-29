@@ -22,6 +22,7 @@ function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorksp
     cursor: null,
     whiteboardAsset: null,
     brief: null,
+    validation: null,
     ...overrides,
   };
 }

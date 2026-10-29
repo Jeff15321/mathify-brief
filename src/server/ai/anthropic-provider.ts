@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-import type { z } from 'zod';
+import { z } from 'zod';
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import {
   modelAnalysisSchema,
@@ -10,13 +10,18 @@ import {
 } from '@/schemas/analysis';
 import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
 import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
+import { VALIDATE_BREAKDOWN_PROMPT, VALIDATE_PROBES_PROMPT } from './validation-prompts';
 import { filesToContentBlocks } from './format-inputs';
 import type {
   AnalyzeQuestionInput,
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
+  ValidateBreakdownInput,
+  ValidateProbesInput,
+  ValidationOutput,
 } from './provider';
+import { validationIssueSchema } from '@/schemas/workspace';
 
 const ANALYSIS_MAX_TOKENS = 8192;
 const PROBE_PAIR_MAX_TOKENS = 4096;
@@ -135,6 +140,83 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
         ...contentBlocks,
       ],
     });
+  }
+
+  async validateBreakdown(input: ValidateBreakdownInput): Promise<ValidationOutput> {
+    const validationSchema = z.object({ issues: z.array(validationIssueSchema) });
+    const breakdownSummary = input.analysis.breakdown
+      .map((s, i) => `${i + 1}. ${s.title}: ${s.description}`)
+      .join('\n');
+    const planSummary = input.analysis.probePlan
+      .map((p, i) => `${i + 1}. ${p.concept}: ${p.intent}`)
+      .join('\n');
+
+    const parsed = await this.createStructured({
+      system: VALIDATE_BREAKDOWN_PROMPT,
+      maxTokens: 2048,
+      schema: validationSchema,
+      operation: 'breakdown validation',
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Question: ${input.questionText}`,
+            `Topic: ${input.analysis.topic}`,
+            `Estimated grade: ${input.analysis.estimatedQuestionGrade}`,
+            `Difficulty: ${input.analysis.gradeDifficulty}`,
+            `Breakdown:\n${breakdownSummary}`,
+            `Probe plan:\n${planSummary}`,
+          ].join('\n'),
+        },
+        ...filesToContentBlocks(input.files),
+      ],
+    });
+
+    return { issues: parsed.issues };
+  }
+
+  async validateProbes(input: ValidateProbesInput): Promise<ValidationOutput> {
+    const validationSchema = z.object({ issues: z.array(validationIssueSchema) });
+    const probesSummary = input.steps
+      .filter((s) => s.main)
+      .map((s) => {
+        const main = s.main!;
+        const lines = [
+          `Probe ${main.id} (concept: ${main.concept}):`,
+          `  Question: ${main.questionMarkdown}`,
+          `  Options: ${main.options.map((o) => `${o.id}: ${o.textMarkdown}`).join(', ')}`,
+          `  Correct: ${main.correctOptionId}`,
+          `  Explanation: ${main.explanation}`,
+          `  Hint: ${main.hint}`,
+        ];
+        if (s.easier) {
+          lines.push(`  Easier probe ${s.easier.id}:`);
+          lines.push(`    Question: ${s.easier.questionMarkdown}`);
+          lines.push(`    Options: ${s.easier.options.map((o) => `${o.id}: ${o.textMarkdown}`).join(', ')}`);
+          lines.push(`    Correct: ${s.easier.correctOptionId}`);
+        }
+        return lines.join('\n');
+      })
+      .join('\n\n');
+
+    const parsed = await this.createStructured({
+      system: VALIDATE_PROBES_PROMPT,
+      maxTokens: 2048,
+      schema: validationSchema,
+      operation: 'probe validation',
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Question: ${input.questionText}`,
+            `Probes:\n${probesSummary}`,
+          ].join('\n'),
+        },
+        ...filesToContentBlocks(input.files),
+      ],
+    });
+
+    return { issues: parsed.issues };
   }
 
   /**

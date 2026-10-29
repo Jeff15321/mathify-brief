@@ -23,7 +23,7 @@ export async function POST() {
     }
 
     // Load files for validation
-    const files = [];
+    const files: import("@/server/ai/provider").StoredFile[] = [];
     for (const attachment of workspace.attachments) {
       const loaded = await assetStore.get(attachment.id);
       if (loaded) {

@@ -113,6 +113,18 @@ export const tutorBriefSchema = z.object({
   briefVersion: z.literal(5),
 });
 
+export const validationIssueSchema = z.object({
+  severity: z.enum(['warning', 'error']),
+  message: z.string().min(1),
+  probeId: z.string().nullable().optional(),
+});
+
+export const validationSchema = z.object({
+  status: z.enum(['done', 'partial', 'failed']),
+  issues: z.array(validationIssueSchema),
+  validatedAt: z.string().min(1),
+});
+
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
 
 export const CURRENT_SCHEMA_VERSION = 4;
@@ -130,4 +142,5 @@ export const currentWorkspaceSchema = z.object({
   cursor: probeCursorSchema.nullable(),
   whiteboardAsset: storedAssetSchema.nullable(),
   brief: tutorBriefSchema.nullable(),
+  validation: validationSchema.nullable().default(null),
 });

@@ -5,6 +5,9 @@ import type {
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
+  ValidateBreakdownInput,
+  ValidateProbesInput,
+  ValidationOutput,
 } from './provider';
 
 const MOCK_PLAN: ModelAnalysis['probePlan'] = [
@@ -167,5 +170,15 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
       suggestedStartingPoint: 'Review the distributive property before moving to multi-step equations.',
       limitations: hasMissingEvidence ? ['Not enough evidence for unanswered or unreached probes.'] : [],
     };
+  }
+
+  async validateBreakdown(_input: ValidateBreakdownInput): Promise<ValidationOutput> {
+    // Mock: always passes
+    return { issues: [] };
+  }
+
+  async validateProbes(_input: ValidateProbesInput): Promise<ValidationOutput> {
+    // Mock: always passes
+    return { issues: [] };
   }
 }

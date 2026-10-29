@@ -148,6 +148,18 @@ export interface TutorBrief {
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
+export interface ValidationIssue {
+  severity: 'warning' | 'error';
+  message: string;
+  probeId?: string | null;
+}
+
+export interface StoredValidation {
+  status: 'done' | 'partial' | 'failed';
+  issues: ValidationIssue[];
+  validatedAt: string;
+}
+
 export interface CurrentWorkspace {
   schemaVersion: 4;
   demoProfile: DemoProfile;
@@ -161,6 +173,7 @@ export interface CurrentWorkspace {
   cursor: ProbeCursor | null;
   whiteboardAsset: StoredAsset | null;
   brief: TutorBrief | null;
+  validation: StoredValidation | null;
 }
 
 /** Student-safe view of the one-question-at-a-time flow. Never contains answer keys or unserved probes. */

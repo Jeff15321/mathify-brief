@@ -93,6 +93,7 @@ export async function startWorkspace(
       cursor: null,
       whiteboardAsset: null,
       brief: null,
+      validation: null,
     };
 
     await workspaceStore.write(newWorkspace);
