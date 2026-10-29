@@ -13,6 +13,7 @@ export const modelProbeSchema = z.object({
   options: z.array(probeOptionSchema),
   correctOptionId: optionIdSchema,
   explanation: z.string().min(1),
+  hint: z.string().min(1),
 });
 
 export type ModelProbe = z.infer<typeof modelProbeSchema>;

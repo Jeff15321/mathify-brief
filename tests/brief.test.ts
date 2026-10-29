@@ -24,7 +24,7 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
 
   it("persists phase: complete and the full brief, including answer keys in results", async () => {
     const brief = await submitBrief({ whiteboardPng: null }, stores);
-    expect(brief.briefVersion).toBe(4);
+    expect(brief.briefVersion).toBe(5);
     expect(brief.results[0].correctOptionId).toMatch(/^[ABCD]$/);
 
     const workspace = await stores.workspaceStore.read();

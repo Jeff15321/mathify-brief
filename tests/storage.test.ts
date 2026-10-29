@@ -10,7 +10,7 @@ import type { CurrentWorkspace } from "@/types/domain";
 function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorkspace {
   const now = new Date().toISOString();
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     demoProfile: DEMO_PROFILE,
     questionText: "Solve 2(x + 3) = 14.",
     attachments: [],

@@ -31,6 +31,7 @@ export const privateProbeSchema = z.object({
   options: z.array(probeOptionSchema),
   correctOptionId: optionIdSchema,
   explanation: z.string().min(1),
+  hint: z.string().min(1),
 });
 
 export const analysisStoredSchema = z.object({
@@ -61,6 +62,10 @@ export const probeStepSchema = z.object({
   mainAnswer: probeAnswerSchema.nullable(),
   easierAnswer: probeAnswerSchema.nullable(),
   easierServed: z.boolean(),
+  mainShownAt: z.string().nullable(),
+  mainAnsweredAt: z.string().nullable(),
+  easierShownAt: z.string().nullable(),
+  easierAnsweredAt: z.string().nullable(),
 });
 
 export const probeCursorSchema = z.object({
@@ -101,13 +106,16 @@ export const tutorBriefSchema = z.object({
   strengths: z.array(z.string()),
   gaps: z.array(z.string()),
   priorityStepIndex: z.number().int().nonnegative().nullable(),
+  confidence: z.enum(['high', 'medium', 'low']),
+  confidenceFactors: z.array(z.object({ factor: z.string(), detail: z.string() })),
+  earlyExit: z.boolean(),
   generatedAt: z.string().min(1),
-  briefVersion: z.literal(4),
+  briefVersion: z.literal(5),
 });
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export const currentWorkspaceSchema = z.object({
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),

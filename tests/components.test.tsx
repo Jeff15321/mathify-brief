@@ -19,6 +19,7 @@ const PROBE: PublicProbe = {
     { id: "C", textMarkdown: "$x + 6$" },
     { id: "D", textMarkdown: "$2x + 5$" },
   ],
+  hint: "Try multiplying the number outside the brackets by each term inside.",
 };
 
 describe("ProbeCard", () => {

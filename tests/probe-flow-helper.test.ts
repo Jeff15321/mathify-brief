@@ -10,6 +10,7 @@ function probe(id: string, correct: "A" | "B" | "C" | "D" = "B"): PrivateProbe {
     options: (["A", "B", "C", "D"] as const).map((optionId) => ({ id: optionId, textMarkdown: `opt ${optionId}` })),
     correctOptionId: correct,
     explanation: "Because.",
+    hint: "Try thinking about the key concept.",
   };
 }
 
@@ -24,6 +25,10 @@ function step(index: number, overrides: Partial<ProbeStep> = {}): ProbeStep {
     mainAnswer: null,
     easierAnswer: null,
     easierServed: false,
+    mainShownAt: null,
+    mainAnsweredAt: null,
+    easierShownAt: null,
+    easierAnsweredAt: null,
     ...overrides,
   };
 }

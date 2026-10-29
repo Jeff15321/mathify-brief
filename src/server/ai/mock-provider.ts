@@ -27,6 +27,7 @@ const MOCK_PAIRS: ModelProbePair[] = [
       ],
       correctOptionId: 'B',
       explanation: 'Distribute the 2 across both terms inside the brackets: $2 \\cdot x$ and $2 \\cdot 3$.',
+      hint: 'Try multiplying the number outside the brackets by each term inside.',
     },
     easier: {
       concept: 'Distributive property',
@@ -39,6 +40,7 @@ const MOCK_PAIRS: ModelProbePair[] = [
       ],
       correctOptionId: 'B',
       explanation: 'The 2 multiplies both $x$ and $1$.',
+      hint: 'Multiply 2 by $x$, then multiply 2 by 1, and add the results.',
     },
   },
   {
@@ -53,6 +55,7 @@ const MOCK_PAIRS: ModelProbePair[] = [
       ],
       correctOptionId: 'C',
       explanation: 'Subtracting 6 undoes the addition, isolating the term with x.',
+      hint: 'Think about which operation will undo the "+ 6" on the left side.',
     },
     easier: {
       concept: 'Inverse operations',
@@ -65,6 +68,7 @@ const MOCK_PAIRS: ModelProbePair[] = [
       ],
       correctOptionId: 'B',
       explanation: 'Subtracting 6 undoes adding 6.',
+      hint: 'The opposite of adding 6 is subtracting 6.',
     },
   },
   {
@@ -79,6 +83,7 @@ const MOCK_PAIRS: ModelProbePair[] = [
       ],
       correctOptionId: 'B',
       explanation: 'Dividing both sides by 2 gives $x = 4$.',
+      hint: 'If $2x = 8$, divide both sides by 2 to get $x$ by itself.',
     },
     easier: {
       concept: 'Solving for x',
@@ -91,6 +96,7 @@ const MOCK_PAIRS: ModelProbePair[] = [
       ],
       correctOptionId: 'B',
       explanation: 'Dividing both sides by 2 gives $x = 2$.',
+      hint: 'Divide both sides by the number in front of $x$.',
     },
   },
 ];

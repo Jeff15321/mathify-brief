@@ -32,6 +32,7 @@ export interface QuestionAnalysisPublic {
   estimatedQuestionGrade: string;
   gradeDifficulty: GradeDifficulty;
   breakdown: StudentBreakdownStep[];
+  probePlan: ProbePlanItem[];
 }
 
 export interface PublicProbe {
@@ -39,11 +40,13 @@ export interface PublicProbe {
   concept: string;
   questionMarkdown: string;
   options: { id: OptionId; textMarkdown: string }[];
+  hint: string;
 }
 
 export interface PrivateProbe extends PublicProbe {
   correctOptionId: OptionId;
   explanation: string;
+  hint: string;
 }
 
 /** One planned prerequisite step; the plan fixes how many main questions the student gets. */
@@ -88,6 +91,10 @@ export interface ProbeStep {
   mainAnswer: ProbeAnswer | null;
   easierAnswer: ProbeAnswer | null;
   easierServed: boolean;
+  mainShownAt: string | null;
+  mainAnsweredAt: string | null;
+  easierShownAt: string | null;
+  easierAnsweredAt: string | null;
 }
 
 /** The probe currently in front of the student; null once every step is done. */
@@ -132,14 +139,17 @@ export interface TutorBrief {
   strengths: string[];            // concepts answered correctly on the main probe
   gaps: string[];                 // concepts missed on the main probe (incorrect or IDK), whatever the retry outcome
   priorityStepIndex: number | null; // first step whose main answer was incorrect or "I don't know"
+  confidence: 'high' | 'medium' | 'low';
+  confidenceFactors: Array<{ factor: string; detail: string }>;
+  earlyExit: boolean;            // true if student submitted before reaching all steps
   generatedAt: string;
-  briefVersion: 4;
+  briefVersion: 5;
 }
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
 export interface CurrentWorkspace {
-  schemaVersion: 3;
+  schemaVersion: 4;
   demoProfile: DemoProfile;
   questionText: string;
   attachments: StoredAsset[];
@@ -180,6 +190,7 @@ export function toPublicProbe(probe: PrivateProbe): PublicProbe {
     concept: probe.concept,
     questionMarkdown: probe.questionMarkdown,
     options: probe.options,
+    hint: probe.hint,
   };
 }
 
@@ -190,5 +201,6 @@ export function toPublicAnalysis(analysis: QuestionAnalysisStored): QuestionAnal
     estimatedQuestionGrade: analysis.estimatedQuestionGrade,
     gradeDifficulty: analysis.gradeDifficulty,
     breakdown: analysis.breakdown,
+    probePlan: analysis.probePlan,
   };
 }
