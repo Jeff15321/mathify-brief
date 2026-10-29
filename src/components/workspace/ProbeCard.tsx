@@ -1,10 +1,12 @@
+import { useState } from "react";
+import { Lightbulb } from "lucide-react";
 import { MathText } from "@/components/shared/MathText";
 import type { ProbeAnswer, PublicProbe } from "@/types/domain";
 
 /**
  * One multiple-choice probe: the generated options A-D followed by an "I don't know" choice,
  * and a Next button that confirms the selection. "I don't know" looks like any other option;
- * its meaning is handled by backend scoring.
+ * its meaning is handled by backend scoring. A collapsible hint is shown below the question.
  * @param saving - True while the answer is being saved; shows "Saving…" on the button.
  * @param disabled - Disables Next for reasons outside the card (e.g. the brief is submitting).
  */
@@ -25,6 +27,7 @@ export function ProbeCard({
   saving?: boolean;
   disabled?: boolean;
 }) {
+  const [hintOpen, setHintOpen] = useState(false);
   const choices: { id: ProbeAnswer; textMarkdown: string }[] = [
     ...probe.options,
     { id: "IDK", textMarkdown: "I don't know" },
@@ -41,6 +44,19 @@ export function ProbeCard({
         </span>
       </div>
       <MathText text={probe.questionMarkdown} className="text-sm leading-relaxed text-slate-800" />
+      <button
+        type="button"
+        onClick={() => setHintOpen((open) => !open)}
+        className="flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50"
+      >
+        <Lightbulb size={14} aria-hidden="true" />
+        {hintOpen ? "Hide hint" : "Show hint"}
+      </button>
+      {hintOpen && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm italic text-amber-800">
+          {probe.hint}
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         {choices.map((choice) => (
           <label

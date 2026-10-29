@@ -1,9 +1,11 @@
 /** Shared rules for every generated multiple-choice probe (analysis first pair and later pairs). */
 const PROBE_RULES = `Each probe is a single-correct-answer multiple-choice question with four distinct options
-A-D, one verified correct answer, and a private explanation. The explanation is for a tutor
-skimming quickly: ONE short sentence (under 20 words) stating only why the correct answer is
-correct; do not explain each wrong option. Probes check a prerequisite concept; they must not
-simply copy or solve the original problem. Keep language suitable for the student's grade.
+A-D, one verified correct answer, a private explanation, and a student-visible hint. The
+explanation is for a tutor skimming quickly: ONE short sentence (under 20 words) stating only
+why the correct answer is correct; do not explain each wrong option. The hint is a
+one-sentence nudge that points the student toward the right approach without revealing the
+answer or which option is correct. Probes check a prerequisite concept; they must not simply
+copy or solve the original problem. Keep language suitable for the student's grade.
 Each step has a "main" probe and an "easier" probe on the SAME concept. The easier probe is
 shown only if the student gets the main one wrong or answers "I don't know", so it must be
 clearly simpler (smaller numbers, fewer steps, or more scaffolding) while still testing that
