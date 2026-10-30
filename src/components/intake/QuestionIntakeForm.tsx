@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { analyzeQuestion, ApiClientError, startWorkspace } from "@/lib/api-client";
 import {
@@ -38,14 +38,52 @@ function validateClientSide(questionText: string, files: File[]): string | null 
   return null;
 }
 
+/**
+ * A file input that always works, even on repeated clicks.
+ *
+ * The trick: every time a selection is made, we bump a key counter. React
+ * unmounts the old <input> and mounts a fresh one, so the browser can never
+ * get confused about "same value, no change" and the picker always opens.
+ */
+function AlwaysFreshFileInput({
+  onChange,
+  disabled,
+}: {
+  onChange: (files: FileList) => void;
+  disabled?: boolean;
+}) {
+  const [key, setKey] = useState(0);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      onChange(e.target.files);
+    }
+    // Bump key to force a fresh <input> on next render
+    setKey((k) => k + 1);
+  }
+
+  return (
+    <input
+      key={key}
+      type="file"
+      multiple
+      accept={ACCEPT}
+      disabled={disabled}
+      onChange={handleChange}
+      className="sr-only"
+    />
+  );
+}
+
 export function QuestionIntakeForm() {
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [questionText, setQuestionText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<"idle" | "uploading" | "analyzing">("idle");
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  // Track whether the file picker is open so we can prevent duplicate inputs
+  const [pickerActive, setPickerActive] = useState(false);
 
   const busy = status !== "idle";
 
@@ -53,11 +91,8 @@ export function QuestionIntakeForm() {
     if (!newFiles || newFiles.length === 0) return;
     setFiles((prev) => {
       const combined = [...prev, ...Array.from(newFiles)];
-      // Enforce max files
       return combined.slice(0, MAX_FILES);
     });
-    // Reset the file input so the same file can be re-selected
-    if (inputRef.current) inputRef.current.value = "";
   }, []);
 
   function removeFile(index: number) {
@@ -79,6 +114,24 @@ export function QuestionIntakeForm() {
   function handleDragLeave(e: React.DragEvent) {
     e.preventDefault();
     setDragOver(false);
+  }
+
+  /** Opens a file picker by creating a temporary input element. */
+  function openFilePicker() {
+    if (busy || pickerActive) return;
+    setPickerActive(true);
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.accept = ACCEPT;
+    input.onchange = () => {
+      if (input.files) addFiles(input.files);
+      setPickerActive(false);
+    };
+    input.oncancel = () => {
+      setPickerActive(false);
+    };
+    input.click();
   }
 
   async function runAnalysis() {
@@ -145,23 +198,12 @@ export function QuestionIntakeForm() {
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium">Upload files</label>
 
-        {/* The real file input — visually hidden but not display:none.
-            label[htmlFor] triggers it natively, which works every time
-            unlike inputRef.current.click() which browsers block as synthetic. */}
-        <input
-          ref={inputRef}
-          id="fileInput"
-          type="file"
-          multiple
-          accept={ACCEPT}
-          disabled={busy}
-          onChange={(e) => addFiles(e.target.files)}
-          className="sr-only"
-        />
-
-        {/* Drop zone — uses label htmlFor so clicking it opens the file picker natively */}
-        <label
-          htmlFor="fileInput"
+        {/* Drop zone — click opens a fresh temp file picker each time */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={openFilePicker}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openFilePicker(); }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -169,7 +211,7 @@ export function QuestionIntakeForm() {
             dragOver
               ? "border-blue-400 bg-blue-50"
               : "border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50"
-          } ${busy ? "pointer-events-none opacity-50" : ""}`}
+          } ${busy || pickerActive ? "pointer-events-none opacity-50" : ""}`}
         >
           <Upload size={28} className="text-slate-400" />
           <p className="text-sm text-slate-600">
@@ -178,20 +220,22 @@ export function QuestionIntakeForm() {
           <p className="text-xs text-slate-400">
             PNG, JPEG, WebP, or PDF · up to {MAX_FILES} files
           </p>
-        </label>
+        </div>
 
         {/* Show attached files + add more button */}
         {files.length > 0 && (
           <div className="flex flex-col gap-2">
             <FileAttachmentList files={files} onRemove={removeFile} />
             {files.length < MAX_FILES && (
-              <label
-                htmlFor="fileInput"
-                className={`flex items-center gap-1.5 self-start rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 ${busy ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
+              <button
+                type="button"
+                disabled={busy || pickerActive}
+                onClick={openFilePicker}
+                className="flex items-center gap-1.5 self-start rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >
                 <Plus size={14} />
                 Add more files
-              </label>
+              </button>
             )}
           </div>
         )}
