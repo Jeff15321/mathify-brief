@@ -145,12 +145,26 @@ export function QuestionIntakeForm() {
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium">Upload files</label>
 
-        {/* Drop zone */}
-        <div
+        {/* The real file input — visually hidden but not display:none.
+            label[htmlFor] triggers it natively, which works every time
+            unlike inputRef.current.click() which browsers block as synthetic. */}
+        <input
+          ref={inputRef}
+          id="fileInput"
+          type="file"
+          multiple
+          accept={ACCEPT}
+          disabled={busy}
+          onChange={(e) => addFiles(e.target.files)}
+          className="sr-only"
+        />
+
+        {/* Drop zone — uses label htmlFor so clicking it opens the file picker natively */}
+        <label
+          htmlFor="fileInput"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          onClick={() => !busy && inputRef.current?.click()}
           className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 transition-colors ${
             dragOver
               ? "border-blue-400 bg-blue-50"
@@ -164,35 +178,20 @@ export function QuestionIntakeForm() {
           <p className="text-xs text-slate-400">
             PNG, JPEG, WebP, or PDF · up to {MAX_FILES} files
           </p>
-        </div>
-
-        {/* Visually hidden file input — triggered by the drop zone or the Add More button.
-            Uses sr-only instead of hidden so .click() works reliably across browsers
-            (display:none inputs may not open the file picker on subsequent clicks). */}
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept={ACCEPT}
-          disabled={busy}
-          onChange={(e) => addFiles(e.target.files)}
-          className="sr-only"
-        />
+        </label>
 
         {/* Show attached files + add more button */}
         {files.length > 0 && (
           <div className="flex flex-col gap-2">
             <FileAttachmentList files={files} onRemove={removeFile} />
             {files.length < MAX_FILES && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => inputRef.current?.click()}
-                className="flex items-center gap-1.5 self-start rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              <label
+                htmlFor="fileInput"
+                className={`flex items-center gap-1.5 self-start rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 ${busy ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
               >
                 <Plus size={14} />
                 Add more files
-              </button>
+              </label>
             )}
           </div>
         )}
