@@ -43,8 +43,59 @@ npm run test:e2e   # one Playwright happy-path end-to-end test (mocked AI)
 ```
 
 Automated tests never call the paid Anthropic API, regardless of `.env.local`.
+The current jsdom/undici test dependencies require a compatible Node runtime
+(Node 22.22.2+ on the 22.x line, or Node 24.15.0+ on the 24.x line).
 
 ## Demo walkthrough
+
+### Stakeholder evidence presentation
+
+Open `/stakeholder-deck.html` or open `public/stakeholder-deck.html` directly in a
+browser. It is a self-contained, static 12-slide presentation with no AI calls or
+external assets. Use arrow keys, Home/End, **N** for speaker notes, and **P** or
+**Print / Save PDF** for a printable deck. Sources and caveats are included.
+
+The deck distinguishes published design rationale, synthetic prototype tests,
+checked reference answers, and unmeasured effectiveness. There are currently zero
+tutor responses. No live-model accuracy run was possible without an API credential.
+See `docs/prompt-research.md` for the corrected research claims and review protocol.
+
+### Reading-week whiteboard update
+
+The workspace embeds Excalidraw (loaded client-side) for freehand drawing, text,
+shapes, arrows, erasing, and image insertion. Uploaded PNG/JPEG/WebP questions are
+added as separate editable images; PDFs remain available in the original-question
+view. Expand/restore and narrow-screen tab changes keep the scene mounted.
+Submission locks editing and exports the whole non-deleted scene to a white-background
+PNG (including uploaded images). An empty scene sends no whiteboard. Load/export
+errors are shown rather than silently dropping work. The scene remains in browser
+memory until submission; refresh recovery and cross-session history remain deferred.
+
+`npm install` copies Excalidraw's bundled fonts into a git-ignored public assets
+directory so text rendering/export does not rely on a font CDN. If that directory
+is removed, run `npm run postinstall` to restore it.
+
+Private planning sources and stage notes live in `.project-notes/`, excluded by
+`.gitignore`. This branch builds on Alec's `feedback-features`; session management
+remains deferred under the latest explicit team instruction.
+
+The whiteboard includes **Fit to work**, a waiting-time prompt, and visible image
+loading status. Automatic fitting happens only when new question images are
+imported, so ordinary rerenders do not reset the student's pan/zoom.
+
+Tutor feedback requires three 1-5 ratings; comments are optional and capped at
+5,000 characters. Failed HTTP/network submissions show an error and preserve the
+form for retry rather than displaying a false success. Report confidence is
+explicitly labeled a heuristic, not a validated accuracy probability. In-app
+feedback is separate from the external tutor needs/layout questionnaire and does
+not measure the 10-15-second skim target.
+
+Whiteboard update verification: production build, typecheck, touched-file lint,
+41 focused unit/component tests, and two mock-AI browser flows pass. The browser
+coverage includes drawing across expansion/mobile tabs, text entry, blank-board
+submission, multi-image PNG export, successful feedback API submission, and no
+external network requests. Feedback regression tests also cover rejected HTTP
+requests, network failures, and preserving inputs for retry.
 
 1. `npm run dev`, open http://localhost:3000.
 2. Type a question (e.g. `Solve $2(x + 3) = 14$.`) and/or attach PNG/JPEG/WebP/PDF files, click

@@ -15,8 +15,10 @@
 import { TEST_QUESTIONS, type TestQuestion } from "../src/lib/test-questions";
 import { getAnalysisProvider } from "../src/server/ai";
 import type { AnalyzeQuestionInput } from "../src/server/ai/provider";
+import type { ModelAnalysis, ModelProbePair } from "../src/schemas/analysis";
 
 interface EvalResult {
+  providerMode: "mock" | "live";
   questionId: string;
   grade: number;
   questionText: string;
@@ -31,6 +33,9 @@ interface EvalResult {
   firstPairGenerated: boolean;
   latencyMs: number;
   error: string | null;
+  probeError: string | null;
+  analysis: ModelAnalysis | null;
+  firstPair: ModelProbePair | null;
 }
 
 async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
@@ -42,12 +47,15 @@ async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
   };
 
   const start = Date.now();
+  const providerMode = process.env.AI_MOCK_MODE !== "false" ? "mock" : "live";
   try {
     const analysis = await provider.analyzeQuestion(input);
     const latencyMs = Date.now() - start;
 
     // Also try generating the first probe pair
     let firstPairGenerated = false;
+    let firstPair: ModelProbePair | null = null;
+    let probeError: string | null = null;
     try {
       const pair = await provider.generateProbePair({
         grade: question.grade,
@@ -56,11 +64,13 @@ async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
         stepIndex: 0,
       });
       firstPairGenerated = pair.main != null && pair.easier != null;
-    } catch {
-      // Non-fatal — still record the analysis result
+      firstPair = pair;
+    } catch (err) {
+      probeError = err instanceof Error ? err.message : String(err);
     }
 
     return {
+      providerMode,
       questionId: question.id,
       grade: question.grade,
       questionText: question.questionText,
@@ -77,9 +87,13 @@ async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
       firstPairGenerated,
       latencyMs,
       error: null,
+      probeError,
+      analysis,
+      firstPair,
     };
   } catch (err) {
     return {
+      providerMode,
       questionId: question.id,
       grade: question.grade,
       questionText: question.questionText,
@@ -94,6 +108,9 @@ async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
       firstPairGenerated: false,
       latencyMs: Date.now() - start,
       error: err instanceof Error ? err.message : String(err),
+      probeError: null,
+      analysis: null,
+      firstPair: null,
     };
   }
 }
@@ -105,7 +122,7 @@ async function main() {
 
   if (!quiet) {
     console.log(`🧪 Prompt Evaluation — ${TEST_QUESTIONS.length} test questions`);
-    console.log(`   Provider: ${process.env.AI_MOCK_MODE === "true" ? "mock" : "Anthropic"}`);
+    console.log(`   Provider: ${process.env.AI_MOCK_MODE !== "false" ? "mock (fixture-only; not model accuracy)" : "Anthropic (live)"}`);
     console.log();
   }
 
@@ -147,6 +164,8 @@ async function main() {
   console.log(`   Questions evaluated: ${results.length}`);
   console.log(`   Successful:          ${successful.length}`);
   console.log(`   Errors:              ${results.length - successful.length}`);
+  console.log(`   Probe generation errors: ${results.filter(r => r.probeError).length}`);
+  console.log("   Topic and step-count metrics are sanity checks, not mathematical accuracy.");
   console.log(`   Topic matches:       ${topicMatches}/${successful.length}`);
   console.log(`   Breakdown sufficient: ${breakdownSufficient}/${successful.length}`);
   console.log(`   Average latency:     ${avgLatency}ms`);

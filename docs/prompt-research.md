@@ -4,6 +4,13 @@
 
 This document surveys research on effective prompting strategies for math question decomposition and diagnostic probe generation — the two core AI tasks in the Mathify Tutor Brief system. It evaluates trade-offs between prompt approaches and proposes an evaluation methodology for benchmarking prompt variants against a canonical test set.
 
+> Evidence audit, November 1, 2026: this is a research rationale and proposed
+> methodology, not completed experimental findings. There are currently zero tutor
+> responses (confirmed by the project owner). No live API credential is available
+> in this workspace. Mock runs and prewritten examples must not be reported as model
+> accuracy or learner outcomes. The static stakeholder presentation is available at
+> `public/stakeholder-deck.html`.
+
 ---
 
 ## 1. Literature Review
@@ -18,7 +25,7 @@ This document surveys research on effective prompting strategies for math questi
 
 ### 1.2 Few-Shot vs. Zero-Shot Prompting
 
-**Key finding:** Brown et al. (2020) and subsequent work showed that few-shot examples improve task accuracy and format compliance, but the effect diminishes with model capability — the strongest models benefit less from examples.
+**Key finding:** Brown et al. (2020) studied few-shot task performance in language models. Whether examples improve this project's mathematical accuracy or format compliance must be measured locally; the paper does not establish that stronger models benefit less in our setting.
 
 - **Citation:** Brown, T., Mann, B., Ryder, N., et al. (2020). "Language Models are Few-Shot Learners." *NeurIPS 2020*. [arXiv:2005.14165](https://arxiv.org/abs/2005.14165)
 - **Relevance:** Our current prompts are zero-shot — they describe the task without worked examples. Adding 1–2 high-quality example breakdowns could improve format compliance and reduce malformed outputs.
@@ -26,11 +33,16 @@ This document surveys research on effective prompting strategies for math questi
 
 ### 1.3 Structured Output and Schema Constraints
 
-**Key finding:** Using structured output (JSON schema, tool calls, or function calling) significantly reduces format errors and improves the reliability of downstream parsing. Recent work on constrained decoding (e.g., JSONformer, Outlines) shows that enforcing schema at inference time eliminates formatting errors entirely.
+**Engineering rationale:** Structured output and Zod validation provide explicit
+format contracts. They do not establish mathematical correctness, handle every
+provider failure, or guarantee valid responses.
 
-- **Citation:** Liu, A., Feng, B., Wang, X., et al. (2024). "Let the Model Decide: Constrained Decoding for Few-Shot Classification." [arXiv:2402.05826](https://arxiv.org/abs/2402.05826)
-- **Relevance:** Mathify already uses `zodOutputFormat()` from the Anthropic SDK, which applies structured output constraints. This is the most impactful prompt engineering decision we've made — it eliminates an entire class of errors.
-- **Trade-off:** Structured output can sometimes reduce the model's "creative" range. For our use case, this is a feature, not a bug — we want consistent, schema-valid outputs.
+- **Citation correction:** the previous arXiv:2402.05826 link is a paper about
+  SARS-CoV-2 modelling, not constrained decoding; it is excluded from our evidence.
+- **Relevance:** the provider uses schema-constrained output and validates the
+  returned artifacts. This is an implemented engineering safeguard, not a measured
+  ranking of prompt strategies.
+- **Limitation:** a perfectly valid JSON object can still contain a wrong answer.
 
 ### 1.4 Role Prompting and Persona
 
@@ -57,7 +69,7 @@ This document surveys research on effective prompting strategies for math questi
 
 ### 1.6 Ontario Math Curriculum Specificity
 
-**Key finding:** Domain-specific prompts that reference curriculum expectations improve the accuracy of grade-level assessments and topic classification.
+**Design rationale:** Curriculum references provide scope and terminology; improved grade-level accuracy from adding them is a hypothesis to test, not a result established by a curriculum document.
 
 - **Citation:** Ontario Ministry of Education (2021). *The Ontario Curriculum, Grade 9: Mathematics (MTH1W).* [link](https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics/courses/mth1w)
 - **Citation:** Ontario Ministry of Education (2005). *The Ontario Curriculum, Grades 9 and 10: Mathematics.* [link](https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics)
@@ -67,6 +79,9 @@ This document surveys research on effective prompting strategies for math questi
 ---
 
 ## 2. Prompt Strategy Comparison
+
+The comparisons below are hypotheses, not measured results. Terms such as
+"Best" or "Better" must not be presented as observed performance.
 
 | Strategy | Latency | Format Compliance | Breakdown Quality | Probe Quality | Recommendation |
 |----------|---------|-------------------|-------------------|---------------|----------------|
@@ -191,7 +206,40 @@ The validation prompts (`src/server/ai/validation-prompts.ts`) check:
 4. Whether distractors are reasonable
 5. Whether hints are helpful without giving away the answer
 
-This creates a feedback loop: prompt improvements can be validated automatically before deploying to production.
+This creates a candidate review loop, not proof of correctness. The reviewer uses
+the same provider construction point as the generator and can share its errors.
+Compare its judgments against checked reference answers and intentionally corrupted
+probes; report false positives, missed errors, and call failures separately.
+
+## 6. Validation protocol and decision gates
+
+1. Use the eight project-authored reference problems in
+   `src/lib/test-questions.ts`. Textbook chapter/example attributions have not been
+   verified and are not evidence of provenance. Curriculum links provide context,
+   not proof that a specific question appeared there.
+2. Freeze question text, prompt version, model ID, date, and mock/live mode for each
+   run. Retain full generated breakdowns, main/easier options, private keys, hints,
+   generation failures, and separate analysis/probe latencies.
+3. Independently check the reference solutions: x=4; (x+2)(x+3); 5 cm; sin(theta)=5/13;
+   5 cups; (x,y)=(2,5); 153.9 cm^2; x^4 with x != 0.
+4. Review every served and generated item for key correctness, exactly one valid
+   option, prerequisite alignment, meaningful distractors, and hint leakage.
+   Longer breakdowns and substring topic matches are only sanity checks.
+5. Compare the reviewer against known-error cases: wrong key, duplicate correct
+   options, unrelated concept, and answer-revealing hint. Include clean controls.
+   Measure detected errors / seeded errors and false flags / clean cases.
+6. Have a math educator review the artifacts before any accuracy claim. Report
+   counts/denominators and failures, not just successful calls. Eight cases are an
+   exploratory check, not a representative validation sample.
+7. When tutors respond, separate the external needs/layout questionnaire from
+   per-demo feedback. Record respondent count, version/case, rating distributions,
+   and comments. Zero responses currently means no tutor-derived findings.
+8. For the 10-15-second goal, use matched synthetic cases with/without the brief,
+   counterbalance order, record interpretation correctness and time, and avoid
+   reusing the same problem with the same tutor. A rating alone cannot test timing.
+9. Before a supervised pilot, require no unresolved mathematical key errors in the
+   reviewed sample and stakeholder agreement on the comprehension/timing target.
+   These are proposed decision gates, not achieved outcomes.
 
 ---
 
@@ -199,9 +247,29 @@ This creates a feedback loop: prompt improvements can be validated automatically
 
 1. Wei, J., Wang, X., Schuurmans, D., et al. (2022). "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models." NeurIPS 2022. https://arxiv.org/abs/2201.11903
 2. Brown, T., Mann, B., Ryder, N., et al. (2020). "Language Models are Few-Shot Learners." NeurIPS 2020. https://arxiv.org/abs/2005.14165
-3. Liu, A., Feng, B., Wang, X., et al. (2024). "Let the Model Decide." https://arxiv.org/abs/2402.05826
+3. Removed: incorrect constrained-decoding citation (arXiv:2402.05826).
 4. White, J., Fu, Q., et al. (2023). "A Prompt Pattern Catalog to Enhance Prompt Engineering with ChatGPT." https://arxiv.org/abs/2302.11382
 5. Rupp, A.A., Templin, J., & Henson, R.A. (2010). *Diagnostic Measurement: Theory, Methods, and Applications.* Guilford Press.
 6. Leighton, J.P. & Gierl, M.J. (2007). *Cognitive Diagnostic Assessment for Education.* Cambridge University Press.
 7. Ontario Ministry of Education (2021). *The Ontario Curriculum, Grade 9: Mathematics (MTH1W).* https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics/courses/mth1w
 8. Ontario Ministry of Education (2005). *The Ontario Curriculum, Grades 9 and 10: Mathematics.* https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics
+9. Education Endowment Foundation (2021). *Teacher Feedback to Improve Pupil Learning*, Recommendation 1. https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/feedback
+10. Michael Alley. *Assertion-Evidence Approach*: message headlines supported by visual evidence. https://www.assertion-evidence.com/
+
+## Verification snapshot (November 1, 2026)
+
+- Full offline Vitest suite: 111 passing tests across 16 files, including eight
+  reference-solution checks and consistency checks on the simulated briefs.
+- Playwright: three passing tests (two synthetic handoff flows, one presentation
+  navigation/mobile/print test), with a successful production build.
+- Typecheck and changed-code lint passed.
+- Static PDF export: exactly 12 pages; no slide exceeds its printable page.
+- Evaluation JSON now retains mock/live provenance, the full analysis and first
+  probe pair, and explicit probe-generation errors. It remains a harness, not
+  an independently graded math-accuracy benchmark.
+- Mock harness smoke: eight records, all explicitly marked `mock`, with analysis
+  and first-pair artifacts and zero generation failures. This checks plumbing only;
+  the mock provider returns fixed fixtures and cannot benchmark new questions.
+- Fixed reviewer input coverage: easier retries now include their concept, hint,
+  and explanation, not just options/key. A mocked SDK payload test verifies this;
+  no actual reviewer-accuracy result is inferred.

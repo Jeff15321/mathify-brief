@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mathify Tutor Brief — Research, Evidence, and Next Decision</title>
+<style>
+:root{--ink:#172b3a;--muted:#536371;--accent:#9e431f;--line:#d5dde2;--paper:#fff;--soft:#f3f6f8}
+*{box-sizing:border-box}body{margin:0;background:#e8edf0;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+a{color:#175782;text-underline-offset:3px}button{font:inherit;cursor:pointer;border:1px solid var(--line);background:white;color:var(--ink);padding:9px 14px;border-radius:4px}button:disabled{opacity:.45;cursor:default}button:focus-visible,a:focus-visible{outline:3px solid #175782;outline-offset:3px}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:center;padding:12px;flex-wrap:wrap}.toolbar span{font-size:14px;min-width:100px;text-align:center}
+main{max-width:1280px;margin:0 auto;padding:0 18px 20px}.slide{background:var(--paper);margin:0 0 20px;padding:46px 54px;min-height:660px;border:1px solid var(--line);position:relative}
+.js .slide[hidden]{display:none}.eyebrow{font-size:13px;letter-spacing:1.8px;text-transform:uppercase;color:var(--accent);font-weight:bold;margin:0 0 18px}
+h1,h2{font-weight:600;line-height:1.12;letter-spacing:-1px;margin:0 0 30px;max-width:1040px}h1{font-size:54px}h2{font-size:40px}h3{font-size:21px;margin:0 0 14px}p{font-size:22px;line-height:1.4;margin:0 0 16px}
+.lede{font-size:27px;max-width:820px}.small{font-size:16px;color:var(--muted);line-height:1.45}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.two{grid-template-columns:repeat(2,1fr)}.box{background:var(--soft);border-top:3px solid var(--ink);padding:24px}.box p{font-size:20px}.accent{border-top-color:var(--accent)}.big{font-size:64px;font-weight:bold;color:var(--accent);line-height:1;margin:10px 0 16px}
+.flow{display:flex;gap:12px;align-items:stretch;margin:30px 0}.flow .box{flex:1;min-width:0}.flow .box p{font-size:19px}.arrow{align-self:center;font-size:28px;color:var(--muted)}.equation{font-size:36px;margin:10px 0 22px;font-family:Georgia,serif}
+.answer{padding:15px 20px;border:1px solid var(--line);margin:10px 0;font-size:23px}.answer.selected{border-left:5px solid var(--accent)}.answer.correct{border-left:5px solid #276354}
+.footer{border-top:1px solid var(--line);margin-top:28px;padding-top:12px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;gap:15px}.notes{display:none;background:#fff7ed;border-left:3px solid var(--accent);padding:16px;margin-top:20px;font-size:16px;line-height:1.5}.show-notes .notes{display:block}
+table{border-collapse:collapse;width:100%;font-size:18px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}.sources{font-size:17px;line-height:1.5;padding-left:22px}.sources li{margin:0 0 13px}
+.status{text-align:center;min-height:22px;font-size:14px}.tag{display:inline-block;border:1px solid var(--line);padding:5px 9px;font-size:14px;color:var(--muted);margin-bottom:18px}
+@media(max-width:850px){.slide{padding:28px 24px;min-height:0}h1{font-size:38px}h2{font-size:30px}.grid{grid-template-columns:1fr}.flow{flex-direction:column}.arrow{transform:rotate(90deg)}p{font-size:20px}.equation{font-size:28px}.footer{flex-direction:column}table{font-size:15px}th,td{padding:8px}.big{font-size:48px}}
+@media print{@page{size:A4 landscape;margin:10mm}body{background:white}.toolbar,.status{display:none!important}main{padding:0;max-width:none}.slide,.js .slide[hidden]{display:block!important;break-after:page;page-break-after:always;border:0;margin:0;padding:8mm;min-height:0;height:185mm;overflow:visible}.slide:last-child{break-after:auto;page-break-after:auto}h1{font-size:34pt}h2{font-size:26pt}p{font-size:16pt}.box p{font-size:14pt}.small{font-size:11pt}.sources{font-size:12pt}.notes{display:none!important}.footer{font-size:10pt}.grid{grid-template-columns:repeat(3,1fr)}.grid.two{grid-template-columns:repeat(2,1fr)}.flow{flex-direction:row}.arrow{transform:none}.big{font-size:44pt}table{font-size:12pt}th,td{padding:8px}.slide a{color:var(--ink)}}
+</style>
+</head>
+<body>
+<nav class="toolbar" aria-label="Presentation controls">
+<button id="prev" type="button">Previous</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Next</button>
+<button id="notes" type="button" aria-pressed="false">Speaker notes</button><button id="print" type="button">Print / Save PDF</button>
+</nav>
+<p class="status" id="status" role="status"></p>
+<main aria-label="Stakeholder presentation">
+<section class="slide" id="slide-01" aria-labelledby="title-01">
+<p class="eyebrow">TVO Mathify / Reading-week evidence review / 1 November 2026</p>
+<h1 id="title-01" tabindex="-1">Give tutors a better starting point.<br>Keep the judgment human.</h1>
+<p class="lede">A research-informed diagnostic intake, with a working prototype and a transparent validation plan.</p>
+<div class="grid" style="margin-top:38px"><div class="box"><h3>Research rationale</h3><p>Identify gaps before choosing feedback.</p></div><div class="box"><h3>Working prototype</h3><p>Probe, retry, capture work, hand off.</p></div><div class="box accent"><h3>Next evidence</h3><p>Math accuracy and tutor comprehension.</p></div></div>
+<div class="footer"><span>Research-backed rationale ≠ proven learning gains</span><span>01 / 12</span></div>
+<aside class="notes">Opening: we are not claiming this prototype improves grades or saves a measured amount of time. We are showing why the design is reasonable, what we have verified, and the evidence needed for a supervised trial. This deck is static, authored content: no model calls, generated charts, external scripts, or runtime dependencies.</aside>
+</section>
+<section class="slide" id="slide-02" aria-labelledby="title-02">
+<p class="eyebrow">The proposed intervention</p><h2 id="title-02" tabindex="-1">Use waiting time to collect evidence—not to diagnose a student permanently.</h2>
+<div class="flow"><div class="box"><h3>Question</h3><p>Student submits a problem and optional work.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Concept probes</h3><p>One question at a time; an easier retry if needed.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Tutor brief</h3><p>Possible gap, actual responses, and whiteboard work.</p></div></div>
+<p class="lede">The tutor sees the evidence and decides where to begin.</p><p class="small">Design target: understand the brief in 10–15 seconds. Baseline and achieved time have not yet been measured.</p>
+<div class="footer"><span>Project scope: a single-question intake prototype, not live Mathify integration</span><span>02 / 12</span></div>
+<aside class="notes">The target comes from project planning, not a published measured improvement. Early submission is supported; unreached probes are not marked wrong. The current brief previews whiteboard work but does not automatically diagnose that work. Sessions, learner profiles, auth, and live tutor connections remain outside this demo.</aside>
+</section>
+<section class="slide" id="slide-03" aria-labelledby="title-03">
+<p class="eyebrow">Published guidance / Design rationale</p><h2 id="title-03" tabindex="-1">Formative assessment helps teachers choose the feedback a learner needs.</h2>
+<div class="flow"><div class="box"><h3>Elicit evidence</h3><p>What can the learner do on this concept?</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Identify a gap</h3><p>Which response needs clarification?</p></div><span class="arrow" aria-hidden="true">→</span><div class="box accent"><h3>Respond</h3><p>The tutor checks the interpretation and adapts instruction.</p></div></div>
+<p class="small">EEF guidance recommends formative assessment as a foundation for effective feedback. Our probes are intended to supply that evidence—not replace high-quality instruction.</p>
+<div class="footer"><span><a href="https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/feedback">EEF (2021), Teacher Feedback to Improve Pupil Learning, Recommendation 1</a></span><span>03 / 12</span></div>
+<aside class="notes">This is the strongest direct educational rationale in the deck. The guidance is about classroom feedback, not a trial of our AI system or an Ontario tutoring queue. We are translating a principle into a prototype; transfer to this setting still requires evaluation.</aside>
+</section>
+<section class="slide" id="slide-04" aria-labelledby="title-04">
+<p class="eyebrow">Worked illustration / Synthetic responses</p><h2 id="title-04" tabindex="-1">A targeted probe can reveal which part of a problem needs attention.</h2>
+<div class="grid two"><div class="box"><h3>Original question</h3><p class="equation">2(x + 3) = 14</p><div class="answer">Distribute → balance → divide</div><p class="small">Reference solution: 2x + 6 = 14 → 2x = 8 → x = 4.</p></div><div class="box accent"><h3>Probe: expand 2(x + 3)</h3><div class="answer selected">A. 2x + 3 <span class="small">/ selected</span></div><div class="answer correct">B. 2x + 6 <span class="small">/ correct</span></div><p>Possible gap: multiplying the constant inside the brackets.</p></div></div>
+<div class="footer"><span>Project-authored example, not an actual student or live-model accuracy result</span><span>04 / 12</span></div>
+<aside class="notes">The distractor is informative because it preserves the x term but fails to multiply the constant. That is a hypothesis about the response, not a diagnosis. Ask the learner to explain their choice. Other explanations include a slip, misreading, or guessing. The full app has four options; this slide shows the selected option and key only to keep the story clear.</aside>
+</section>
+<section class="slide" id="slide-05" aria-labelledby="title-05">
+<p class="eyebrow">Adaptive follow-up / Synthetic responses</p><h2 id="title-05" tabindex="-1">An easier retry adds evidence without erasing the original difficulty.</h2>
+<div class="flow"><div class="box"><h3>Main probe</h3><p class="equation">2(x + 3)</p><p>Selected 2x + 3.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Easier retry</h3><p class="equation">2(x + 1)</p><p>Selected 2x + 2.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box accent"><h3>Tutor starting point</h3><p>Confirm distribution; use a simpler example first.</p></div></div>
+<p class="small">Observed: a missed main item and a correct simpler item. Not established: mastery, learning style, or the cause of the mistake.</p>
+<div class="footer"><span>One retry per concept; “I don't know” is kept distinct from a wrong answer</span><span>05 / 12</span></div>
+<aside class="notes">Correcting a simpler item is useful, but reducing 3 to 1 is only a modest difficulty adjustment; we have not calibrated these questions psychometrically. The tutor may need a representation or explanation, not another multiple-choice question. This example illustrates the implemented branch, not its measured educational benefit.</aside>
+</section>
+<section class="slide" id="slide-06" aria-labelledby="title-06">
+<p class="eyebrow">AI research / Engineering boundary</p><h2 id="title-06" tabindex="-1">Research supports testing structured reasoning—not trusting every generated answer.</h2>
+<div class="grid"><div class="box"><h3>Reasoning prompts</h3><p>Wei et al. studied improvements on language-model reasoning benchmarks.</p><p class="small">Not evidence of student learning gains in our prototype.</p></div><div class="box"><h3>Schema validation</h3><p>Typed JSON makes outputs easier to check and display.</p><p class="small">A valid schema can contain incorrect mathematics.</p></div><div class="box accent"><h3>Human verification</h3><p>Check keys, prerequisites, distractors, and hint leakage.</p><p class="small">A second AI review is supporting evidence, not ground truth.</p></div></div>
+<div class="footer"><span><a href="https://arxiv.org/abs/2201.11903">Wei et al. (2022), Chain-of-Thought Prompting</a> / schema and review are prototype safeguards</span><span>06 / 12</span></div>
+<aside class="notes">The current design requests prerequisite steps; it is not an exact replication of the published few-shot chain-of-thought experiments. Do not say our model achieved the paper's benchmark scores. An incorrect constrained-decoding citation was removed from the draft after checking its actual arXiv title. We do not reproduce private model reasoning for students.</aside>
+</section>
+<section class="slide" id="slide-07" aria-labelledby="title-07">
+<p class="eyebrow">Validation architecture</p><h2 id="title-07" tabindex="-1">Use three checks, with independently checked mathematics as the anchor.</h2>
+<div class="grid"><div class="box"><h3>1 / Contract checks</h3><p>Required fields, four choices, stored keys, and answer flow.</p><p class="small">Detect malformed or inconsistent artifacts.</p></div><div class="box"><h3>2 / AI reviewer</h3><p>Review breakdown, options, explanations, and hints.</p><p class="small">Implemented; opt-in. Accuracy not yet benchmarked.</p></div><div class="box accent"><h3>3 / Reference + tutor</h3><p>Solve independently, then review diagnostic relevance.</p><p class="small">Evaluate missed errors as well as successful detections.</p></div></div>
+<p class="small">Confidence currently reflects heuristic coverage/timing. It is not a calibrated probability that the brief is correct.</p>
+<div class="footer"><span>No-issue AI review ≠ a verified answer / tutor confirmation remains essential</span><span>07 / 12</span></div>
+<aside class="notes">The reviewer is a second call through the same provider, not necessarily a different model. To test it, include clean controls and known wrong keys, duplicate valid options, off-topic probes, and revealing hints. Measure detection and false flags. No live benchmark was executed in this session because no API credential is available.</aside>
+</section>
+<section class="slide" id="slide-08" aria-labelledby="title-08">
+<p class="eyebrow">Local verification / Not educational effectiveness</p><h2 id="title-08" tabindex="-1">The implemented handoff works in repeatable, offline tests.</h2>
+<div class="grid"><div class="box"><div class="big">111</div><h3>Offline tests</h3><p>Reference arithmetic, probe flow, storage, UI, whiteboard, and feedback.</p></div><div class="box"><div class="big">3</div><h3>Browser checks</h3><p>Two handoff flows plus deck navigation, mobile layout, and printing.</p></div><div class="box accent"><h3>Additional checks</h3><p>Production build, typecheck, and touched-file lint passed.</p><p class="small">Full offline suite: 16 test files. Dated verification, not study participants.</p></div></div>
+<p class="small">Browser verification includes preserved drawings, blank-board omission, both uploaded images in the tutor PNG, and no external network requests in the tested flows.</p>
+<div class="footer"><span>Mock AI, synthetic data, local storage / November 1, 2026</span><span>08 / 12</span></div>
+<aside class="notes">These are engineering tests, not 111 students or 111 independently validated generated probes. The two handoff flows use synthetic inputs; the third test checks the presentation. None establishes diagnostic accuracy or learner benefit. Full offline suite: 111 tests in 16 files passed November 1. Run with a compatible Node 22 runtime; npm run test:e2e performs a production build before its three tests.</aside>
+</section>
+<section class="slide" id="slide-09" aria-labelledby="title-09">
+<p class="eyebrow">Prepared reference set / Live evaluation pending</p><h2 id="title-09" tabindex="-1">Start with eight checked answers, then score the actual generated probes.</h2>
+<table><thead><tr><th>Reference problem</th><th>Checked solution</th><th>Key review focus</th></tr></thead><tbody>
+<tr><td>2(x + 3) = 14</td><td>x = 4</td><td>Distribution and equation balance</td></tr>
+<tr><td>x² + 5x + 6</td><td>(x + 2)(x + 3)</td><td>Product and sum constraints</td></tr>
+<tr><td>Right triangle: legs 3, 4</td><td>Hypotenuse = 5 cm</td><td>Side identification and square root</td></tr>
+<tr><td>Opposite = 5; hypotenuse = 13</td><td>sin θ = 5/13</td><td>Ratio selection</td></tr>
+<tr><td>2 cups / 12 cookies → 30 cookies</td><td>5 cups</td><td>Proportional scaling</td></tr>
+<tr><td>y = 2x + 1; y = −x + 7</td><td>(x, y) = (2, 5)</td><td>Equality and substitution</td></tr>
+<tr><td>Circle: radius 7 cm</td><td>153.9 cm² (1 decimal)</td><td>Radius squared and units</td></tr>
+<tr><td>(2x³)² ÷ 4x²</td><td>x⁴; x ≠ 0</td><td>Exponent rules and domain</td></tr></tbody></table>
+<div class="footer"><span>Project-authored reference cases / no live-model accuracy percentage claimed</span><span>09 / 12</span></div>
+<aside class="notes">Independent arithmetic/algebra regression checks accompany these answers. This small, familiar set is an exploratory starting point, not representative coverage of Ontario mathematics. Retain full artifacts and score every main/easier probe for correctness, unique key, concept alignment, distractor quality, and non-revealing hints. Do not substitute topic matching or step counts for that review. Verify exact curriculum alignment with an educator.</aside>
+</section>
+<section class="slide" id="slide-10" aria-labelledby="title-10">
+<p class="eyebrow">Tutor evidence / Current status</p><h2 id="title-10" tabindex="-1">Zero tutor responses means the human-value claim is still open.</h2>
+<div class="grid"><div class="box"><div class="big">0</div><h3>Tutor responses</h3><p>Confirmed by the project owner on November 1.</p></div><div class="box"><h3>Questionnaire</h3><p>Needs, layout preferences, and information priorities.</p><p class="small">Distributed; no results to analyze yet.</p></div><div class="box accent"><h3>Timed walkthrough</h3><p>Can tutors identify the gap and starting point in 10–15 seconds?</p><p class="small">Record correctness and time, not ratings alone.</p></div></div>
+<div class="footer"><span>In-app feedback captures usefulness, breakdown accuracy, and probe quality ratings</span><span>10 / 12</span></div>
+<aside class="notes">The external questionnaire uses early mockups, while the current UI has evolved. Confirm preferences against this version. For a walkthrough, use matched synthetic cases and counterbalance with/without-brief order. Include early submission and whiteboard-only work; the correct response may be “insufficient probe evidence.” Record the denominator, missing responses, comments, and disagreements. Test-submitted feedback is not a tutor response.</aside>
+</section>
+<section class="slide" id="slide-11" aria-labelledby="title-11">
+<p class="eyebrow">Stakeholder decision</p><h2 id="title-11" tabindex="-1">Approve a bounded evaluation before expanding the product.</h2>
+<div class="flow"><div class="box"><h3>First: accuracy</h3><p>Review generated items against reference answers; test the reviewer.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Then: tutor value</h3><p>Collect feedback and measure correct interpretation within the target time.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box accent"><h3>Then: supervised pilot</h3><p>Resolve errors and agree success criteria before using real learner data.</p></div></div>
+<p class="lede">Research justifies the experiment. Results must justify the rollout.</p>
+<div class="footer"><span>Ask: a math reviewer, participating tutors, and an agreed evaluation protocol</span><span>11 / 12</span></div>
+<aside class="notes">Proposed gate: no unresolved answer-key errors in the reviewed sample, documented reviewer failure rates, and an agreed timing/comprehension criterion. These gates have not been achieved. Keep sessions/history, persistent profiles, authentication, and public deployment separate. Real learner data requires privacy, consent, and access-control work beyond this local prototype.</aside>
+</section>
+<section class="slide" id="slide-12" aria-labelledby="title-12">
+<p class="eyebrow">References and evidence boundaries</p><h2 id="title-12" tabindex="-1">Every claim has a source—and a limit.</h2>
+<ol class="sources">
+<li><strong>Educational rationale:</strong> EEF (2021), <a href="https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/feedback">Teacher Feedback to Improve Pupil Learning</a>, Recommendation 1. Formative assessment informs feedback; not a study of this product.</li>
+<li><strong>AI reasoning:</strong> Wei et al. (2022), <a href="https://arxiv.org/abs/2201.11903">Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</a>. Model benchmark evidence; not learner outcomes.</li>
+<li><strong>Curriculum context:</strong> Ontario Ministry of Education, <a href="https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics/courses/mth1w">Grade 9 Mathematics (MTH1W)</a>. Scope context; exact alignment/provenance of our example questions is not certified.</li>
+<li><strong>Presentation method:</strong> Michael Alley, <a href="https://www.assertion-evidence.com/">Assertion-Evidence Approach</a>. Sentence headlines, visual support, and speaker explanation; applied here without a downloaded template.</li>
+<li><strong>Prototype evidence:</strong> repository tests and synthetic browser flows, November 1, 2026. Reproducible engineering checks; no tutor-response or live-model effectiveness result.</li>
+</ol>
+<div class="footer"><span>Controls: ← / →, Home / End, N for notes, P to print / Save PDF</span><span>12 / 12</span></div>
+<aside class="notes">Supporting methodology is in docs/prompt-research.md; source code and tests are in the repository. No invented survey percentages, model success rates, or effect-size transfer is used. Sources were checked online; the draft's unrelated arXiv citation was excluded. Speaker notes hold caveats so the visible slides remain concise.</aside>
+</section>
+</main>
+<script>
+(() => {
+  const slides = [...document.querySelectorAll(".slide")];
+  const previous = document.getElementById("prev");
+  const next = document.getElementById("next");
+  const notes = document.getElementById("notes");
+  const counter = document.getElementById("counter");
+  let index = 0;
+  document.documentElement.classList.add("js");
+  function show(target, focus = false) {
+    index = Math.max(0, Math.min(slides.length - 1, target));
+    slides.forEach((slide, i) => { slide.hidden = i !== index; });
+    previous.disabled = index === 0;
+    next.disabled = index === slides.length - 1;
+    counter.textContent = `Slide ${index + 1} of ${slides.length}`;
+    history.replaceState(null, "", `#${slides[index].id}`);
+    if (focus) slides[index].querySelector("h1,h2").focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+  function fromHash() {
+    const target = slides.findIndex(slide => `#${slide.id}` === location.hash);
+    show(target < 0 ? 0 : target);
+  }
+  function toggleNotes() {
+    const visible = document.body.classList.toggle("show-notes");
+    notes.setAttribute("aria-pressed", String(visible));
+  }
+  previous.addEventListener("click", () => show(index - 1, true));
+  next.addEventListener("click", () => show(index + 1, true));
+  notes.addEventListener("click", toggleNotes);
+  document.getElementById("print").addEventListener("click", () => window.print());
+  window.addEventListener("hashchange", fromHash);
+  document.addEventListener("keydown", event => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest("input,textarea,select,button,a")) return;
+    if (["ArrowRight","PageDown","ArrowLeft","PageUp","Home","End","n","N","p","P"].includes(event.key)) event.preventDefault();
+    if (event.key === "ArrowRight" || event.key === "PageDown") show(index + 1, true);
+    if (event.key === "ArrowLeft" || event.key === "PageUp") show(index - 1, true);
+    if (event.key === "Home") show(0, true);
+    if (event.key === "End") show(slides.length - 1, true);
+    if (event.key.toLowerCase() === "n") toggleNotes();
+    if (event.key.toLowerCase() === "p") window.print();
+  });
+  fromHash();
+})();
+</script>
+</body>
+</html>

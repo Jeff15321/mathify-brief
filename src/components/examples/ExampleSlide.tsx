@@ -40,7 +40,10 @@ export function ExampleSlide({ example }: { example: ExampleQuestion }) {
           </span>
         </div>
         <p className="text-lg font-semibold text-slate-800">{example.questionText}</p>
-        <p className="mt-1 text-xs text-slate-400">Source: {example.source}</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Prewritten illustration with simulated responses, not a measured live-model result.
+          Curriculum context: {example.gradeLevel} mathematics. Exact textbook attribution is unverified.
+        </p>
       </div>
 
       {/* Breakdown diagram */}
@@ -56,7 +59,7 @@ export function ExampleSlide({ example }: { example: ExampleQuestion }) {
       {/* Probe previews */}
       {probePreviews.length > 0 && (
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-3 text-sm font-semibold text-slate-700">Generated probes</h3>
+          <h3 className="mb-3 text-sm font-semibold text-slate-700">Illustrative probes</h3>
           <div className="flex flex-col gap-3">
             {probePreviews.map((probe, i) => (
               <div key={i} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
@@ -65,7 +68,6 @@ export function ExampleSlide({ example }: { example: ExampleQuestion }) {
                 <div className="mt-2 grid grid-cols-2 gap-1.5">
                   {probe.options.map((opt) => {
                     const isSelected = probe.mainAnswer === opt.id;
-                    const isCorrect = opt.id === probe.options.find(() => true)?.id; // simplified
                     return (
                       <div
                         key={opt.id}
@@ -126,7 +128,7 @@ export function ExampleSlide({ example }: { example: ExampleQuestion }) {
                 ))}
               </ul>
             ) : (
-              <p className="mt-1 text-xs text-red-400 italic">No gaps — great work!</p>
+              <p className="mt-1 text-xs text-red-400 italic">No gaps observed in these simulated answers.</p>
             )}
           </div>
         </div>

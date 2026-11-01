@@ -194,6 +194,9 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
           lines.push(`    Question: ${s.easier.questionMarkdown}`);
           lines.push(`    Options: ${s.easier.options.map((o) => `${o.id}: ${o.textMarkdown}`).join(', ')}`);
           lines.push(`    Correct: ${s.easier.correctOptionId}`);
+          lines.push(`    Concept: ${s.easier.concept}`);
+          lines.push(`    Explanation: ${s.easier.explanation}`);
+          lines.push(`    Hint: ${s.easier.hint}`);
         }
         return lines.join('\n');
       })
