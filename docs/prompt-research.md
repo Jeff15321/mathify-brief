@@ -263,10 +263,20 @@ probes; report false positives, missed errors, and call failures separately.
 - Playwright: three passing tests (two synthetic handoff flows, one presentation
   navigation/mobile/print test), with a successful production build.
 - Typecheck and changed-code lint passed.
-- HTML export: 12 pages. Editable PowerPoint: 12 content slides plus retained
-  Beatrice template credits. The PowerPoint-derived PDF has 13 pages.
+- HTML and editable PowerPoint: 12 slides, including sources and Beatrice
+  attribution. The PowerPoint-derived PDF has 12 pages. Original 16:9
+  product-review layouts use message headlines, a traceable synthetic case,
+  native editable diagrams, large prototype evidence, and natural speaker scripts.
   Template source: https://www.slidescarnival.com/template/beatrice-free-presentation-template/66
-  License: CC BY 4.0, with original credits retained.
+  License: CC BY 4.0, with attribution retained. Diagrams are original;
+  prototype screenshots use mock data. No stock photos or generated images.
+  Design references were inspected, not copied:
+  - Public Google Cloud executive presentation, February 11, 2020:
+    https://services.google.com/fh/files/misc/goldman_sachs_keynote_google_cloud_thomas_kurian_021120.pdf
+  - Sparks, Google Cloud Next keynote design case study:
+    https://www.wearesparks.com/our-work/google-cloud-next/
+  These support a consistent visual grammar, hierarchy, and diagram-led
+  storytelling. They are not Mathify effectiveness evidence or Google endorsement.
 - Evaluation JSON now retains mock/live provenance, the full analysis and first
   probe pair, and explicit probe-generation errors. It remains a harness, not
   an independently graded math-accuracy benchmark.

@@ -48,7 +48,7 @@ describe("Independent reference arithmetic (not model accuracy)", () => {
 describe("Evidence integrity", () => {
   it("covers the eight existing reference cases without reporting a live success rate", () => {
     expect(TEST_QUESTIONS).toHaveLength(8);
-    expect(deck).toContain("no live-model accuracy percentage claimed");
+    expect(deck).toContain("No live-model accuracy percentage is claimed");
     expect(deck).toContain("Zero tutor responses");
     expect(deck).toContain("not an actual student or live-model accuracy result");
     expect(deck).not.toMatch(/<script[^>]+src=|<link[^>]+href=/i);

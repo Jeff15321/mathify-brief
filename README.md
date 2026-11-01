@@ -51,18 +51,36 @@ The current jsdom/undici test dependencies require a compatible Node runtime
 ### Stakeholder evidence presentation
 
 Download `/Mathify-stakeholder-evidence.pptx` for the editable PowerPoint version:
-12 content slides plus a retained template credits slide. It adapts the
+12 slides, including sources and template credits. It adapts the
 [Beatrice Google Slides/PowerPoint template](https://www.slidescarnival.com/template/beatrice-free-presentation-template/66)
 by SlidesCarnival under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-The original credits are retained. Colors and backgrounds follow the template;
-text and layouts are adapted, with Arial/Georgia for font compatibility.
+Template attribution is retained, but the visible layouts are original:
+16:9 product-review compositions with message headlines, native diagrams,
+large synthetic prototype screenshots, evidence boundaries, and a validation ask.
+The design references an actual
+[public Google Cloud executive deck](https://services.google.com/fh/files/misc/goldman_sachs_keynote_google_cloud_thomas_kurian_021120.pdf)
+and [Sparks' Google Cloud Next design case study](https://www.wearesparks.com/our-work/google-cloud-next/).
+It does not reproduce Google slides, logos, or imply endorsement.
+Typography uses Segoe UI with an Arial fallback in the browser.
+Native PowerPoint text and diagrams remain editable; natural spoken scripts
+are included in speaker notes.
 The deck contains no em dashes and explicitly states that no tutor responses
 have been received. The questionnaire was distributed; response analysis is pending.
 
 Open `/stakeholder-deck.html` or open `public/stakeholder-deck.html` directly in a
-browser. It is a self-contained, static 12-slide presentation with no AI calls or
-external assets. Use arrow keys, Home/End, **N** for speaker notes, and **P** or
+browser. It is a static 12-slide presentation with no AI calls or remote assets.
+The browser uses the same authored 16:9 composition as PowerPoint, rather than
+reflowing it into a long article. Speaker scripts appear below the slide.
+Keep `public/deck-images` alongside the HTML when copying it.
+Use arrow keys, Home/End, **N** for speaker notes, and **P** or
 **Print / Save PDF** for a printable deck. Sources and caveats are included.
+
+To rebuild both versions, run `python scripts/build-stakeholder-deck.py` on Windows
+with `python-pptx==1.0.2` and Pillow installed. The builder reuses the committed
+template-derived PowerPoint and three local mock UI screenshots.
+Edit the shared slide data and canvas compositions in that script, not the
+generated HTML. Each canvas is rendered as native editable PowerPoint objects
+and accessible SVG in the browser.
 
 The deck distinguishes published design rationale, synthetic prototype tests,
 checked reference answers, and unmeasured effectiveness. There are currently zero
