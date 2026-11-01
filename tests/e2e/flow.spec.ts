@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// The demo stores a singleton workspace, so these flows must not run concurrently.
+test.describe.configure({ mode: "serial" });
+
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
 test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> early submit -> brief", async ({ page }) => {
   await page.goto("/");
@@ -29,29 +32,23 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
 
   // Draw on the whiteboard, then expand/restore; the current selection must survive.
   await page.locator('input[name="s2-easier"][value="B"]').check();
-  const canvas = page.locator("canvas");
+  await page.getByTitle(/^Draw —/).click();
+  const canvas = page.locator("canvas.excalidraw__canvas.interactive");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("whiteboard canvas not found");
-  await page.mouse.move(box.x + 50, box.y + 50);
+  await page.mouse.move(box.x + 300, box.y + 280);
   await page.mouse.down();
-  await page.mouse.move(box.x + 200, box.y + 150);
+  await page.mouse.move(box.x + 450, box.y + 380);
   await page.mouse.up();
+  await expect(page.getByRole("button", { name: "Undo", exact: true })).toBeEnabled();
 
-  // Regression: the whole dotted area must be drawable, including its top-left corner.
-  const area = await canvas.locator("xpath=..").boundingBox();
-  if (!area) throw new Error("whiteboard area not found");
-  await page.mouse.move(area.x + 15, area.y + 15);
-  await page.mouse.down();
-  await page.mouse.move(area.x + 40, area.y + 18);
-  await page.mouse.up();
-  const cornerHasInk = await canvas.evaluate((el: HTMLCanvasElement) => {
-    const ratio = el.width / el.getBoundingClientRect().width;
-    const { data } = el.getContext("2d")!.getImageData(10 * ratio, 10 * ratio, 35 * ratio, 15 * ratio);
-    return data.some((value, i) => i % 4 === 3 && value !== 0);
-  });
-  expect(cornerHasInk).toBe(true);
   await page.getByLabel("Expand Whiteboard").click();
   await page.getByLabel("Restore Whiteboard").click();
+  await page.setViewportSize({ width: 800, height: 900 });
+  await page.getByRole("button", { name: "Relevant Concepts", exact: true }).click();
+  await page.getByRole("button", { name: "Whiteboard", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Undo", exact: true })).toBeEnabled();
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
   await next.click();
 
@@ -92,4 +89,94 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(retryItems).toHaveCount(2);
   await expect(retryItems.first()).toBeVisible();
   await expect(page.getByText("Not reached before submitting")).toHaveCount(0);
+
+  for (const label of ["Overall usefulness", "Breakdown accuracy", "Probe quality"]) {
+    await page.getByRole("group", { name: label }).getByRole("button", { name: "4 out of 5" }).click();
+  }
+  const feedbackSaved = page.waitForResponse((response) =>
+    response.url().endsWith("/api/feedback") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Submit feedback" }).click();
+  expect((await feedbackSaved).status()).toBe(201);
+  await expect(page.getByText(/Thank you for your feedback/)).toBeVisible();
+});
+
+test("blank scenes omit the snapshot; multiple uploaded images survive in the tutor PNG", async ({ page }) => {
+  const externalRequests: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.protocol.startsWith("http") && url.hostname !== "localhost") externalRequests.push(request.url());
+  });
+  await page.goto("/");
+  await page.getByLabel("Question (optional if files provided)").fill("Solve x + 3 = 7.");
+  await page.getByRole("button", { name: "Begin Session" }).click();
+  await page.waitForURL("**/workspace");
+  await expect(page.getByTitle(/^Draw —/)).toBeVisible();
+  await page.getByRole("button", { name: "Fit to work" }).click();
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.waitForURL("**/brief");
+  const blank = await (await page.request.get("/api/workspace")).json();
+  expect(blank.workspace.whiteboardAsset).toBeNull();
+
+  await page.goto("/");
+  const images = await page.evaluate(() => ["#ff0000", "#0000ff"].map((color) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 120;
+    canvas.height = 70;
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = color;
+    context.fillRect(0, 0, 120, 70);
+    return canvas.toDataURL("image/png").split(",")[1];
+  }));
+  const chooserPromise = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: /Drag & drop images or PDFs/ }).click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles(images.map((image, index) => ({
+    name: `question-${index}.png`,
+    mimeType: "image/png",
+    buffer: Buffer.from(image, "base64"),
+  })));
+  await page.getByLabel("Question (optional if files provided)").fill("Solve x + 3 = 7.");
+  await page.getByRole("button", { name: "Begin Session" }).click();
+  await page.waitForURL("**/workspace");
+  await expect(page.getByTitle(/^Draw —/)).toBeVisible();
+  // Wait for the two image assets to be decoded and drawn, not just for the editor shell.
+  await expect.poll(() => page.locator("canvas.excalidraw__canvas.static").evaluate((canvas: HTMLCanvasElement) => {
+    const data = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height).data;
+    let red = false;
+    let blue = false;
+    for (let index = 0; index < data.length; index += 4) {
+      red ||= data[index] > 200 && data[index + 1] < 50 && data[index + 2] < 50;
+      blue ||= data[index] < 50 && data[index + 1] < 50 && data[index + 2] > 200;
+    }
+    return red && blue;
+  })).toBe(true);
+  await page.getByTitle(/^Text —/).click();
+  const board = await page.locator("canvas.excalidraw__canvas.interactive").boundingBox();
+  if (!board) throw new Error("whiteboard canvas not found");
+  await page.mouse.click(board.x + 300, board.y + 400);
+  const textEditor = page.getByRole("textbox");
+  await textEditor.fill("x + 3 = 7");
+  await textEditor.press("Escape");
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.waitForURL("**/brief");
+  const preview = page.getByAltText("Student's whiteboard");
+  await expect(preview).toBeVisible();
+  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => {
+    if (!image.complete || !image.naturalWidth) return false;
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(image, 0, 0);
+    const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let red = false;
+    let blue = false;
+    for (let index = 0; index < data.length; index += 4) {
+      red ||= data[index] > 200 && data[index + 1] < 50 && data[index + 2] < 50;
+      blue ||= data[index] < 50 && data[index + 1] < 50 && data[index + 2] > 200;
+    }
+    return red && blue;
+  })).toBe(true);
+  expect(externalRequests).toEqual([]);
 });

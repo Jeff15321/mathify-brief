@@ -48,3 +48,7 @@ next-env.d.ts
 # test artifacts
 /playwright-report
 /test-results
+
+# Private planning sources and stage-by-stage working notes
+/.project-notes/
+/public/excalidraw-assets/

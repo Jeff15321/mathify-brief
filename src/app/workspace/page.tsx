@@ -130,7 +130,7 @@ export default function WorkspacePage() {
       router.push("/brief");
     } catch (err) {
       setError(
-        err instanceof ApiClientError ? err.message : "Could not submit your answers. Please try again.",
+        err instanceof Error ? err.message : "Could not submit your answers. Please try again.",
       );
       setSubmitting(false);
     }
