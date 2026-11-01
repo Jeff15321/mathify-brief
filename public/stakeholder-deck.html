@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mathify Tutor Brief — Research, Evidence, and Next Decision</title>
+<title>Mathify Tutor Brief: Research, Evidence, and Next Decision</title>
 <style>
 :root{--ink:#172b3a;--muted:#536371;--accent:#9e431f;--line:#d5dde2;--paper:#fff;--soft:#f3f6f8}
 *{box-sizing:border-box}body{margin:0;background:#e8edf0;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
@@ -26,6 +26,7 @@ table{border-collapse:collapse;width:100%;font-size:18px}th,td{text-align:left;p
 <nav class="toolbar" aria-label="Presentation controls">
 <button id="prev" type="button">Previous</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Next</button>
 <button id="notes" type="button" aria-pressed="false">Speaker notes</button><button id="print" type="button">Print / Save PDF</button>
+<a href="Mathify-stakeholder-evidence.pptx" download>Download PowerPoint</a>
 </nav>
 <p class="status" id="status" role="status"></p>
 <main aria-label="Stakeholder presentation">
@@ -38,7 +39,7 @@ table{border-collapse:collapse;width:100%;font-size:18px}th,td{text-align:left;p
 <aside class="notes">Opening: we are not claiming this prototype improves grades or saves a measured amount of time. We are showing why the design is reasonable, what we have verified, and the evidence needed for a supervised trial. This deck is static, authored content: no model calls, generated charts, external scripts, or runtime dependencies.</aside>
 </section>
 <section class="slide" id="slide-02" aria-labelledby="title-02">
-<p class="eyebrow">The proposed intervention</p><h2 id="title-02" tabindex="-1">Use waiting time to collect evidence—not to diagnose a student permanently.</h2>
+<p class="eyebrow">The proposed intervention</p><h2 id="title-02" tabindex="-1">Use waiting time to collect evidence, not to diagnose a student permanently.</h2>
 <div class="flow"><div class="box"><h3>Question</h3><p>Student submits a problem and optional work.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Concept probes</h3><p>One question at a time; an easier retry if needed.</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Tutor brief</h3><p>Possible gap, actual responses, and whiteboard work.</p></div></div>
 <p class="lede">The tutor sees the evidence and decides where to begin.</p><p class="small">Design target: understand the brief in 10–15 seconds. Baseline and achieved time have not yet been measured.</p>
 <div class="footer"><span>Project scope: a single-question intake prototype, not live Mathify integration</span><span>02 / 12</span></div>
@@ -47,7 +48,7 @@ table{border-collapse:collapse;width:100%;font-size:18px}th,td{text-align:left;p
 <section class="slide" id="slide-03" aria-labelledby="title-03">
 <p class="eyebrow">Published guidance / Design rationale</p><h2 id="title-03" tabindex="-1">Formative assessment helps teachers choose the feedback a learner needs.</h2>
 <div class="flow"><div class="box"><h3>Elicit evidence</h3><p>What can the learner do on this concept?</p></div><span class="arrow" aria-hidden="true">→</span><div class="box"><h3>Identify a gap</h3><p>Which response needs clarification?</p></div><span class="arrow" aria-hidden="true">→</span><div class="box accent"><h3>Respond</h3><p>The tutor checks the interpretation and adapts instruction.</p></div></div>
-<p class="small">EEF guidance recommends formative assessment as a foundation for effective feedback. Our probes are intended to supply that evidence—not replace high-quality instruction.</p>
+<p class="small">EEF guidance recommends formative assessment as a foundation for effective feedback. Our probes are intended to supply that evidence, not replace high-quality instruction.</p>
 <div class="footer"><span><a href="https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/feedback">EEF (2021), Teacher Feedback to Improve Pupil Learning, Recommendation 1</a></span><span>03 / 12</span></div>
 <aside class="notes">This is the strongest direct educational rationale in the deck. The guidance is about classroom feedback, not a trial of our AI system or an Ontario tutoring queue. We are translating a principle into a prototype; transfer to this setting still requires evaluation.</aside>
 </section>
@@ -65,7 +66,7 @@ table{border-collapse:collapse;width:100%;font-size:18px}th,td{text-align:left;p
 <aside class="notes">Correcting a simpler item is useful, but reducing 3 to 1 is only a modest difficulty adjustment; we have not calibrated these questions psychometrically. The tutor may need a representation or explanation, not another multiple-choice question. This example illustrates the implemented branch, not its measured educational benefit.</aside>
 </section>
 <section class="slide" id="slide-06" aria-labelledby="title-06">
-<p class="eyebrow">AI research / Engineering boundary</p><h2 id="title-06" tabindex="-1">Research supports testing structured reasoning—not trusting every generated answer.</h2>
+<p class="eyebrow">AI research / Engineering boundary</p><h2 id="title-06" tabindex="-1">Research supports testing structured reasoning, not trusting every generated answer.</h2>
 <div class="grid"><div class="box"><h3>Reasoning prompts</h3><p>Wei et al. studied improvements on language-model reasoning benchmarks.</p><p class="small">Not evidence of student learning gains in our prototype.</p></div><div class="box"><h3>Schema validation</h3><p>Typed JSON makes outputs easier to check and display.</p><p class="small">A valid schema can contain incorrect mathematics.</p></div><div class="box accent"><h3>Human verification</h3><p>Check keys, prerequisites, distractors, and hint leakage.</p><p class="small">A second AI review is supporting evidence, not ground truth.</p></div></div>
 <div class="footer"><span><a href="https://arxiv.org/abs/2201.11903">Wei et al. (2022), Chain-of-Thought Prompting</a> / schema and review are prototype safeguards</span><span>06 / 12</span></div>
 <aside class="notes">The current design requests prerequisite steps; it is not an exact replication of the published few-shot chain-of-thought experiments. Do not say our model achieved the paper's benchmark scores. An incorrect constrained-decoding citation was removed from the draft after checking its actual arXiv title. We do not reproduce private model reasoning for students.</aside>
@@ -112,7 +113,7 @@ table{border-collapse:collapse;width:100%;font-size:18px}th,td{text-align:left;p
 <aside class="notes">Proposed gate: no unresolved answer-key errors in the reviewed sample, documented reviewer failure rates, and an agreed timing/comprehension criterion. These gates have not been achieved. Keep sessions/history, persistent profiles, authentication, and public deployment separate. Real learner data requires privacy, consent, and access-control work beyond this local prototype.</aside>
 </section>
 <section class="slide" id="slide-12" aria-labelledby="title-12">
-<p class="eyebrow">References and evidence boundaries</p><h2 id="title-12" tabindex="-1">Every claim has a source—and a limit.</h2>
+<p class="eyebrow">References and evidence boundaries</p><h2 id="title-12" tabindex="-1">Every claim has a source and a limit.</h2>
 <ol class="sources">
 <li><strong>Educational rationale:</strong> EEF (2021), <a href="https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/feedback">Teacher Feedback to Improve Pupil Learning</a>, Recommendation 1. Formative assessment informs feedback; not a study of this product.</li>
 <li><strong>AI reasoning:</strong> Wei et al. (2022), <a href="https://arxiv.org/abs/2201.11903">Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</a>. Model benchmark evidence; not learner outcomes.</li>

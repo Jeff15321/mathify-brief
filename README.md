@@ -50,6 +50,15 @@ The current jsdom/undici test dependencies require a compatible Node runtime
 
 ### Stakeholder evidence presentation
 
+Download `/Mathify-stakeholder-evidence.pptx` for the editable PowerPoint version:
+12 content slides plus a retained template credits slide. It adapts the
+[Beatrice Google Slides/PowerPoint template](https://www.slidescarnival.com/template/beatrice-free-presentation-template/66)
+by SlidesCarnival under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The original credits are retained. Colors and backgrounds follow the template;
+text and layouts are adapted, with Arial/Georgia for font compatibility.
+The deck contains no em dashes and explicitly states that no tutor responses
+have been received. The questionnaire was distributed; response analysis is pending.
+
 Open `/stakeholder-deck.html` or open `public/stakeholder-deck.html` directly in a
 browser. It is a self-contained, static 12-slide presentation with no AI calls or
 external assets. Use arrow keys, Home/End, **N** for speaker notes, and **P** or

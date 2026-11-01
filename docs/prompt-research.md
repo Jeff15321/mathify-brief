@@ -1,8 +1,8 @@
-# Prompt Effectiveness Research — Mathify Tutor Brief
+# Prompt Effectiveness Research: Mathify Tutor Brief
 
 ## Overview
 
-This document surveys research on effective prompting strategies for math question decomposition and diagnostic probe generation — the two core AI tasks in the Mathify Tutor Brief system. It evaluates trade-offs between prompt approaches and proposes an evaluation methodology for benchmarking prompt variants against a canonical test set.
+This document surveys research on effective prompting strategies for math question decomposition and diagnostic probe generation, the two core AI tasks in the Mathify Tutor Brief system. It evaluates trade-offs between prompt approaches and proposes an evaluation methodology for benchmarking prompt variants against a canonical test set.
 
 > Evidence audit, November 1, 2026: this is a research rationale and proposed
 > methodology, not completed experimental findings. There are currently zero tutor
@@ -17,7 +17,7 @@ This document surveys research on effective prompting strategies for math questi
 
 ### 1.1 Chain-of-Thought Prompting
 
-**Key finding:** Wei et al. (2022) showed that chain-of-thought (CoT) prompting — providing step-by-step reasoning examples in the prompt — significantly improves performance on multi-step math problems, especially for larger models.
+**Key finding:** Wei et al. (2022) showed that chain-of-thought (CoT) prompting, providing step-by-step reasoning examples in the prompt, significantly improves performance on multi-step math problems, especially for larger models.
 
 - **Citation:** Wei, J., Wang, X., Schuurmans, D., et al. (2022). "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models." *NeurIPS 2022*. [arXiv:2201.11903](https://arxiv.org/abs/2201.11903)
 - **Relevance:** Our `ANALYSIS_SYSTEM_PROMPT` implicitly requests chain-of-thought reasoning by asking the model to "identify the prerequisite concepts" and "explain why each is needed." Making this more explicit with numbered reasoning steps could improve breakdown quality.
@@ -28,7 +28,7 @@ This document surveys research on effective prompting strategies for math questi
 **Key finding:** Brown et al. (2020) studied few-shot task performance in language models. Whether examples improve this project's mathematical accuracy or format compliance must be measured locally; the paper does not establish that stronger models benefit less in our setting.
 
 - **Citation:** Brown, T., Mann, B., Ryder, N., et al. (2020). "Language Models are Few-Shot Learners." *NeurIPS 2020*. [arXiv:2005.14165](https://arxiv.org/abs/2005.14165)
-- **Relevance:** Our current prompts are zero-shot — they describe the task without worked examples. Adding 1–2 high-quality example breakdowns could improve format compliance and reduce malformed outputs.
+- **Relevance:** Our current prompts are zero-shot: they describe the task without worked examples. Adding 1–2 high-quality example breakdowns could improve format compliance and reduce malformed outputs.
 - **Trade-off:** Few-shot examples consume context window tokens and may bias the model toward the specific patterns in the examples. If the examples are too narrow, the model may miss creative or atypical breakdowns.
 
 ### 1.3 Structured Output and Schema Constraints
@@ -263,7 +263,10 @@ probes; report false positives, missed errors, and call failures separately.
 - Playwright: three passing tests (two synthetic handoff flows, one presentation
   navigation/mobile/print test), with a successful production build.
 - Typecheck and changed-code lint passed.
-- Static PDF export: exactly 12 pages; no slide exceeds its printable page.
+- HTML export: 12 pages. Editable PowerPoint: 12 content slides plus retained
+  Beatrice template credits. The PowerPoint-derived PDF has 13 pages.
+  Template source: https://www.slidescarnival.com/template/beatrice-free-presentation-template/66
+  License: CC BY 4.0, with original credits retained.
 - Evaluation JSON now retains mock/live provenance, the full analysis and first
   probe pair, and explicit probe-generation errors. It remains a harness, not
   an independently graded math-accuracy benchmark.

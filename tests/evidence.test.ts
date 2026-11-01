@@ -52,6 +52,8 @@ describe("Evidence integrity", () => {
     expect(deck).toContain("Zero tutor responses");
     expect(deck).toContain("not an actual student or live-model accuracy result");
     expect(deck).not.toMatch(/<script[^>]+src=|<link[^>]+href=/i);
+    expect(deck).not.toContain("\u2014");
+    expect(readFileSync(path.resolve("public", "Mathify-stakeholder-evidence.pptx")).subarray(0, 2).toString()).toBe("PK");
   });
   it.each(EXAMPLE_QUESTIONS)("keeps the simulated summary consistent for $id", (example) => {
     const calculated = summarizeBrief(example.simulatedBrief.results, example.simulatedBrief.notReachedConcepts);
