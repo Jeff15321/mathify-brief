@@ -48,6 +48,10 @@ export function ConfidenceCard({
           </span>
         )}
       </div>
+      <p className="text-xs text-slate-600">
+        This is a heuristic based on probe coverage and response timing, not a validated
+        probability of accuracy. Confirm possible gaps with the student.
+      </p>
       {factors.length > 0 && (
         <ul className="flex flex-col gap-1 text-xs text-slate-600">
           {factors.map((f, i) => (

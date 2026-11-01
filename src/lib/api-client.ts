@@ -7,6 +7,23 @@ export class ApiClientError extends Error {
   ) {
     super(message);
   }
+
+}
+
+export interface TutorFeedbackInput {
+  overallUsefulness: number;
+  breakdownAccuracy: number;
+  probeQuality: number;
+  comments: string;
+}
+
+export async function submitTutorFeedback(data: TutorFeedbackInput): Promise<void> {
+  const res = await fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...data, submittedAt: new Date().toISOString() }),
+  });
+  if (!res.ok) await parseErrorResponse(res);
 }
 
 async function parseErrorResponse(res: Response): Promise<never> {

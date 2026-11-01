@@ -2,18 +2,14 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
-
-interface FeedbackData {
-  overallUsefulness: number;
-  breakdownAccuracy: number;
-  probeQuality: number;
-  comments: string;
-}
+import { submitTutorFeedback, type TutorFeedbackInput } from "@/lib/api-client";
+import { ErrorBanner } from "@/components/shared/ErrorBanner";
 
 export function TutorFeedbackForm() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [data, setData] = useState<FeedbackData>({
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<TutorFeedbackInput>({
     overallUsefulness: 0,
     breakdownAccuracy: 0,
     probeQuality: 0,
@@ -26,20 +22,18 @@ export function TutorFeedbackForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (data.overallUsefulness === 0 || data.breakdownAccuracy === 0 || data.probeQuality === 0) return;
+    if (submitting) return;
+    if (data.overallUsefulness === 0 || data.breakdownAccuracy === 0 || data.probeQuality === 0) {
+      setError("Please rate all three areas before submitting.");
+      return;
+    }
     setSubmitting(true);
+    setError(null);
     try {
-      await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          submittedAt: new Date().toISOString(),
-        }),
-      });
+      await submitTutorFeedback(data);
       setSubmitted(true);
-    } catch {
-      // Silently fail — feedback is best-effort
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save feedback. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -57,8 +51,10 @@ export function TutorFeedbackForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <h3 className="text-sm font-semibold text-slate-900">Tutor Feedback</h3>
       <p className="text-xs text-slate-500">
-        Your feedback helps us validate and improve this report. All fields are required.
+        Rate each area from 1 (poor) to 5 (excellent). Comments are optional.
       </p>
+      {error && <ErrorBanner message={error} />}
+      <fieldset disabled={submitting} className="flex flex-col gap-4">
 
       <RatingField
         label="Overall usefulness"
@@ -78,17 +74,19 @@ export function TutorFeedbackForm() {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="feedback-comments" className="text-xs font-medium text-slate-700">
-          Additional comments
+          Additional comments (optional)
         </label>
         <textarea
           id="feedback-comments"
           value={data.comments}
           onChange={(e) => setData((prev) => ({ ...prev, comments: e.target.value }))}
           rows={3}
+          maxLength={5000}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-200"
           placeholder="What would you change? What was most useful?"
         />
       </div>
+      </fieldset>
 
       <button
         type="submit"
@@ -126,6 +124,7 @@ function RatingField({
                 : "border-slate-200 bg-white text-slate-400 hover:border-blue-300"
             }`}
             aria-label={`${n} out of 5`}
+            aria-pressed={n === value}
           >
             {n}
           </button>
