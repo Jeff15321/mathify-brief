@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { TutorBrief } from '@/types/domain';
 import { getStores, type createStores } from './storage';
 import { ApiError } from './errors';
@@ -53,6 +54,7 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
 
   const { results, notReachedConcepts } = computeResults(workspace.probeSteps, workspace.cursor);
   const brief: TutorBrief = {
+    reportId: randomUUID(),
     results,
     notReachedConcepts,
     ...summarizeBrief(results, notReachedConcepts),

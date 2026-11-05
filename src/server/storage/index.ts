@@ -1,3 +1,4 @@
+import { LocalFeedbackStore } from './local-feedback-store';
 import { LocalAssetStore } from './local-asset-store';
 import { LocalWorkspaceStore } from './local-workspace-store';
 import type { AssetStore, CurrentWorkspaceStore } from './contracts';
@@ -5,10 +6,11 @@ import type { AssetStore, CurrentWorkspaceStore } from './contracts';
 export function createStores(dataDir: string): {
   workspaceStore: CurrentWorkspaceStore;
   assetStore: AssetStore;
+  feedbackStore: LocalFeedbackStore;
 } {
   const workspaceStore = new LocalWorkspaceStore(dataDir);
   const assetStore = new LocalAssetStore(dataDir, workspaceStore);
-  return { workspaceStore, assetStore };
+  return { workspaceStore, assetStore, feedbackStore: new LocalFeedbackStore(dataDir) };
 }
 
 let cached: ReturnType<typeof createStores> | null = null;

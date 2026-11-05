@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 // Dedicated port so E2E never reuses a developer's dev server (which may run with live AI).
-const E2E_PORT = 3100;
+const E2E_PORT = Number(process.env.E2E_PORT || 3100);
 const E2E_URL = `http://localhost:${E2E_PORT}`;
 
 export default defineConfig({
@@ -15,7 +15,7 @@ export default defineConfig({
     reuseExistingServer: false,
     env: {
       AI_MOCK_MODE: 'true',
-      LOCAL_DATA_DIR: './.playwright-data',
+      LOCAL_DATA_DIR: process.env.LOCAL_DATA_DIR || './.playwright-data',
     },
   },
   use: {

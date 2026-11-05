@@ -125,6 +125,8 @@ export interface ProbeTally {
 
 /** The Tutor Brief dashboard, computed entirely from stored answers (no AI). */
 export interface TutorBrief {
+  /** Unique generation identity; optional for existing local reports. */
+  reportId?: string;
   results: ProbeResult[];         // one per probe actually served
   notReachedConcepts: string[];   // planned steps the student never reached before submitting
   core: ProbeTally;
@@ -164,6 +166,8 @@ export interface PublicProbing {
 }
 
 export interface PublicWorkspace {
+  /** Fingerprint of the exact completed report, computed on the server. */
+  feedbackReportId?: string | null;
   profile: DemoProfile;
   questionText: string;
   attachments: StoredAsset[];
