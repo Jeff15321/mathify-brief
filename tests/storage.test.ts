@@ -10,7 +10,7 @@ import type { CurrentWorkspace } from "@/types/domain";
 function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorkspace {
   const now = new Date().toISOString();
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     demoProfile: DEMO_PROFILE,
     questionText: "Solve 2(x + 3) = 14.",
     attachments: [],
@@ -61,9 +61,9 @@ describe("Local storage (isolated temp directory)", () => {
     expect(readBack?.questionText).toBe("second");
   });
 
-  it("read() treats a workspace from an older schema version as absent", async () => {
+  it.each([1, 3])("read() treats older schema version %s (including unreviewed v3) as absent", async (schemaVersion) => {
     const { workspaceStore } = createStores(dataDir);
-    await writeFile(path.join(dataDir, "workspace.json"), JSON.stringify({ ...makeWorkspace(), schemaVersion: 1 }));
+    await writeFile(path.join(dataDir, "workspace.json"), JSON.stringify({ ...makeWorkspace(), schemaVersion }));
     expect(await workspaceStore.read()).toBeNull();
   });
 

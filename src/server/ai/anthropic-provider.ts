@@ -9,6 +9,8 @@ import {
   validateProbePair,
 } from '@/schemas/analysis';
 import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
+import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
+import { REVIEW_SYSTEM_PROMPT } from './prompts';
 import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
 import type {
@@ -33,6 +35,25 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   constructor() {
     this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     this.model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+  }
+
+  async reviewAnalysis(input: AnalyzeQuestionInput, candidate: ModelAnalysis) {
+    return this.createStructured({
+      system: REVIEW_SYSTEM_PROMPT, maxTokens: 4096, schema: analysisReviewSchema,
+      operation: 'an analysis review',
+      content: [
+        { type: 'text', text: JSON.stringify({ grade: input.grade, originalQuestion: input.questionText, candidate }) },
+        ...filesToContentBlocks(input.files),
+      ],
+    });
+  }
+
+  async reviewProbePair(input: GenerateProbePairInput, candidate: ModelProbePair) {
+    return this.createStructured({
+      system: REVIEW_SYSTEM_PROMPT, maxTokens: 4096, schema: probeReviewSchema,
+      operation: 'a probe review',
+      content: [{ type: 'text', text: JSON.stringify({ ...input, candidate }) }],
+    });
   }
 
   async analyzeQuestion(input: AnalyzeQuestionInput): Promise<ModelAnalysis> {

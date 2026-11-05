@@ -25,7 +25,7 @@ Open http://localhost:3000.
 | Variable | Purpose |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Server-only Claude Console key. Never exposed to the browser. |
-| `ANTHROPIC_MODEL` | Model id for both Mathify AI calls (default `claude-sonnet-5-5`). |
+| `ANTHROPIC_MODEL` | Model id for generation and independent review calls (default `claude-sonnet-5-5`). |
 | `LOCAL_DATA_DIR` | Directory for the local workspace JSON + uploaded files (default `./data`). |
 | `AI_MOCK_MODE` | `true` (default) runs fully offline with a deterministic fake provider. Set `false` to call the real Anthropic API. |
 | `RUN_LIVE_AI_SMOKE` | Set to `1` (with a real key) to run one explicit, low-cost live Anthropic connectivity check. Never enabled in automated tests. |
@@ -62,9 +62,24 @@ Automated tests never call the paid Anthropic API, regardless of `.env.local`.
 
 With `AI_MOCK_MODE=true` (default) this entire flow runs fully offline against a deterministic
 fixture provider. Set `AI_MOCK_MODE=false` with a real `ANTHROPIC_API_KEY` to use live Claude
-calls. A session makes 1 analysis call (which also writes the first question pair), one
-text-only call per remaining planned step (main + easier question). The Tutor Brief makes no
-AI call.
+calls. Every analysis and every deferred question pair now requires a separate review call
+using the same configured model in a fresh conversation. For a 3–5 step session, successful
+generation and review use 6–10 logical AI calls total (two per step); transport retries can
+add requests. Review adds latency and token cost, including re-reading attachments for the
+initial analysis. The Tutor Brief makes no AI call.
+
+Review checks answer keys, unique correct options, explanations, prerequisite relevance,
+same-concept easier retries, and the breakdown's mathematical and pedagogical accuracy.
+Every check must pass before content is saved as ready. This is a quality gate, not a proof
+of correctness; the same model may still make correlated mistakes. Mock mode remains fully
+offline and approves only its fixed demo fixtures; it is not a mathematical reviewer for
+arbitrary input. Verdicts and answer keys are never included in student workspace responses.
+
+A rejected, malformed, or unavailable review returns a generic recoverable error. There is no
+automatic content regeneration loop: retry analysis from intake, or use the existing probe
+retry control for a failed deferred pair. Each retry generates and reviews fresh content.
+Schema version 4 invalidates older saved workspaces, which may contain unreviewed content:
+restart any existing session after upgrading. Uploaded files are left intact.
 
 Upgrading from an earlier build: a `data/workspace.json` with an older `schemaVersion` is
 ignored (treated as no workspace), and its old upload files are left in `data/uploads/`. Delete

@@ -108,7 +108,7 @@ export const tutorBriefSchema = z.object({
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export const currentWorkspaceSchema = z.object({
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
