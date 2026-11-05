@@ -1,15 +1,14 @@
-# Prompt Effectiveness Research: Mathify Tutor Brief
+# AI Reliability Research: Mathify Tutor Brief
 
 ## Overview
 
 This document surveys research on effective prompting strategies for math question decomposition and diagnostic probe generation, the two core AI tasks in the Mathify Tutor Brief system. It evaluates trade-offs between prompt approaches and proposes an evaluation methodology for benchmarking prompt variants against a canonical test set.
 
-> Evidence audit, November 1, 2026: this is a research rationale and proposed
-> methodology, not completed experimental findings. There are currently zero tutor
-> responses (confirmed by the project owner). No live API credential is available
-> in this workspace. Mock runs and prewritten examples must not be reported as model
-> accuracy or learner outcomes. The static stakeholder presentation is available at
-> `public/stakeholder-deck.html`.
+> Evidence audit: this document is a research rationale and evaluation protocol, not
+> completed model-accuracy findings. There are zero tutor responses. No Anthropic API
+> credential is configured in this workspace, so the live checker benchmark has not
+> run. Mock runs and fixed fixtures must not be reported as model accuracy or learner
+> outcomes. The stakeholder presentation is at `public/stakeholder-deck.html`.
 
 ---
 
@@ -76,6 +75,28 @@ provider failure, or guarantee valid responses.
 - **Relevance:** Our prompts reference "Ontario math curriculum" and "grade level" which helps the model produce appropriate difficulty assessments. Adding specific curriculum expectation codes (e.g., "C1.4" for algebraic expressions) could further improve alignment.
 - **Trade-off:** Curriculum codes change between revisions and may not be in the training data for older curriculum documents.
 
+### 1.7 Reliability of LLM Judges and AI-Authored Assessment Items
+
+**LLM-as-judge evidence is a reason to calibrate, not to assume agreement.**
+
+- **Thakur et al. (2025):** Across judge models scoring answers, even the strongest
+  judges differed from human-assigned scores. Their error analysis found sensitivity
+  to prompt complexity and a tendency toward leniency. This is not a study of math
+  tutoring, but it directly cautions against treating a second model call as ground
+  truth.
+- **Yamauchi et al. (2026):** The study found that evaluation criteria were important
+  to judge reliability and that chain-of-thought added little when criteria were
+  already clear. The practical implication is to make Mathify's rubric explicit and
+  compare checker labels with independent human labels.
+- **Frontiers education study (2026):** In one third-year Operating Systems course
+  with 42 students, researchers compared expert-validated AI-authored MCQs with
+  human-written MCQs. Some measures were not significantly different, but several
+  discrimination and reliability measures were low. The small, subject-specific
+  study is bounded evidence, not proof about math probes or Mathify.
+
+**Conclusion:** Research supports measuring agreement and error patterns. It does
+not supply an accuracy score for Mathify's generated questions or checker.
+
 ---
 
 ## 2. Prompt Strategy Comparison
@@ -98,7 +119,10 @@ The comparisons below are hypotheses, not measured results. Terms such as
 
 ### 3.1 Test Set
 
-We use 8 canonical test questions sourced from Ontario curriculum documents (see `src/lib/test-questions.ts`), spanning Grades 7–11 across topics:
+The eight canonical examples in `src/lib/test-questions.ts` are project-authored.
+Ontario curriculum labels provide context only. Textbook chapter/example
+attributions are unverified and are not evidence of provenance. The examples span
+Grades 7–11 across topics:
 - Linear equations (Grade 9)
 - Quadratic factoring (Grade 10)
 - Pythagorean theorem (Grade 9)
@@ -129,21 +153,27 @@ We use 8 canonical test questions sourced from Ontario curriculum documents (see
 ### 3.3 Running the Evaluation
 
 ```bash
-# With mock provider (fast, for development)
-AI_MOCK_MODE=true npx tsx scripts/prompt-evaluation.ts
-
-# With Anthropic provider (real evaluation)
-ANTHROPIC_API_KEY=... npx tsx scripts/prompt-evaluation.ts --json > results.json
-
-# JSON output for analysis
+# Mock provider is the default and checks harness plumbing only
 npx tsx scripts/prompt-evaluation.ts --json
+
+# Live provider. Configure ANTHROPIC_API_KEY in the local environment first.
+AI_MOCK_MODE=false npx tsx scripts/prompt-evaluation.ts --json > results.json
+
+# PowerShell equivalent
+$env:AI_MOCK_MODE = "false"
+npx tsx scripts/prompt-evaluation.ts --json > results.json
 ```
+
+The JSON report includes the full analysis and every planned main/easier pair.
+Analysis latency includes the first pair returned with the analysis. Follow-up probe
+latency and failures are recorded separately. Topic and step-count measures remain
+sanity checks. The script does not grade the math or question quality.
 
 ### 3.4 Manual Review Process
 
 Automated metrics can evaluate topic matching and format compliance. Probe quality requires expert review:
 
-1. Run `prompt-evaluation.ts --json` to generate structured results
+1. Run `prompt-evaluation.ts --json` to retain the complete generated artifacts
 2. For each question, a math education expert reviews:
    - Breakdown prerequisite accuracy (1–5)
    - Distractor quality per probe (1–5)
@@ -193,18 +223,21 @@ Proposed: "Ontario math curriculum (MTH1W for Grade 9, MPM2D for Grade 10, MCR3U
 
 ## 5. Validation Microservice
 
-The validation service (`src/server/validation-service.ts`) provides a built-in mechanism for checking prompt quality: it uses a second AI call to review the analysis and probe outputs for correctness. This is gated by `AI_VALIDATION_ENABLED=true` and can be run as:
+The validation service (`src/server/validation-service.ts`) has separate second-call
+reviews for the breakdown and generated probes. It is off by default, gated by
+`AI_VALIDATION_ENABLED=true`, and is not part of the automatic student flow. It uses
+the same provider construction point as generation. It can be run against the saved
+workspace as:
 
 ```bash
 AI_VALIDATION_ENABLED=true npx tsx scripts/validate-analysis.ts
 ```
 
-The validation prompts (`src/server/ai/validation-prompts.ts`) check:
-1. Whether prerequisite concepts are correctly identified
-2. Whether any important prerequisites are missing
-3. Whether the correct answers are actually correct
-4. Whether distractors are reasonable
-5. Whether hints are helpful without giving away the answer
+The validation prompts (`src/server/ai/validation-prompts.ts`) check prerequisite
+coverage, unnecessary prerequisites, answer keys, option ambiguity, concept alignment,
+explanations, hint leakage, and relative difficulty of the easier probe. New model
+findings must use a category; older saved validation results remain readable without
+one.
 
 This creates a candidate review loop, not proof of correctness. The reviewer uses
 the same provider construction point as the generator and can share its errors.
@@ -225,19 +258,36 @@ probes; report false positives, missed errors, and call failures separately.
 4. Review every served and generated item for key correctness, exactly one valid
    option, prerequisite alignment, meaningful distractors, and hint leakage.
    Longer breakdowns and substring topic matches are only sanity checks.
-5. Compare the reviewer against known-error cases: wrong key, duplicate correct
-   options, unrelated concept, and answer-revealing hint. Include clean controls.
-   Measure detected errors / seeded errors and false flags / clean cases.
-6. Have a math educator review the artifacts before any accuracy claim. Report
-   counts/denominators and failures, not just successful calls. Eight cases are an
-   exploratory check, not a representative validation sample.
-7. When tutors respond, separate the external needs/layout questionnaire from
+5. `scripts/validator-benchmark.ts` now implements two unmodified fixture controls
+   and eight scripted faults: missing prerequisite, unnecessary prerequisite, wrong
+   answer key, ambiguous options, concept mismatch, explanation error, hint leakage,
+   and an easier probe that is not easier. The cases use one fixed equation and are
+   an exploratory harness, not a representative reliability sample. The controls are
+   not independently educator-reviewed.
+6. Run the live checker benchmark only with explicit opt-in flags and a local API key:
+
+   ```powershell
+   $env:RUN_VALIDATOR_BENCHMARK = "1"
+   $env:AI_VALIDATION_ENABLED = "true"
+   $env:AI_MOCK_MODE = "false"
+   npx tsx scripts/validator-benchmark.ts --json
+   ```
+
+   The command requires `ANTHROPIC_API_KEY` in the local environment and refuses
+   mock mode. It reports category-level fault detection, false flags on completed
+   controls, unclassified findings, and call failures. A failed call is not a clean
+   result.
+7. Have an independent math educator label generated artifacts and benchmark
+   fixtures before making any accuracy claim. Report counts, denominators, model,
+   prompt version, and failures. Do not treat agreement between same-provider calls
+   as independent validation.
+8. When tutors respond, separate the external needs/layout questionnaire from
    per-demo feedback. Record respondent count, version/case, rating distributions,
    and comments. Zero responses currently means no tutor-derived findings.
-8. For the 10-15-second goal, use matched synthetic cases with/without the brief,
+9. For the 10-15-second goal, use matched synthetic cases with/without the brief,
    counterbalance order, record interpretation correctness and time, and avoid
    reusing the same problem with the same tutor. A rating alone cannot test timing.
-9. Before a supervised pilot, require no unresolved mathematical key errors in the
+10. Before a supervised pilot, require no unresolved mathematical key errors in the
    reviewed sample and stakeholder agreement on the comprehension/timing target.
    These are proposed decision gates, not achieved outcomes.
 
@@ -253,20 +303,21 @@ probes; report false positives, missed errors, and call failures separately.
 6. Leighton, J.P. & Gierl, M.J. (2007). *Cognitive Diagnostic Assessment for Education.* Cambridge University Press.
 7. Ontario Ministry of Education (2021). *The Ontario Curriculum, Grade 9: Mathematics (MTH1W).* https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics/courses/mth1w
 8. Ontario Ministry of Education (2005). *The Ontario Curriculum, Grades 9 and 10: Mathematics.* https://www.dcp.edu.gov.on.ca/en/curriculum/secondary-mathematics
-9. Education Endowment Foundation (2021). *Teacher Feedback to Improve Pupil Learning*, Recommendation 1. https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/feedback
-10. Michael Alley. *Assertion-Evidence Approach*: message headlines supported by visual evidence. https://www.assertion-evidence.com/
+9. Thakur, A.S., Choudhary, K., Ramayapally, V.S., Vaidyanathan, S., & Hupkes, D. (2025). "Judging the Judges: Evaluating Alignment and Vulnerabilities in LLMs-as-Judges." GEM 2025. https://aclanthology.org/2025.gem-1.33/
+10. Yamauchi, Y., Yano, T., & Oyamada, M. (2026). "An Empirical Study of LLM-as-a-Judge: How Design Choices Impact Evaluation Reliability." GEM 2026. https://aclanthology.org/2026.gem-main.19/
+11. "LLMs in the Classroom: Outcomes and Perceptions of Questions Written with the Aid of AI." *Frontiers in Education* (2026). https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2026.1837523/full
 
 ## Verification snapshot (November 1, 2026)
 
-- Full offline Vitest suite: 111 passing tests across 16 files, including eight
+- Full offline Vitest suite: 116 passing tests across 17 files, including eight
   reference-solution checks and consistency checks on the simulated briefs.
 - Playwright: three passing tests (two synthetic handoff flows, one presentation
   navigation/mobile/print test), with a successful production build.
 - Typecheck and changed-code lint passed.
-- HTML and editable PowerPoint: 12 slides, including sources and Beatrice
-  attribution. The PowerPoint-derived PDF has 12 pages. Original 16:9
-  product-review layouts use message headlines, a traceable synthetic case,
-  native editable diagrams, large prototype evidence, and natural speaker scripts.
+- HTML and editable PowerPoint: 11 slides, including sources and Beatrice
+  attribution. The reliability review uses message headlines, a traceable synthetic
+  case, native editable diagrams, and speaker scripts. The PowerPoint archive was
+  verified to contain 11 speaker-notes slides.
   Template source: https://www.slidescarnival.com/template/beatrice-free-presentation-template/66
   License: CC BY 4.0, with attribution retained. Diagrams are original;
   prototype screenshots use mock data. No stock photos or generated images.
@@ -277,12 +328,11 @@ probes; report false positives, missed errors, and call failures separately.
     https://www.wearesparks.com/our-work/google-cloud-next/
   These support a consistent visual grammar, hierarchy, and diagram-led
   storytelling. They are not Mathify effectiveness evidence or Google endorsement.
-- Evaluation JSON now retains mock/live provenance, the full analysis and first
-  probe pair, and explicit probe-generation errors. It remains a harness, not
-  an independently graded math-accuracy benchmark.
-- Mock harness smoke: eight records, all explicitly marked `mock`, with analysis
-  and first-pair artifacts and zero generation failures. This checks plumbing only;
-  the mock provider returns fixed fixtures and cannot benchmark new questions.
+- Evaluation JSON retains provider/model provenance, full analysis, every planned
+  pair, follow-up latency, and generation failures. It remains a harness, not an
+  independently graded math-accuracy benchmark.
+- The live checker benchmark is implemented but has not run because no API key is
+  configured. Its tests use local fixtures and do not measure checker performance.
 - Fixed reviewer input coverage: easier retries now include their concept, hint,
   and explanation, not just options/key. A mocked SDK payload test verifies this;
   no actual reviewer-accuracy result is inferred.

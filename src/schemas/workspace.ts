@@ -6,6 +6,7 @@ import {
   probeOptionSchema,
   probePlanItemSchema,
 } from './analysis';
+import { VALIDATION_ISSUE_CATEGORIES } from '@/types/domain';
 
 export const assetKindSchema = z.enum(['attachment', 'whiteboard']);
 export const mimeTypeSchema = z.enum(['image/png', 'image/jpeg', 'image/webp', 'application/pdf']);
@@ -113,10 +114,17 @@ export const tutorBriefSchema = z.object({
   briefVersion: z.literal(5),
 });
 
+export const validationIssueCategorySchema = z.enum(VALIDATION_ISSUE_CATEGORIES);
+
 export const validationIssueSchema = z.object({
   severity: z.enum(['warning', 'error']),
   message: z.string().min(1),
+  category: validationIssueCategorySchema.optional(),
   probeId: z.string().nullable().optional(),
+});
+
+export const validationIssueOutputSchema = validationIssueSchema.extend({
+  category: validationIssueCategorySchema,
 });
 
 export const validationSchema = z.object({

@@ -1,10 +1,6 @@
 /**
- * Canonical test questions for prompt evaluation and benchmarking.
- * Each question is sourced from Ontario curriculum documents or widely-used
- * Ontario math textbooks, with citations.
- *
- * These are used by scripts/prompt-evaluation.ts to run the AI analysis
- * pipeline against a fixed set of inputs and compare prompt variants.
+ * Project-authored canonical examples for prompt evaluation.
+ * Curriculum references provide context; exact textbook attributions are unverified.
  */
 
 export interface TestQuestion {
@@ -23,9 +19,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     id: "gr9-linear-brackets",
     grade: 9,
     questionText: "Solve 2(x + 3) = 14.",
-    source:
-      "Ontario MTH1W (Grade 9 De-streamed), 2021 curriculum. " +
-      "Nelson Math 9, Chapter 4: Linear Relations and Equations, Example 3.",
+    source: "Project-authored example; Ontario Grade 9 MTH1W context. Textbook attribution not verified.",
     expectedTopic: "Linear equations",
     minBreakdownSteps: 2,
   },
@@ -33,9 +27,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     id: "gr10-quadratic-factor",
     grade: 10,
     questionText: "Factor x² + 5x + 6.",
-    source:
-      "Ontario MPM2D (Grade 10 Academic), 2005 curriculum. " +
-      "McGraw-Hill Ryerson Mathematics 10, Chapter 5: Quadratic Expressions, Practice Question 8.",
+    source: "Project-authored example; Ontario Grade 10 MPM2D context. Textbook attribution not verified.",
     expectedTopic: "Quadratic factoring",
     minBreakdownSteps: 2,
   },
@@ -44,9 +36,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     grade: 9,
     questionText:
       "A right triangle has legs of length 3 cm and 4 cm. Find the length of the hypotenuse.",
-    source:
-      "Ontario MTH1W (Grade 9 De-streamed), 2021 curriculum. " +
-      "Nelson Math 9, Chapter 8: Measurement and Geometry, Example 1.",
+    source: "Project-authored example; Ontario Grade 9 MTH1W context. Textbook attribution not verified.",
     expectedTopic: "Pythagorean theorem",
     minBreakdownSteps: 2,
   },
@@ -55,9 +45,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     grade: 11,
     questionText:
       "In a right triangle, the side opposite angle θ is 5 and the hypotenuse is 13. Find sin θ.",
-    source:
-      "Ontario MCR3U (Grade 11 Functions), 2006 curriculum. " +
-      "Nelson Functions 11, Chapter 5: Trigonometric Ratios, Example 2.",
+    source: "Project-authored example; Ontario Grade 11 MCR3U context. Textbook attribution not verified.",
     expectedTopic: "Trigonometric ratios",
     minBreakdownSteps: 2,
   },
@@ -66,9 +54,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     grade: 7,
     questionText:
       "A recipe calls for 2 cups of flour to make 12 cookies. How many cups of flour are needed to make 30 cookies?",
-    source:
-      "Ontario Grade 7 Mathematics, 2020 curriculum (spatial sense & proportional reasoning). " +
-      "Math Makes Sense 7, Chapter 6: Ratio and Proportion, Practice Question 5.",
+    source: "Project-authored example; Ontario Grade 7 curriculum context. Textbook attribution not verified.",
     expectedTopic: "Proportional reasoning",
     minBreakdownSteps: 2,
   },
@@ -77,9 +63,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     grade: 10,
     questionText:
       "Solve the system: y = 2x + 1 and y = -x + 7.",
-    source:
-      "Ontario MPM2D (Grade 10 Academic), 2005 curriculum. " +
-      "Nelson Principles of Mathematics 10, Chapter 6: Systems of Linear Equations, Example 1.",
+    source: "Project-authored example; Ontario Grade 10 MPM2D context. Textbook attribution not verified.",
     expectedTopic: "Systems of linear equations",
     minBreakdownSteps: 2,
   },
@@ -88,9 +72,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     grade: 8,
     questionText:
       "Find the area of a circle with radius 7 cm. Round your answer to one decimal place.",
-    source:
-      "Ontario Grade 8 Mathematics, 2020 curriculum. " +
-      "Math Makes Sense 8, Chapter 8: Measurement: Area and Volume, Example 3.",
+    source: "Project-authored example; Ontario Grade 8 curriculum context. Textbook attribution not verified.",
     expectedTopic: "Area of a circle",
     minBreakdownSteps: 2,
   },
@@ -98,9 +80,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     id: "gr11-exponent-law",
     grade: 11,
     questionText: "Simplify (2x³)² ÷ 4x².",
-    source:
-      "Ontario MCR3U (Grade 11 Functions), 2006 curriculum. " +
-      "Nelson Functions 11, Chapter 1: Characteristics of Functions, Review Question 12.",
+    source: "Project-authored example; Ontario Grade 11 MCR3U context. Textbook attribution not verified.",
     expectedTopic: "Exponent laws",
     minBreakdownSteps: 2,
   },

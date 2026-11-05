@@ -21,7 +21,7 @@ import type {
   ValidateProbesInput,
   ValidationOutput,
 } from './provider';
-import { validationIssueSchema } from '@/schemas/workspace';
+import { validationIssueOutputSchema } from '@/schemas/workspace';
 
 const ANALYSIS_MAX_TOKENS = 8192;
 const PROBE_PAIR_MAX_TOKENS = 4096;
@@ -143,7 +143,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   }
 
   async validateBreakdown(input: ValidateBreakdownInput): Promise<ValidationOutput> {
-    const validationSchema = z.object({ issues: z.array(validationIssueSchema) });
+    const validationSchema = z.object({ issues: z.array(validationIssueOutputSchema) });
     const breakdownSummary = input.analysis.breakdown
       .map((s, i) => `${i + 1}. ${s.title}: ${s.description}`)
       .join('\n');
@@ -176,7 +176,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   }
 
   async validateProbes(input: ValidateProbesInput): Promise<ValidationOutput> {
-    const validationSchema = z.object({ issues: z.array(validationIssueSchema) });
+    const validationSchema = z.object({ issues: z.array(validationIssueOutputSchema) });
     const probesSummary = input.steps
       .filter((s) => s.main)
       .map((s) => {

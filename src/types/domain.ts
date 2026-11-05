@@ -148,9 +148,24 @@ export interface TutorBrief {
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
+export const VALIDATION_ISSUE_CATEGORIES = [
+  'missing_prerequisite',
+  'unnecessary_prerequisite',
+  'answer_key',
+  'ambiguous_options',
+  'concept_mismatch',
+  'explanation_error',
+  'hint_leak',
+  'difficulty_mismatch',
+  'other',
+] as const;
+
+export type ValidationIssueCategory = (typeof VALIDATION_ISSUE_CATEGORIES)[number];
+
 export interface ValidationIssue {
   severity: 'warning' | 'error';
   message: string;
+  category?: ValidationIssueCategory;
   probeId?: string | null;
 }
 

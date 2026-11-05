@@ -13,6 +13,12 @@
 
 import { getStores } from "../src/server/storage";
 import { validateBreakdown, validateProbes } from "../src/server/validation-service";
+import type { ValidationIssue } from "../src/types/domain";
+
+function formatIssue(issue: ValidationIssue): string {
+  const category = issue.category ?? "unclassified";
+  return `[${issue.severity}] [${category}] ${issue.message}`;
+}
 
 async function main() {
   // Ensure validation is enabled
@@ -67,14 +73,14 @@ async function main() {
   } else if (breakdownResult.status === "failed") {
     console.log("   ❌  Validation call failed");
     for (const issue of breakdownResult.issues) {
-      console.log(`   - [${issue.severity}] ${issue.message}`);
+      console.log(`   - ${formatIssue(issue)}`);
     }
   } else if (breakdownResult.issues.length === 0) {
     console.log("   ✅  No issues found");
   } else {
     console.log(`   ⚠️  Found ${breakdownResult.issues.length} issue(s):`);
     for (const issue of breakdownResult.issues) {
-      console.log(`   - [${issue.severity}] ${issue.message}`);
+      console.log(`   - ${formatIssue(issue)}`);
     }
   }
 
@@ -87,14 +93,14 @@ async function main() {
   } else if (probesResult.status === "failed") {
     console.log("   ❌  Validation call failed");
     for (const issue of probesResult.issues) {
-      console.log(`   - [${issue.severity}] ${issue.message}${issue.probeId ? ` (probe: ${issue.probeId})` : ""}`);
+      console.log(`   - ${formatIssue(issue)}${issue.probeId ? ` (probe: ${issue.probeId})` : ""}`);
     }
   } else if (probesResult.issues.length === 0) {
     console.log("   ✅  No issues found");
   } else {
     console.log(`   ⚠️  Found ${probesResult.issues.length} issue(s):`);
     for (const issue of probesResult.issues) {
-      console.log(`   - [${issue.severity}] ${issue.message}${issue.probeId ? ` (probe: ${issue.probeId})` : ""}`);
+      console.log(`   - ${formatIssue(issue)}${issue.probeId ? ` (probe: ${issue.probeId})` : ""}`);
     }
   }
 

@@ -1,15 +1,11 @@
 /**
- * Prompt evaluation script — runs the AI analysis pipeline against a set of
- * canonical test questions and outputs structured results for analysis.
+ * Capture all generated analysis and probe pairs for the canonical examples.
  *
  * Usage:
  *   npx tsx scripts/prompt-evaluation.ts [--json] [--quiet]
  *
- * Options:
- *   --json    Output results as JSON (for piping to analysis tools)
- *   --quiet   Suppress per-question progress output
- *
- * Requires ANTHROPIC_API_KEY in env (unless AI_MOCK_MODE=true).
+ * Mock mode is the default. Mock output verifies harness plumbing only.
+ * Topic matching and breakdown length are sanity checks, not accuracy scores.
  */
 
 import { TEST_QUESTIONS, type TestQuestion } from "../src/lib/test-questions";
@@ -17,25 +13,36 @@ import { getAnalysisProvider } from "../src/server/ai";
 import type { AnalyzeQuestionInput } from "../src/server/ai/provider";
 import type { ModelAnalysis, ModelProbePair } from "../src/schemas/analysis";
 
+interface ProbePairArtifact {
+  stepIndex: number;
+  concept: string;
+  source: "analysis-response" | "follow-up-call";
+  latencyMs: number | null;
+  pair: ModelProbePair | null;
+  error: string | null;
+}
+
 interface EvalResult {
-  providerMode: "mock" | "live";
   questionId: string;
   grade: number;
   questionText: string;
+  sourceContext: string;
   expectedTopic: string;
-  actualTopic: string;
-  topicMatch: boolean;
-  breakdownSteps: number;
-  minBreakdownSteps: number;
-  breakdownSufficient: boolean;
-  gradeDifficulty: string;
-  probePlanLength: number;
-  firstPairGenerated: boolean;
-  latencyMs: number;
-  error: string | null;
-  probeError: string | null;
+  analysisLatencyMs: number;
+  analysisError: string | null;
   analysis: ModelAnalysis | null;
-  firstPair: ModelProbePair | null;
+  sanityChecks: {
+    topicMatch: boolean;
+    breakdownSteps: number;
+    minBreakdownSteps: number;
+    breakdownMeetsMinimum: boolean;
+  } | null;
+  probeLatencyMs: number;
+  probePairs: ProbePairArtifact[];
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
@@ -45,143 +52,198 @@ async function evaluateQuestion(question: TestQuestion): Promise<EvalResult> {
     questionText: question.questionText,
     files: [],
   };
+  const analysisStartedAt = Date.now();
+  let analysis: ModelAnalysis;
 
-  const start = Date.now();
-  const providerMode = process.env.AI_MOCK_MODE !== "false" ? "mock" : "live";
   try {
-    const analysis = await provider.analyzeQuestion(input);
-    const latencyMs = Date.now() - start;
+    analysis = await provider.analyzeQuestion(input);
+  } catch (error) {
+    return {
+      questionId: question.id,
+      grade: question.grade,
+      questionText: question.questionText,
+      sourceContext: question.source,
+      expectedTopic: question.expectedTopic,
+      analysisLatencyMs: Date.now() - analysisStartedAt,
+      analysisError: errorMessage(error),
+      analysis: null,
+      sanityChecks: null,
+      probeLatencyMs: 0,
+      probePairs: [],
+    };
+  }
 
-    // Also try generating the first probe pair
-    let firstPairGenerated = false;
-    let firstPair: ModelProbePair | null = null;
-    let probeError: string | null = null;
+  const analysisLatencyMs = Date.now() - analysisStartedAt;
+  const probePairs: ProbePairArtifact[] = [{
+    stepIndex: 0,
+    concept: analysis.probePlan[0]?.concept ?? "Unplanned first pair",
+    source: "analysis-response",
+    latencyMs: null,
+    pair: analysis.firstPair,
+    error: null,
+  }];
+  let probeLatencyMs = 0;
+
+  for (let stepIndex = 1; stepIndex < analysis.probePlan.length; stepIndex += 1) {
+    const plan = analysis.probePlan[stepIndex];
+    if (!plan) continue;
+
+    const startedAt = Date.now();
     try {
       const pair = await provider.generateProbePair({
         grade: question.grade,
         parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
         plan: analysis.probePlan,
-        stepIndex: 0,
+        stepIndex,
       });
-      firstPairGenerated = pair.main != null && pair.easier != null;
-      firstPair = pair;
-    } catch (err) {
-      probeError = err instanceof Error ? err.message : String(err);
+      const latencyMs = Date.now() - startedAt;
+      probeLatencyMs += latencyMs;
+      probePairs.push({
+        stepIndex,
+        concept: plan.concept,
+        source: "follow-up-call",
+        latencyMs,
+        pair,
+        error: null,
+      });
+    } catch (error) {
+      const latencyMs = Date.now() - startedAt;
+      probeLatencyMs += latencyMs;
+      probePairs.push({
+        stepIndex,
+        concept: plan.concept,
+        source: "follow-up-call",
+        latencyMs,
+        pair: null,
+        error: errorMessage(error),
+      });
     }
+  }
 
-    return {
-      providerMode,
-      questionId: question.id,
-      grade: question.grade,
-      questionText: question.questionText,
-      expectedTopic: question.expectedTopic,
-      actualTopic: analysis.topic,
+  return {
+    questionId: question.id,
+    grade: question.grade,
+    questionText: question.questionText,
+    sourceContext: question.source,
+    expectedTopic: question.expectedTopic,
+    analysisLatencyMs,
+    analysisError: null,
+    analysis,
+    sanityChecks: {
       topicMatch:
         analysis.topic.toLowerCase().includes(question.expectedTopic.toLowerCase()) ||
         question.expectedTopic.toLowerCase().includes(analysis.topic.toLowerCase()),
       breakdownSteps: analysis.breakdown.length,
       minBreakdownSteps: question.minBreakdownSteps,
-      breakdownSufficient: analysis.breakdown.length >= question.minBreakdownSteps,
-      gradeDifficulty: analysis.gradeDifficulty,
-      probePlanLength: analysis.probePlan.length,
-      firstPairGenerated,
-      latencyMs,
-      error: null,
-      probeError,
-      analysis,
-      firstPair,
-    };
-  } catch (err) {
-    return {
-      providerMode,
-      questionId: question.id,
-      grade: question.grade,
-      questionText: question.questionText,
-      expectedTopic: question.expectedTopic,
-      actualTopic: "",
-      topicMatch: false,
-      breakdownSteps: 0,
-      minBreakdownSteps: question.minBreakdownSteps,
-      breakdownSufficient: false,
-      gradeDifficulty: "",
-      probePlanLength: 0,
-      firstPairGenerated: false,
-      latencyMs: Date.now() - start,
-      error: err instanceof Error ? err.message : String(err),
-      probeError: null,
-      analysis: null,
-      firstPair: null,
-    };
-  }
+      breakdownMeetsMinimum: analysis.breakdown.length >= question.minBreakdownSteps,
+    },
+    probeLatencyMs,
+    probePairs,
+  };
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const jsonOutput = args.includes("--json");
-  const quiet = args.includes("--quiet");
+  const quiet = args.includes("--quiet") || jsonOutput;
+  const providerMode = process.env.AI_MOCK_MODE === "false" ? "live" : "mock";
+  const modelId = providerMode === "mock"
+    ? "fixed-mock-provider"
+    : process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
   if (!quiet) {
-    console.log(`🧪 Prompt Evaluation — ${TEST_QUESTIONS.length} test questions`);
-    console.log(`   Provider: ${process.env.AI_MOCK_MODE !== "false" ? "mock (fixture-only; not model accuracy)" : "Anthropic (live)"}`);
-    console.log();
+    console.log(`Prompt evaluation: ${TEST_QUESTIONS.length} authored examples`);
+    console.log(`Provider: ${providerMode} (${modelId})`);
   }
 
   const results: EvalResult[] = [];
-
   for (const question of TEST_QUESTIONS) {
-    if (!quiet) {
-      process.stdout.write(`   Evaluating ${question.id}… `);
-    }
+    if (!quiet) process.stdout.write(`Evaluating ${question.id}... `);
     const result = await evaluateQuestion(question);
     results.push(result);
-
     if (!quiet) {
-      if (result.error) {
-        console.log(`❌ (${result.latencyMs}ms) Error: ${result.error}`);
+      if (result.analysisError) {
+        console.log(`analysis failed (${result.analysisLatencyMs}ms): ${result.analysisError}`);
       } else {
-        const topicIcon = result.topicMatch ? "✅" : "⚠️";
-        const breakdownIcon = result.breakdownSufficient ? "✅" : "⚠️";
+        const generated = result.probePairs.filter((pair) => pair.pair !== null).length;
+        const failed = result.probePairs.filter((pair) => pair.error !== null).length;
         console.log(
-          `done (${result.latencyMs}ms) ${topicIcon} topic ${breakdownIcon} ${result.breakdownSteps}/${result.minBreakdownSteps} steps`,
+          `${generated}/${result.probePairs.length} pairs retained, ${failed} follow-up failures`,
         );
       }
     }
   }
 
+  const successfulAnalyses = results.filter((result) => result.analysis !== null);
+  const plannedPairs = successfulAnalyses.reduce(
+    (count, result) => count + (result.analysis?.probePlan.length ?? 0),
+    0,
+  );
+  const retainedPairs = results.reduce(
+    (count, result) => count + result.probePairs.filter((pair) => pair.pair !== null).length,
+    0,
+  );
+  const followUpCalls = results.reduce(
+    (count, result) => count + result.probePairs.filter((pair) => pair.source === "follow-up-call").length,
+    0,
+  );
+  const report = {
+    metadata: {
+      runAt: new Date().toISOString(),
+      providerMode,
+      modelId,
+      promptVersion: "analysis-v2",
+      testSetSize: TEST_QUESTIONS.length,
+      measurementLimit: "Generated math, distractors, hints, explanations, and concept alignment are not graded automatically.",
+    },
+    summary: {
+      questions: results.length,
+      analysisSuccesses: successfulAnalyses.length,
+      analysisFailures: results.length - successfulAnalyses.length,
+      plannedProbePairs: plannedPairs,
+      retainedProbePairs: retainedPairs,
+      followUpCalls,
+      followUpCallFailures: results.reduce(
+        (count, result) => count + result.probePairs.filter((pair) => pair.error !== null).length,
+        0,
+      ),
+      averageAnalysisLatencyMs: successfulAnalyses.length === 0
+        ? null
+        : Math.round(
+            successfulAnalyses.reduce((total, result) => total + result.analysisLatencyMs, 0) /
+              successfulAnalyses.length,
+          ),
+      averageFollowUpProbeLatencyMs: followUpCalls === 0
+        ? null
+        : Math.round(
+            results.reduce((total, result) => total + result.probeLatencyMs, 0) / followUpCalls,
+          ),
+      topicMatches: successfulAnalyses.filter((result) => result.sanityChecks?.topicMatch).length,
+      breakdownsMeetingMinimum: successfulAnalyses.filter(
+        (result) => result.sanityChecks?.breakdownMeetsMinimum,
+      ).length,
+    },
+    results,
+  };
+
   if (jsonOutput) {
-    console.log(JSON.stringify(results, null, 2));
+    console.log(JSON.stringify(report, null, 2));
     return;
   }
 
-  // Summary
-  const successful = results.filter((r) => !r.error);
-  const topicMatches = successful.filter((r) => r.topicMatch).length;
-  const breakdownSufficient = successful.filter((r) => r.breakdownSufficient).length;
-  const avgLatency =
-    successful.length > 0 ? Math.round(successful.reduce((s, r) => s + r.latencyMs, 0) / successful.length) : 0;
-
-  console.log("\n📊 Summary");
-  console.log(`   Questions evaluated: ${results.length}`);
-  console.log(`   Successful:          ${successful.length}`);
-  console.log(`   Errors:              ${results.length - successful.length}`);
-  console.log(`   Probe generation errors: ${results.filter(r => r.probeError).length}`);
-  console.log("   Topic and step-count metrics are sanity checks, not mathematical accuracy.");
-  console.log(`   Topic matches:       ${topicMatches}/${successful.length}`);
-  console.log(`   Breakdown sufficient: ${breakdownSufficient}/${successful.length}`);
-  console.log(`   Average latency:     ${avgLatency}ms`);
-
-  if (successful.length > 0) {
-    console.log("\n📋 Per-question breakdown:");
-    for (const r of successful) {
-      console.log(
-        `   ${r.questionId}: ${r.breakdownSteps} steps, ${r.probePlanLength} probes planned, ` +
-          `difficulty=${r.gradeDifficulty}, topic="${r.actualTopic}" ${r.topicMatch ? "✓" : "✗ expected: " + r.expectedTopic}`,
-      );
-    }
+  console.log("\nSummary");
+  console.log(`  Questions: ${report.summary.questions}`);
+  console.log(`  Successful analyses: ${report.summary.analysisSuccesses}`);
+  console.log(`  Probe pairs retained: ${report.summary.retainedProbePairs}/${report.summary.plannedProbePairs}`);
+  console.log(`  Follow-up call failures: ${report.summary.followUpCallFailures}`);
+  console.log("  Topic and step-count measures are sanity checks only.");
+  console.log("  No generated-question accuracy score is calculated.");
+  if (providerMode === "mock") {
+    console.log("  Mock fixtures verify plumbing only; they are not model evidence.");
   }
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
+main().catch((error: unknown) => {
+  console.error("Prompt evaluation failed:", errorMessage(error));
+  process.exitCode = 1;
 });

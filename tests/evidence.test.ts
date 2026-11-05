@@ -48,9 +48,14 @@ describe("Independent reference arithmetic (not model accuracy)", () => {
 describe("Evidence integrity", () => {
   it("covers the eight existing reference cases without reporting a live success rate", () => {
     expect(TEST_QUESTIONS).toHaveLength(8);
-    expect(deck).toContain("No live-model accuracy percentage is claimed");
+    expect(TEST_QUESTIONS.every((question) =>
+      question.source.startsWith("Project-authored example") &&
+      question.source.includes("Textbook attribution not verified"),
+    )).toBe(true);
+    expect(deck).toContain("No live model result is claimed");
     expect(deck).toContain("Zero tutor responses");
-    expect(deck).toContain("not an actual student or live-model accuracy result");
+    expect(deck).toContain("How can we trust each AI-written question and answer key?");
+    expect(deck).toContain("No API key is configured.");
     expect(deck).not.toMatch(/<script[^>]+src=|<link[^>]+href=/i);
     expect(deck).not.toContain("\u2014");
     expect(readFileSync(path.resolve("public", "Mathify-stakeholder-evidence.pptx")).subarray(0, 2).toString()).toBe("PK");
