@@ -309,6 +309,30 @@ probes; report false positives, missed errors, and call failures separately.
 
 ## Presentation evidence update (November 5, 2026)
 
+- Training scale is not a test-set size: NVIDIA's current OpenMathReasoning card
+  reports **3.2 million generated reasoning solutions across 306,000 unique
+  problems**, sourced from AoPS forums including high-school olympiad material.
+  The card corrects the paper's initial 540,000-problem figure. These are synthetic
+  training solutions, not millions of independently verified Ontario curriculum
+  examples or evidence about Claude's undisclosed training corpus.
+  Sources: https://huggingface.co/datasets/nvidia/OpenMathReasoning and
+  https://arxiv.org/abs/2504.16891
+- AlphaEvolve's 2025 paper reports **48 scalar multiplications for a 4-by-4 complex
+  matrix product**, improving on Strassen's 49 after **56 years**. This is a
+  specific algorithmic discovery using search and automated evaluation, not proof
+  that a general chatbot exceeds every human or cannot make errors.
+  Source: https://arxiv.org/abs/2506.13131
+- Weng et al., *Large Language Models Are Better Reasoners with Self-Verification*
+  (2023 version), table 1: code-davinci-002 on GSM8K improves from **60.81% to
+  65.14%**, or **4.33 percentage points**, with self-verification. The method checks
+  candidate answers against problem conditions and selects among them. This is
+  evidence for a particular verification procedure, not a measured improvement
+  from Mathify's prompted issue-reporting checker. Cobbe et al. (2021) separately
+  train verifiers to select among candidate solutions; Mathify does not implement
+  that trained-verifier method either.
+  Sources: https://arxiv.org/abs/2212.09561 (table verified at
+  https://ar5iv.labs.arxiv.org/html/2212.09561) and
+  https://arxiv.org/abs/2110.14168
 - DeepSeek-R1 reports **97.3% MATH-500 pass@1** in its January 2025
   paper and official results. The authors describe 64 sampled responses per query
   to estimate pass@1 on benchmarks requiring sampling; this is not pass@64.
@@ -333,6 +357,17 @@ probes; report false positives, missed errors, and call failures separately.
 - Compare review enabled/disabled on the same examples, measuring meaningful
   errors detected and false alarms on good questions. This is a proposed study;
   no live accuracy results or tutor questionnaire responses are available.
+- Tutor responses are not a prerequisite for all technical testing: known-answer
+  cases, structural checks, deliberately corrupted examples and synthetic edge
+  cases can start now. Target-user workflow suitability still requires tutor
+  input. A few target cases, a short tutor meeting and approval to pursue the
+  evaluation are the next concrete asks.
+- A requested "100% across a few dozen manually checked live cases" figure is
+  omitted because live outputs, denominator, review criteria and review records
+  were not provided. Offline tests and mock generation runs cannot substantiate
+  that claim. Even a documented perfect sample would not establish zero risk.
+- Four substantive presentation slides are followed by two MLA-style works-cited
+  pages with 12 references and clickable links in both HTML and PowerPoint.
 
 ## Verification snapshot (November 1, 2026; deck updated November 5)
 

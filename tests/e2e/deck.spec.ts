@@ -15,12 +15,24 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
   await expect(page.locator("#slide-02")).toContainText("97.3%");
   await expect(page.locator("#slide-02")).toContainText("reported pass@1");
   await expect(page.locator("#slide-02")).toContainText("Mathify uses Claude");
+  await expect(page.locator("#slide-02")).toContainText("3.2M");
+  await expect(page.locator("#slide-02")).toContainText("306K distinct problems");
+  await expect(page.locator("#slide-02")).toContainText("500 problems");
+  await expect(page.locator("#slide-02")).toContainText("56 years");
+  await expect(page.locator("#slide-03")).toContainText("+4.33 percentage points");
+  await expect(page.locator("#slide-03")).toContainText("not a Mathify result");
   await expect(page.locator("#slide-04")).toContainText("LangSmith");
   await expect(page.locator("#slide-04")).toContainText("promptfoo");
   await expect(page.locator("#slide-04")).toContainText("DeepEval");
   await expect(page.locator("#slide-04")).toContainText("not current integrations");
-  await expect(page.locator("#slide-05")).toContainText("held-out examples");
-  await expect(page.locator("#slide-05")).toContainText("not a completed study");
+  await expect(page.locator("#slide-04")).toContainText("held-out examples");
+  await expect(page.locator("#slide-04")).toContainText("Tutors validate target-user fit");
+  for (const id of ["#slide-05", "#slide-06"]) {
+    await expect(page.locator(`${id} .slide-canvas a`)).toHaveCount(12);
+    for (const link of await page.locator(`${id} .slide-canvas a`).all()) {
+      await expect(link).toHaveAttribute("href", /^https:\/\//);
+    }
+  }
   await expect(page.getByRole("button", { name: "Previous", exact: true })).toBeDisabled();
   for (const slide of await page.locator(".slide").all()) {
     await expect(slide.locator(".slide-canvas")).toHaveCount(1);
