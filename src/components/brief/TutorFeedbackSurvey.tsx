@@ -3,9 +3,24 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 const questions = [
-  { name: "accuracy", label: "Accuracy", description: "Does this report accurately reflect the student's work?" },
-  { name: "clarity", label: "Clarity", description: "Is the report easy to understand?" },
-  { name: "startingPointUsefulness", label: "Usefulness for choosing a starting point", description: "Does it help you decide where to begin tutoring?" },
+  {
+    name: "accuracy",
+    label: "Accuracy",
+    description: "How well did this report reflect the student's work?",
+    choices: ["Very inaccurate", "Inaccurate", "Mixed", "Accurate", "Very accurate"],
+  },
+  {
+    name: "clarity",
+    label: "Clarity",
+    description: "How easy was the report to understand?",
+    choices: ["Very difficult", "Difficult", "Neither difficult nor easy", "Easy", "Very easy"],
+  },
+  {
+    name: "startingPointUsefulness",
+    label: "Usefulness",
+    description: "How useful was the report for understanding where the student needs support?",
+    choices: ["Not useful", "Slightly useful", "Somewhat useful", "Useful", "Very useful"],
+  },
 ] as const;
 
 /** The keyed inner form discards drafts and pending status when the report changes. */
@@ -76,29 +91,29 @@ function FeedbackForm({ reportId }: { reportId: string }) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
-          <p className="text-sm text-slate-600">After reviewing this report, rate each statement from 1 (strongly disagree) to 5 (strongly agree). All three ratings are required.</p>
-          <fieldset disabled={status === "saving"} className="space-y-4 disabled:opacity-60">
+          <p className="text-sm text-slate-600">Help us improve future reports. Choose one response for each question; all three are required.</p>
+          <fieldset disabled={status === "saving"} className="space-y-5 disabled:opacity-60">
             <legend className="sr-only">Report ratings</legend>
-            {questions.map(({ name, label, description }) => (
-              <fieldset key={name}>
+            {questions.map(({ name, label, description, choices }) => (
+              <fieldset key={name} aria-describedby={`${name}-description`}>
                 <legend className="text-sm font-medium text-slate-900">{label}</legend>
-                <p className="mb-2 text-xs text-slate-600">{description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <label key={rating} className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-1 rounded-lg border border-slate-200 px-2 text-sm has-checked:border-blue-600 has-checked:bg-blue-50">
-                      <input type="radio" name={name} value={rating} required aria-label={`${label}: ${rating}`} className="accent-blue-600" />
-                      {rating}
+                <p id={`${name}-description`} className="mb-2 text-sm text-slate-600">{description}</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {choices.map((choice, index) => (
+                    <label key={choice} className="flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm leading-snug text-slate-700 hover:border-blue-400 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:font-medium has-checked:text-blue-900 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600">
+                      <input type="radio" name={name} value={index + 1} required className="h-4 w-4 shrink-0 accent-blue-600" />
+                      <span>{choice}</span>
                     </label>
                   ))}
                 </div>
               </fieldset>
             ))}
             <label className="block text-sm font-medium text-slate-900">
-              What was missing or cluttered? <span className="font-normal text-slate-500">(optional)</span>
-              <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-lg border border-slate-300 p-2 font-normal" />
+              What was inaccurate, missing, or unnecessary? <span className="font-normal text-slate-500">(optional)</span>
+              <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-lg border border-slate-300 p-2 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" />
               <span className="text-xs font-normal text-slate-500">Up to 2,000 characters.</span>
             </label>
-            <button type="submit" className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-wait">
+            <button type="submit" className="min-h-11 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-wait">
               {status === "saving" ? "Saving feedback…" : "Save feedback"}
             </button>
           </fieldset>

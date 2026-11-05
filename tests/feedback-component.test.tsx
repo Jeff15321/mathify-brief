@@ -1,17 +1,54 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { TutorFeedbackSurvey } from '@/components/brief/TutorFeedbackSurvey';
 
 const reportId = 'a'.repeat(64);
 const response = (value: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(value), { status }));
 const fillRatings = () => {
-  for (const label of ['Accuracy: 4', 'Clarity: 5', 'Usefulness for choosing a starting point: 3']) {
+  for (const label of ['Accurate', 'Very easy', 'Somewhat useful']) {
     fireEvent.click(screen.getByRole('radio', { name: label }));
   }
 };
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('tutor survey', () => {
+  it('offers unselected, required verbal choices in labelled and described groups', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => response({ feedback: null })));
+    render(<TutorFeedbackSurvey reportId={reportId} />);
+    await screen.findByRole('button', { name: 'Save feedback' });
+    const accuracy = screen.getByRole('group', { name: 'Accuracy' });
+    const clarity = screen.getByRole('group', { name: 'Clarity' });
+    const usefulness = screen.getByRole('group', { name: 'Usefulness' });
+    expect(accuracy).toHaveAccessibleDescription("How well did this report reflect the student's work?");
+    expect(clarity).toHaveAccessibleDescription('How easy was the report to understand?');
+    expect(usefulness).toHaveAccessibleDescription('How useful was the report for understanding where the student needs support?');
+    expect(within(accuracy).getByRole('radio', { name: 'Mixed' })).toBeVisible();
+    expect(within(clarity).getByRole('radio', { name: 'Neither difficult nor easy' })).toBeVisible();
+    expect(within(usefulness).getByRole('radio', { name: 'Not useful' })).toBeVisible();
+    for (const radio of screen.getAllByRole('radio')) {
+      expect(radio).not.toBeChecked();
+      expect(radio).toBeRequired();
+      expect(radio).not.toHaveAccessibleName(/^[1-5]$/);
+    }
+    expect(screen.getByRole('textbox', { name: /What was inaccurate, missing, or unnecessary/ })).not.toBeRequired();
+  });
+
+  it('keeps one choice per dimension and clears an unsaved draft when the report changes', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => response({ feedback: null })));
+    const { rerender } = render(<TutorFeedbackSurvey reportId={reportId} />);
+    await screen.findByRole('button', { name: 'Save feedback' });
+    fillRatings();
+    fireEvent.click(screen.getByRole('radio', { name: 'Mixed' }));
+    expect(screen.getByRole('radio', { name: 'Accurate' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Mixed' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Very easy' })).toBeChecked();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'For the old report' } });
+    rerender(<TutorFeedbackSurvey reportId={'b'.repeat(64)} />);
+    await screen.findByRole('button', { name: 'Save feedback' });
+    for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
+    expect(screen.getByRole('textbox')).toHaveValue('');
+  });
+
   it('submits ratings with exact identity, prevents double submit, and confirms success', async () => {
     let resolve!: (response: Response) => void;
     const fetchMock = vi.fn().mockImplementationOnce(() => response({ feedback: null }))
@@ -40,7 +77,7 @@ describe('tutor survey', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save feedback' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Storage unavailable');
     expect(screen.getByRole('textbox')).toHaveValue('Keep this draft');
-    expect(screen.getByRole('radio', { name: 'Accuracy: 4' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Accurate' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Save feedback' }));
     expect(await screen.findByText(/your feedback is saved/)).toBeVisible();
   });

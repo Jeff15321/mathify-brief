@@ -1,6 +1,6 @@
 # Tutor feedback
 
-The report ends with three required 1–5 ratings: accuracy, clarity, and usefulness for choosing where to start tutoring. Tutors can optionally describe missing or cluttered content (2,000 characters maximum). A failed save retains the draft; reload restores the saved status. There is one immutable evaluation per report. Retrying identical feedback is safe; a different second evaluation is rejected.
+The report ends with three required ratings: accuracy, clarity, and usefulness for understanding where the student needs support. Each question has five verbal choices, with no preselected answer. They map in order to the existing 1–5 API values (the usefulness field remains `startingPointUsefulness`). Tutors can optionally describe inaccurate, missing, or unnecessary content (2,000 characters maximum). A failed save retains the draft; reload restores the saved status. There is one immutable evaluation per report. Retrying identical feedback is safe; a different second evaluation is rejected.
 
 `POST /api/feedback` accepts JSON with `reportId`, `accuracy`, `clarity`, `startingPointUsefulness`, and optional `comments`. Ratings must be integers from 1 through 5. `GET /api/feedback?reportId=…` returns saved status without returning comments or report content. Both responses disable caching.
 
