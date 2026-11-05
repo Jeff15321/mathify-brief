@@ -1,4 +1,5 @@
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
+import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
 import type {
   AnalyzeQuestionInput,
@@ -95,6 +96,29 @@ const MOCK_PAIRS: ModelProbePair[] = [
   },
 ];
 
+const MOCK_ANALYSIS: ModelAnalysis = {
+  parsedQuestionMarkdown: 'Solve $2(x + 3) = 14$.',
+  topic: 'Linear equations',
+  estimatedQuestionGrade: 'Grade 9',
+  gradeDifficulty: 'on_grade',
+  breakdown: [
+    {
+      title: 'Distributive property',
+      description: 'Expand brackets carefully before combining like terms.',
+    },
+    {
+      title: 'Equation balance',
+      description: 'Apply the same inverse operation to both sides of the equation.',
+    },
+    {
+      title: 'Isolating a variable',
+      description: 'Simplify step by step until the variable stands alone.',
+    },
+  ],
+  probePlan: MOCK_PLAN,
+  firstPair: MOCK_PAIRS[0],
+};
+
 /**
  * Deterministic, schema-valid fixture provider. Used whenever AI_MOCK_MODE=true and in all
  * automated tests, regardless of whether an ANTHROPIC_API_KEY is configured (IMPLEMENTATION_PLAN.md
@@ -102,34 +126,26 @@ const MOCK_PAIRS: ModelProbePair[] = [
  */
 export class MockAnalysisProvider implements MathAnalysisProvider {
   async analyzeQuestion(_input: AnalyzeQuestionInput): Promise<ModelAnalysis> {
-    return {
-      parsedQuestionMarkdown: 'Solve $2(x + 3) = 14$.',
-      topic: 'Linear equations',
-      estimatedQuestionGrade: 'Grade 9',
-      gradeDifficulty: 'on_grade',
-      breakdown: [
-        {
-          title: 'Distributive property',
-          description: 'Expand brackets carefully before combining like terms.',
-        },
-        {
-          title: 'Equation balance',
-          description: 'Apply the same inverse operation to both sides of the equation.',
-        },
-        {
-          title: 'Isolating a variable',
-          description: 'Simplify step by step until the variable stands alone.',
-        },
-      ],
-      probePlan: MOCK_PLAN,
-      firstPair: MOCK_PAIRS[0],
-    };
+    return structuredClone(MOCK_ANALYSIS);
+  }
+
+  /** Offline allowlist only: never approves arbitrary mathematical content. */
+  async reviewAnalysis(_input: AnalyzeQuestionInput, candidate: ModelAnalysis) {
+    const approved = JSON.stringify(candidate) === JSON.stringify(MOCK_ANALYSIS);
+    return analysisReviewSchema.parse(Object.fromEntries(Object.keys(analysisReviewSchema.shape).map((key) => [key, approved])));
+  }
+
+  async reviewProbePair(input: GenerateProbePairInput, candidate: ModelProbePair) {
+    const approved = JSON.stringify(candidate) === JSON.stringify(MOCK_PAIRS[input.stepIndex])
+      && JSON.stringify(input.plan) === JSON.stringify(MOCK_PLAN)
+      && input.parsedQuestionMarkdown === MOCK_ANALYSIS.parsedQuestionMarkdown;
+    return probeReviewSchema.parse(Object.fromEntries(Object.keys(probeReviewSchema.shape).map((key) => [key, approved])));
   }
 
   async generateProbePair(input: GenerateProbePairInput): Promise<ModelProbePair> {
     const pair = MOCK_PAIRS[input.stepIndex];
     if (!pair) throw new Error(`Mock provider has no probe pair for step ${input.stepIndex}`);
-    return pair;
+    return structuredClone(pair);
   }
 
   async generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief> {

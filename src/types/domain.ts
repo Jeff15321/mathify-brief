@@ -139,7 +139,7 @@ export interface TutorBrief {
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
 export interface CurrentWorkspace {
-  schemaVersion: 3;
+  schemaVersion: 4;
   demoProfile: DemoProfile;
   questionText: string;
   attachments: StoredAsset[];

@@ -2,6 +2,7 @@ import { modelProbePairSchema, validateProbePair, type ModelProbePair } from '@/
 import type { CurrentWorkspace, ProbeAnswer, PublicProbing } from '@/types/domain';
 import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
+import { probeReviewSchema, reviewApproved } from '@/schemas/review';
 import { ApiError } from './errors';
 import { advance, currentProbe, stepToGenerate, toPublicProbing } from './helpers/probe-flow-helper';
 import { toPrivateProbe } from './analysis-service';
@@ -58,19 +59,25 @@ export async function generateNextProbePair(stores: Stores = getStores()): Promi
   let pair: ModelProbePair | null = null;
   let failure: string | null = null;
   try {
-    const raw = await getAnalysisProvider().generateProbePair({
+    const provider = getAnalysisProvider();
+    const input = {
       grade: workspace.demoProfile.grade,
       parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
       plan: analysis.probePlan,
       stepIndex,
-    });
+    };
+    const raw = await provider.generateProbePair(input);
     const parsed = modelProbePairSchema.safeParse(raw);
     if (!parsed.success) {
       failure = `AI probe output failed schema validation: ${parsed.error.message}`;
     } else {
       const errors = validateProbePair(parsed.data);
       if (errors.length > 0) failure = `AI probe output failed validation: ${errors.join('; ')}`;
-      else pair = parsed.data;
+      else {
+        const verdict = probeReviewSchema.parse(await provider.reviewProbePair(input, parsed.data));
+        if (reviewApproved(verdict)) pair = parsed.data;
+        else failure = 'Review rejected';
+      }
     }
   } catch (err) {
     failure = `AI probe generation failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -84,7 +91,8 @@ export async function generateNextProbePair(stores: Stores = getStores()): Promi
     return {
       ...current,
       probeSteps: current.probeSteps.map((step) => {
-        if (step.index !== stepIndex) return step;
+        if (step.index !== stepIndex || step.status !== 'generating'
+          || step.generationStartedAt !== workspace.probeSteps[stepIndex].generationStartedAt) return step;
         return pair
           ? {
               ...step,
@@ -99,7 +107,7 @@ export async function generateNextProbePair(stores: Stores = getStores()): Promi
     };
   });
 
-  if (failure) throw new ApiError(502, 'AI_PROVIDER_ERROR', failure);
+  if (failure) throw new ApiError(502, 'AI_PROVIDER_ERROR', 'The generated questions could not pass quality review. Please retry generation.');
   return publicProbing(saved);
 }
 

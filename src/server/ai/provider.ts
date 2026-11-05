@@ -1,4 +1,5 @@
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
+import type { AnalysisReview, ProbeReview } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
 import type { MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored } from '@/types/domain';
 
@@ -37,6 +38,8 @@ export interface GenerateTutorBriefInput {
 }
 
 export interface MathAnalysisProvider {
+  reviewAnalysis(input: AnalyzeQuestionInput, candidate: ModelAnalysis): Promise<AnalysisReview>;
+  reviewProbePair(input: GenerateProbePairInput, candidate: ModelProbePair): Promise<ProbeReview>;
   analyzeQuestion(input: AnalyzeQuestionInput): Promise<ModelAnalysis>;
   generateProbePair(input: GenerateProbePairInput): Promise<ModelProbePair>;
   generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief>;

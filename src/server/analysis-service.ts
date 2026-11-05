@@ -3,6 +3,7 @@ import type { PrivateProbe, ProbeKind, ProbeStep, QuestionAnalysisPublic, Questi
 import { toPublicAnalysis } from '@/types/domain';
 import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
+import { analysisReviewSchema, reviewApproved } from '@/schemas/review';
 import { ApiError } from './errors';
 import { probeIdFor } from './helpers/probe-flow-helper';
 
@@ -53,22 +54,31 @@ export async function analyzeCurrentWorkspace(stores: Stores = getStores()): Pro
       questionText: workspace.questionText,
       files,
     });
-  } catch (err) {
+  } catch {
     throw new ApiError(
       502,
       'AI_PROVIDER_ERROR',
-      `AI analysis call failed: ${err instanceof Error ? err.message : String(err)}`,
+      'AI analysis could not be completed. Please retry analysis.',
     );
   }
 
   const parsed = modelAnalysisSchema.safeParse(rawResult);
   if (!parsed.success) {
-    throw new ApiError(502, 'AI_PROVIDER_ERROR', `AI analysis output failed schema validation: ${parsed.error.message}`);
+    throw new ApiError(502, 'AI_PROVIDER_ERROR', 'AI analysis could not be validated. Please retry analysis.');
   }
 
   const structuralErrors = validateAnalysisStructure(parsed.data);
   if (structuralErrors.length > 0) {
-    throw new ApiError(502, 'AI_PROVIDER_ERROR', `AI analysis output failed validation: ${structuralErrors.join('; ')}`);
+    throw new ApiError(502, 'AI_PROVIDER_ERROR', 'AI analysis could not be validated. Please retry analysis.');
+  }
+
+  try {
+    const verdict = analysisReviewSchema.parse(await provider.reviewAnalysis({
+      grade: workspace.demoProfile.grade, questionText: workspace.questionText, files,
+    }, parsed.data));
+    if (!reviewApproved(verdict)) throw new Error('Review rejected');
+  } catch {
+    throw new ApiError(502, 'AI_PROVIDER_ERROR', 'The generated content could not pass quality review. Please retry analysis.');
   }
 
   const now = new Date().toISOString();
