@@ -1,0 +1,13 @@
+# Tutor feedback
+
+The report ends with three required 1–5 ratings: accuracy, clarity, and usefulness for choosing where to start tutoring. Tutors can optionally describe missing or cluttered content (2,000 characters maximum). A failed save retains the draft; reload restores the saved status. There is one immutable evaluation per report. Retrying identical feedback is safe; a different second evaluation is rejected.
+
+`POST /api/feedback` accepts JSON with `reportId`, `accuracy`, `clarity`, `startingPointUsefulness`, and optional `comments`. Ratings must be integers from 1 through 5. `GET /api/feedback?reportId=…` returns saved status without returning comments or report content. Both responses disable caching.
+
+The public workspace includes `feedbackReportId`, a SHA-256 fingerprint of the exact report snapshot. New reports also have a UUID generation identity so separate identical reports remain distinct. Existing schema-v3 reports without a UUID still work using their content and creation timestamps. The fingerprint includes the question, displayed analysis, report, and asset metadata. The server verifies it against the current completed workspace while holding the same process-local lock as workspace replacement. Submissions from replaced reports or reports that changed after viewing receive HTTP 409; they cannot attach to the new report.
+
+Feedback is written atomically to `LOCAL_DATA_DIR/feedback/<reportId>.json`, separately from the replaceable `workspace.json`. Each versioned record includes ratings, trimmed comments, submission time, the evaluated report snapshot, and base64 copies of its attachments and whiteboard. These copies preserve the evaluated material when new intake removes old workspace assets. New questions do not delete saved feedback. Storage and retention grow with evaluations; remove files from this directory when the local evaluation records are no longer needed. They may contain student work and tutor comments.
+
+This follows the existing single-user, single-Node-process local MVP. There is no login, feedback history UI, database, or cross-process locking. Run it with persistent local disk; do not treat the files or process-local lock as a multi-user deployment store.
+
+Validation: service/API tests cover invalid input, reload/restart persistence, old reports, duplicate retries, concurrent replacement, storage failure, and asset retention. Component tests cover submission, loading errors, retry, saved status, and identity changes. The mock-AI Playwright journey covers report review → error/retry → saved status after reload → new question retention → stale-tab rejection. Set `E2E_PORT` and `LOCAL_DATA_DIR` to isolate browser runs when needed.

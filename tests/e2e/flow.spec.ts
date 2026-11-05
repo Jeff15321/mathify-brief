@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
-test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> early submit -> brief", async ({ page }) => {
+test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> brief -> tutor feedback", async ({ page, request }) => {
   await page.goto("/");
 
   await page.getByLabel("Question (optional if files provided)").fill("Solve 2(x + 3) = 14.");
@@ -92,4 +92,42 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(retryItems).toHaveCount(2);
   await expect(retryItems.first()).toBeVisible();
   await expect(page.getByText("Not reached before submitting")).toHaveCount(0);
+
+  // The survey sends the evaluated report identity and preserves the draft after an error.
+  const snapshot = await (await request.get("/api/workspace")).json();
+  const reportId = snapshot.workspace.feedbackReportId;
+  await page.getByRole("radio", { name: "Accuracy: 4", exact: true }).check();
+  await page.getByRole("radio", { name: "Clarity: 5", exact: true }).check();
+  await page.getByRole("radio", { name: "Usefulness for choosing a starting point: 3", exact: true }).check();
+  await page.getByRole("textbox", { name: /What was missing or cluttered/ }).fill("A little more context would help.");
+  await page.route("**/api/feedback", async (route) => {
+    await route.fulfill({ status: 500, json: { error: { message: "Could not save. Please try again." } } });
+  }, { times: 1 });
+  await page.getByRole("button", { name: "Save feedback", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Tutor feedback" }).getByRole("alert")).toHaveText(/Could not save/);
+  await expect(page.getByRole("textbox", { name: /What was missing or cluttered/ })).toHaveValue("A little more context would help.");
+  await page.getByRole("button", { name: "Save feedback", exact: true }).click();
+  await expect(page.getByText(/your feedback is saved for this report/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(/your feedback is saved for this report/)).toBeVisible();
+
+  // Start another question; the saved feedback is retained independently of the workspace.
+  await page.getByRole("link", { name: "Start a new question" }).click();
+  await page.getByLabel("Question (optional if files provided)").fill("Solve 4x = 12.");
+  await page.getByRole("button", { name: "Begin Session" }).click();
+  await page.waitForURL("**/workspace");
+  await expect(page.getByText("Question 1 of 3")).toBeVisible();
+  const saved = await (await request.get(`/api/feedback?reportId=${reportId}`)).json();
+  expect(saved.feedback.reportId).toBe(reportId);
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.waitForURL("**/brief");
+  await expect(page.getByRole("button", { name: "Save feedback", exact: true })).toBeVisible();
+  await page.getByRole("radio", { name: "Accuracy: 4", exact: true }).check();
+  await page.getByRole("radio", { name: "Clarity: 5", exact: true }).check();
+  await page.getByRole("radio", { name: "Usefulness for choosing a starting point: 3", exact: true }).check();
+
+  // Another tab replaces this report before the tutor submits the unsaved survey.
+  expect((await request.post("/api/workspace/start", { multipart: { questionText: "A different question" } })).status()).toBe(201);
+  await page.getByRole("button", { name: "Save feedback", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Tutor feedback" }).getByRole("alert")).toHaveText(/report has changed or been replaced/);
 });

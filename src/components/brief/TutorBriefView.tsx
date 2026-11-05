@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TutorFeedbackSurvey } from "./TutorFeedbackSurvey";
 import type { PublicWorkspace, TutorBrief } from "@/types/domain";
 import { BriefHeader } from "./BriefHeader";
 import { CurrentQuestionCard } from "./CurrentQuestionCard";
@@ -39,6 +40,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       <PriorityStepCard results={brief.results} priorityStepIndex={brief.priorityStepIndex} />
       <WhiteboardPreviewCard assetId={workspace.whiteboardAsset?.id ?? null} />
       <ProbingResultsAccordion results={brief.results} notReachedConcepts={brief.notReachedConcepts} />
+      {workspace.feedbackReportId && <TutorFeedbackSurvey reportId={workspace.feedbackReportId} />}
       <Link
         href="/"
         className="self-start rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"

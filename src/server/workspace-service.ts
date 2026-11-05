@@ -1,3 +1,4 @@
+import { getFeedbackReportId } from './feedback-report';
 import { DEMO_PROFILE, toPublicAnalysis } from '@/types/domain';
 import type { CurrentWorkspace, PublicWorkspace, StoredAsset } from '@/types/domain';
 import { MAX_QUESTION_TEXT_LENGTH } from '@/lib/constants';
@@ -14,6 +15,7 @@ type Stores = ReturnType<typeof createStores>;
  */
 export function toPublicWorkspace(workspace: CurrentWorkspace): PublicWorkspace {
   return {
+    feedbackReportId: getFeedbackReportId(workspace),
     profile: workspace.demoProfile,
     questionText: workspace.questionText,
     attachments: workspace.attachments,

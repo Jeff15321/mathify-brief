@@ -94,6 +94,7 @@ export const probeTallySchema = z.object({
 });
 
 export const tutorBriefSchema = z.object({
+  reportId: z.string().uuid().optional(),
   results: z.array(probeResultSchema),
   notReachedConcepts: z.array(z.string()),
   core: probeTallySchema,
