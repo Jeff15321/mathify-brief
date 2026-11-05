@@ -1,34 +1,23 @@
 import { MathText } from "@/components/shared/MathText";
-import type { ProbeOutcome, ProbeResult } from "@/types/domain";
+import type { ProbeResult } from "@/types/domain";
 
-const OUTCOME_COLOR: Record<ProbeOutcome, string> = {
-  correct: "text-emerald-600",
-  incorrect: "text-red-600",
-  dont_know: "text-amber-700",
-  unanswered: "text-slate-500",
-};
-
-/** One-line summary of what the student picked, with the key revealed for the tutor. */
-function selectedLine(result: ProbeResult): string {
-  return {
-    correct: `Selected: ${result.selectedOptionText} (correct)`,
-    incorrect: `Selected: ${result.selectedOptionText} (incorrect, correct answer: ${result.correctOptionText})`,
-    dont_know: `Selected: I don't know (correct answer: ${result.correctOptionText})`,
-    unanswered: "Selected: Unanswered",
-  }[result.outcome];
-}
-
-/** One served probe in the probing results list; easier retries are indented under their main question. */
+/** Each attempt pairs the original question with the student's recorded answer. */
 export function ProbeResultItem({ result }: { result: ProbeResult }) {
-  const isEasier = result.kind === "easier";
+  const label = result.kind === "main" ? "Main question" : "Simpler question";
+  const selected = result.outcome === "dont_know" ? "I don’t know" : result.selectedOptionText ?? "No answer submitted";
   return (
-    <div className={`flex flex-col gap-1 ${isEasier ? "ml-4 border-l-2 border-amber-200 pl-3" : ""}`}>
-      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {isEasier ? "Easier retry" : result.concept}
-      </span>
-      <MathText text={result.questionMarkdown} className="text-sm text-slate-800" />
-      <MathText text={selectedLine(result)} className={`text-sm ${OUTCOME_COLOR[result.outcome]}`} />
-      <MathText text={result.explanation} className="text-xs text-slate-500" />
-    </div>
+    <section aria-label={`${label}: ${result.concept}`} className="min-w-0">
+      <h4 className="mb-4 text-sm font-medium text-slate-500">{result.kind === "main" ? "First try" : "Simpler follow-up"}</h4>
+      <dl className="space-y-4">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <dt className="mb-1 text-sm font-medium text-slate-600">Question</dt>
+          <dd><MathText text={result.questionMarkdown} className="[&_.katex]:inline-block overflow-x-auto text-lg font-semibold leading-relaxed text-slate-900" /></dd>
+        </div>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <dt className="mb-1 text-sm font-medium text-slate-600">Student answer</dt>
+          <dd><MathText text={selected} className="[&_.katex]:inline-block overflow-x-auto text-lg font-semibold leading-relaxed text-slate-900" /></dd>
+        </div>
+      </dl>
+    </section>
   );
 }

@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ProbeCard } from "@/components/workspace/ProbeCard";
 import { ProbingPanel } from "@/components/workspace/ProbingPanel";
 import { QuestionDisplay } from "@/components/workspace/QuestionDisplay";
 import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
-import { ProbeTallyCard } from "@/components/brief/ProbeTallyCard";
-import { PriorityStepCard } from "@/components/brief/PriorityStepCard";
-import { ProbingResultsAccordion } from "@/components/brief/ProbingResultsAccordion";
+import { ConceptChecks } from "@/components/brief/ConceptChecks";
+import { CurrentQuestionCard } from "@/components/brief/CurrentQuestionCard";
+import { BriefHeader } from "@/components/brief/BriefHeader";
 import type { ProbeOutcome, ProbeResult, PublicProbe, PublicProbing } from "@/types/domain";
 
 const PROBE: PublicProbe = {
@@ -172,45 +172,148 @@ function briefResult(kind: "main" | "easier", outcome: ProbeOutcome): ProbeResul
   };
 }
 
-describe("Tutor Brief cards", () => {
-  it("ProbeTallyCard shows correct/attempted, coverage and misses", () => {
-    render(<ProbeTallyCard title="Core probes" tally={{ total: 4, attempted: 4, correct: 1, incorrect: 2, dontKnow: 1 }} emptyLabel="None" />);
-    expect(screen.getByText("1/4")).toBeInTheDocument();
-    expect(screen.getByText("4 of 4 attempted")).toBeInTheDocument();
-    expect(screen.getByText("2 incorrect · 1 don't know")).toBeInTheDocument();
+describe("Tutor Brief evidence", () => {
+  it("puts the subject in the main heading", () => {
+    render(<BriefHeader topic="Linear equations" studentGrade={9} />);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Linear equations");
+    expect(screen.getByText("Tutor brief · Student grade 9")).toBeVisible();
   });
 
-  it("ProbeTallyCard shows its empty label when there are no probes of that kind", () => {
-    render(<ProbeTallyCard title="Easier retries" tally={{ total: 0, attempted: 0, correct: 0, incorrect: 0, dontKnow: 0 }} emptyLabel="No retries needed." />);
-    expect(screen.getByText("No retries needed.")).toBeInTheDocument();
+  it("groups overview and evidence identically, alphabetizes within groups, and preserves identities", () => {
+    const cases: [string, ProbeOutcome, ProbeOutcome | null][] = [
+      ["Zulu retry", "incorrect", "correct"],
+      ["Beta unresolved", "dont_know", "unanswered"],
+      ["Alpha unresolved", "incorrect", "incorrect"],
+      ["Alpha retry", "dont_know", "correct"],
+      ["Zeta correct", "correct", "incorrect"],
+      ["Alpha correct", "correct", null],
+      ["Beta unanswered", "unanswered", "unanswered"],
+      ["Alpha unanswered", "unanswered", null],
+    ];
+    const results = cases.flatMap(([concept, main, easier], stepIndex) => [
+      { ...briefResult("main", main), concept, stepIndex, probeId: `s${stepIndex}-main` },
+      ...(easier ? [{ ...briefResult("easier", easier), concept, stepIndex, probeId: `s${stepIndex}-easier` }] : []),
+    ]);
+    const notReached = ["Zeta not reached", "Alpha not reached"];
+    const originalOrder = results.map((result) => result.probeId);
+    Object.freeze(results);
+    results.forEach(Object.freeze);
+    Object.freeze(notReached);
+    render(<ConceptChecks results={results} notReachedConcepts={notReached} />);
+    const summary = screen.getByRole("region", { name: "Response summary" });
+    expect(within(summary).getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual([
+      "Incorrect or unsure", "Correct on simpler question", "Correct on first try", "Unanswered", "Not reached",
+    ]);
+    const rows = within(summary).getAllByRole("listitem");
+    const details = rows.map((row) => row.querySelector("details")!);
+    const names = details.map((detail) => detail.querySelector("summary h3")!.textContent);
+    expect(names).toEqual([
+      "Alpha unresolved", "Beta unresolved", "Alpha retry", "Zulu retry", "Alpha correct", "Zeta correct", "Alpha unanswered", "Beta unanswered", "Alpha not reached", "Zeta not reached",
+    ]);
+    const ids = ["probe-step-2", "probe-step-1", "probe-step-3", "probe-step-0", "probe-step-5", "probe-step-4", "probe-step-7", "probe-step-6", "not-reached-1", "not-reached-0"];
+    expect(details.map((detail) => detail.id)).toEqual(ids);
+    expect(details.every((detail) => !detail.open)).toBe(true);
+    expect(details[1].querySelector("summary")).toHaveTextContent(/First try.*Unsure.*Simpler follow-up.*Unanswered/);
+    expect(details[2].querySelector("summary")).toHaveTextContent(/First try.*Unsure.*Simpler follow-up.*Correct/);
+    expect(details[5].querySelector("summary")).toHaveTextContent(/First try.*Correct.*Simpler follow-up.*Incorrect/);
+    expect(results.map((result) => result.probeId)).toEqual(originalOrder);
+    expect(notReached).toEqual(["Zeta not reached", "Alpha not reached"]);
   });
 
-  it("PriorityStepCard shows the concept, the student's pick vs the correct answer, and the retry result", () => {
-    render(<PriorityStepCard results={[briefResult("main", "incorrect"), briefResult("easier", "incorrect")]} priorityStepIndex={0} />);
-    expect(screen.getByText("Dividing out a common factor")).toBeInTheDocument();
-    expect(screen.getByText("Student selected · B")).toBeInTheDocument();
-    expect(screen.getByText("Correct · C")).toBeInTheDocument();
-    expect(screen.getByText(/Easier retry also incorrect · 0\/2 correct for this concept/)).toBeInTheDocument();
+  it("sorts concise display names while preserving original names and paired evidence", () => {
+    const concepts = ["Checking a solution by substitution", "Inverse operations", "Dividing by the coefficient to solve ax = b"];
+    const results = concepts.flatMap((concept, stepIndex) => [
+      { ...briefResult("main", "incorrect"), concept, stepIndex, probeId: `s${stepIndex}-main` },
+      { ...briefResult("easier", "correct"), concept, stepIndex, probeId: `s${stepIndex}-easier` },
+    ]);
+    results.forEach(Object.freeze);
+    Object.freeze(results);
+    render(<ConceptChecks results={results} notReachedConcepts={[]} />);
+    const rows = screen.getAllByRole("listitem").map((row) => row.querySelector("details")!);
+    expect(rows.map((row) => row.querySelector("summary h3")!.textContent)).toEqual([
+      "Coefficient division", "Inverse operations", "Substitution check",
+    ]);
+    expect(rows.map((row) => row.id)).toEqual(["probe-step-2", "probe-step-1", "probe-step-0"]);
+    const title = within(rows[2]).getByRole("heading", { name: "Substitution check" });
+    expect(title).toHaveAttribute("title", concepts[0]);
+    fireEvent.click(title);
+    expect(within(rows[2]).getByText(concepts[0], { exact: true })).toBeVisible();
+    const main = within(rows[2]).getByRole("region", { name: `Main question: ${concepts[0]}` });
+    const easier = within(rows[2]).getByRole("region", { name: `Simpler question: ${concepts[0]}` });
+    expect(within(main).getByText("Student answer")).toBeVisible();
+    expect(within(easier).getByText("Student answer")).toBeVisible();
+    expect(results[0].concept).toBe(concepts[0]);
   });
 
-  it("PriorityStepCard has distinct empty states for no misses and no evidence", () => {
-    const { unmount } = render(<PriorityStepCard results={[briefResult("main", "correct")]} priorityStepIndex={null} />);
-    expect(screen.getByText(/No incorrect steps/)).toBeInTheDocument();
-    unmount();
-    render(<PriorityStepCard results={[briefResult("main", "unanswered")]} priorityStepIndex={null} />);
-    expect(screen.getByText("Not enough evidence yet.")).toBeInTheDocument();
+  it("preserves mixed simpler outcomes with their concepts", () => {
+    const results = (["correct", "incorrect", "dont_know", "unanswered"] as const).flatMap((outcome, index) => [
+      { ...briefResult("main", "incorrect"), probeId: `s${index}-main`, stepIndex: index, concept: `Concept ${index}` },
+      { ...briefResult("easier", outcome), probeId: `s${index}-easier`, stepIndex: index, concept: `Concept ${index}` },
+    ]);
+    render(<ConceptChecks results={results} notReachedConcepts={[]} />);
+    const rows = screen.getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent(/Incorrect.*Incorrect/);
+    expect(rows[1]).toHaveTextContent(/Incorrect.*Unsure/);
+    expect(rows[2]).toHaveTextContent(/Incorrect.*Unanswered/);
+    expect(rows[3]).toHaveTextContent(/Incorrect.*Correct/);
+    expect(screen.queryByRole("heading", { name: "Correct on first try" })).not.toBeInTheDocument();
   });
 
-  it("ProbingResultsAccordion starts collapsed and expands on click", () => {
-    const { container } = render(
-      <ProbingResultsAccordion results={[briefResult("main", "incorrect"), briefResult("easier", "correct")]} notReachedConcepts={["Factoring"]} />,
-    );
-    const details = container.querySelector("details")!;
+  it("distinguishes correct, unanswered, unreached and unserved follow-ups", () => {
+    const results = [briefResult("main", "correct"), { ...briefResult("main", "unanswered"), probeId: "s2-main", stepIndex: 1, concept: "Substitution" }];
+    render(<ConceptChecks results={results} notReachedConcepts={["Division"]} />);
+    expect(within(screen.getByRole("heading", { name: "Dividing out a common factor" }).closest("summary")!).getByText("Correct")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Unanswered" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Division" }).closest("details")).toHaveAttribute("id", "not-reached-0");
+    expect(screen.getByRole("heading", { name: "Not reached" })).toBeVisible();
+    expect(screen.getAllByText("Not served")).toHaveLength(3);
+
+  });
+
+  it("reports an empty result set without instructional or diagnostic text", () => {
+    render(<ConceptChecks results={[]} notReachedConcepts={[]} />);
+    expect(screen.getByText("No question evidence recorded.")).toBeVisible();
+  });
+
+  it("discloses original text and uploaded images directly", () => {
+    const { rerender } = render(<CurrentQuestionCard questionText="Original student wording" parsedQuestionMarkdown="Parsed wording" attachments={[]} whiteboardAsset={null} />);
+    expect(screen.getByText("Original student wording")).not.toBeVisible();
+    fireEvent.click(screen.getByText("Original problem & student work"));
+    expect(screen.getByText("Original student wording")).toBeVisible();
+    expect(screen.queryByText("Parsed wording")).not.toBeInTheDocument();
+    rerender(<CurrentQuestionCard questionText="" parsedQuestionMarkdown="Transcribed problem" attachments={[{ id: "image", kind: "attachment", fileName: "question.png", mimeType: "image/png", sizeBytes: 10, createdAt: "2026-01-01" }]} whiteboardAsset={null} />);
+    expect(screen.getByText("Problem · transcribed from upload")).toBeVisible();
+    expect(screen.getByText("Transcribed problem")).toBeVisible();
+    expect(screen.getByAltText("question.png")).toBeVisible();
+    expect(screen.getByRole("link", { name: /question.png · open original/ })).toHaveAttribute("href", "/api/assets/image");
+  });
+
+  it("opens only the selected row's question and answer pairs without key or rationale clutter", () => {
+    const results = [briefResult("main", "incorrect"), briefResult("easier", "correct")];
+    render(<ConceptChecks results={results} notReachedConcepts={["Factoring"]} />);
+    const title = screen.getByRole("heading", { name: "Dividing out a common factor" });
+    const details = title.closest("details")!;
     expect(details.open).toBe(false);
-    expect(screen.getByText(/2 concepts · 2 total responses/)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Probing results"));
+    expect(screen.getAllByText("Student answer").every((label) => label.closest("details")?.open === false)).toBe(true);
+    fireEvent.click(title);
     expect(details.open).toBe(true);
-    expect(screen.getByText("Easier retry")).toBeInTheDocument();
+    const main = screen.getByRole("region", { name: "Main question: Dividing out a common factor" });
+    expect(within(main).getByText("Question")).toBeVisible();
+    expect(within(main).getByText("Student answer")).toBeVisible();
+    expect(main.querySelectorAll("annotation")[0]).toHaveTextContent("8x^2 - 24x + 40 = 0");
+    expect(main.querySelectorAll("annotation")[1]).toHaveTextContent("4x^2 - 12x + 20 = 0");
+    expect(within(main).queryByText(/Answer key|Answer rationale|Student answer ·/)).not.toBeInTheDocument();
+    expect(within(main).queryByText("The GCF is 8.")).not.toBeInTheDocument();
+    expect(within(main).queryByText("Incorrect")).not.toBeInTheDocument();
+    const simpler = screen.getByRole("region", { name: "Simpler question: Dividing out a common factor" });
+    expect(within(simpler).getByText("Student answer")).toBeVisible();
+    expect(simpler.querySelectorAll("annotation")[0]).toHaveTextContent("2x + 4 = 0");
+    expect(simpler.querySelectorAll("annotation")[1]).toHaveTextContent("x^2 - 3x + 5 = 0");
+    expect(screen.getByRole("heading", { name: "Factoring" }).closest("details")!.open).toBe(false);
+    fireEvent.click(title);
+    expect(details.open).toBe(false);
+    expect(within(main).getByText("Student answer")).not.toBeVisible();
+    fireEvent.click(screen.getByRole("heading", { name: "Factoring" }));
+    expect(screen.getByText("Not reached before submitting. No question or answer recorded.")).toBeVisible();
   });
 });

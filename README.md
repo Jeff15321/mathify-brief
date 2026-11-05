@@ -54,10 +54,12 @@ Automated tests never call the paid Anthropic API, regardless of `.env.local`.
    question on the same concept before moving on; answers lock once you move on. The next
    question is generated in the background while you answer the current one. Expand/restore any
    panel, and click **Submit** at any point (questions not reached count as unanswered).
-4. `/brief` shows the Tutor Brief dashboard, built to be skimmed in seconds: Core probes and
-   Easier retries tallies, strengths and possible gaps (concept names), the priority / key
-   incorrect step (what the student picked vs the correct answer, and how the retry went), a
-   whiteboard preview, and a collapsed Probing results list with every question and answer.
+4. **This branch is an incomplete report-design experiment, not intended for merge.**
+   `/brief` leads with observed-result categories and concise concept names, alphabetized
+   within each category. One striped concept row can open at a time, revealing the original
+   question and student answer for each attempt. Correct, unsure, unanswered and unreached
+   responses remain distinct. Original problem/work and report metadata stay in secondary
+   disclosures. The original dashboard remains the intended UI pending further review.
 5. **Start a new question** returns to `/` and replaces the current workspace.
 
 With `AI_MOCK_MODE=true` (default) this entire flow runs fully offline against a deterministic
@@ -70,29 +72,17 @@ Upgrading from an earlier build: a `data/workspace.json` with an older `schemaVe
 ignored (treated as no workspace), and its old upload files are left in `data/uploads/`. Delete
 `data/` to clean up.
 
-## Verification status (all four stages)
+## Verification of this draft experiment
 
-- `npm run typecheck`, `npm run lint`, `npm run build` - all pass with no errors or warnings.
-- `npm run test` - **80/80 Vitest tests passing**: isolated temp-dir storage (including serialized
-  concurrent updates and old-schema handling), every upload-validation rejection path, mocked
-  analysis (plan + first pair, no leaked keys or buffered probes), the pure probe flow (easier
-  retry on wrong/IDK, one retry per step, one-step-ahead buffer, stale/failed generation
-  recovery), probe generation/answering services (idempotent prefetch, locked answers, no lost
-  writes during generation, failure retry), deterministic scoring (served probes, retries,
-  unreached steps, early submit), the brief summary (tallies, strengths/gaps, priority step),
-  brief submission (no AI call), and component tests (one-question panel, Next gating, easier
-  badge, waiting/retry states, radio persistence, Original/Parsed, panel expand/restore keeps
-  children mounted, brief tally/priority cards, collapsed probing results).
-- `npm run test:e2e` - **1/1 Playwright test passing** on its own mock-AI production server
-  (port 3100): intake -> wrong answer -> easier retry -> buffered next question -> "I don't
-  know" -> retry -> draw -> expand/restore -> early Submit -> dashboard tallies, strengths,
-  priority step, whiteboard preview and expandable probing results.
-- Manually verified twice in a real Chrome browser (via the claude-in-chrome tooling): the full
-  intake -> workspace -> brief flow, including whiteboard ink surviving panel expand/restore and
-  the exported whiteboard PNG rendering correctly on the Tutor Brief page.
-- Live Anthropic connectivity: confirmed working with a real key for both the text-only Stage 0
-  smoke call and one full typed-question Stage 2 analysis call (~17s, produced a valid student-safe
-  breakdown + 4 MCQs). Automated tests never call the paid API regardless of `.env.local`.
+- `npm test`: **83 tests passed**, including deterministic scoring, service/storage behavior,
+  grouped result categories, alphabetical display labels, original pair identities, and disclosure content.
+- `npm run lint`, `npm run typecheck`, `npm run build`: passed.
+- Four Playwright journeys passed against an isolated mock-AI production server on port 3202
+  with temporary storage: normal probe/whiteboard flow; keyboard and pointer exclusive row
+  disclosure; unanswered/unreached mobile states; image-only and long original problems; and
+  long answer wrapping. Desktop/mobile screenshots were inspected. These checks do not establish
+  tutor usability or approve the unfinished design for merge.
+- Automated checks make no paid AI calls. Vitest reports its existing Vite config-loader warning.
 
 ## Known future work (intentionally not implemented)
 
