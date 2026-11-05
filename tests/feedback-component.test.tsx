@@ -5,14 +5,14 @@ import { TutorFeedbackSurvey } from '@/components/brief/TutorFeedbackSurvey';
 const reportId = 'a'.repeat(64);
 const response = (value: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(value), { status }));
 const fillRatings = () => {
-  for (const label of ['Accurate', 'Very easy', 'Somewhat useful']) {
+  for (const label of ['4 — Accurate', '5 — Very easy', '3 — Somewhat useful']) {
     fireEvent.click(screen.getByRole('radio', { name: label }));
   }
 };
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('tutor survey', () => {
-  it('offers unselected, required verbal choices in labelled and described groups', async () => {
+  it('offers unselected numeric scales with descriptive names and matching endpoints', async () => {
     vi.stubGlobal('fetch', vi.fn().mockImplementation(() => response({ feedback: null })));
     render(<TutorFeedbackSurvey reportId={reportId} />);
     await screen.findByRole('button', { name: 'Save feedback' });
@@ -22,9 +22,18 @@ describe('tutor survey', () => {
     expect(accuracy).toHaveAccessibleDescription("How well did this report reflect the student's work?");
     expect(clarity).toHaveAccessibleDescription('How easy was the report to understand?');
     expect(usefulness).toHaveAccessibleDescription('How useful was the report for understanding where the student needs support?');
-    expect(within(accuracy).getByRole('radio', { name: 'Mixed' })).toBeVisible();
-    expect(within(clarity).getByRole('radio', { name: 'Neither difficult nor easy' })).toBeVisible();
-    expect(within(usefulness).getByRole('radio', { name: 'Not useful' })).toBeVisible();
+    expect(within(accuracy).getByRole('radio', { name: '3 — Mixed' })).toBeVisible();
+    expect(within(clarity).getByRole('radio', { name: '3 — Neither difficult nor easy' })).toBeVisible();
+    expect(within(usefulness).getByRole('radio', { name: '1 — Not useful' })).toBeVisible();
+    for (const group of [accuracy, clarity, usefulness]) {
+      expect(within(group).getAllByRole('radio').map((radio) => radio.closest('label')!.textContent)).toEqual(['1', '2', '3', '4', '5']);
+    }
+    expect(within(accuracy).getByText('Very inaccurate')).toBeVisible();
+    expect(within(accuracy).getByText('Very accurate')).toBeVisible();
+    expect(within(clarity).getByText('Very difficult')).toBeVisible();
+    expect(within(clarity).getByText('Very easy')).toBeVisible();
+    expect(within(usefulness).getByText('Not useful')).toBeVisible();
+    expect(within(usefulness).getByText('Very useful')).toBeVisible();
     for (const radio of screen.getAllByRole('radio')) {
       expect(radio).not.toBeChecked();
       expect(radio).toBeRequired();
@@ -38,10 +47,10 @@ describe('tutor survey', () => {
     const { rerender } = render(<TutorFeedbackSurvey reportId={reportId} />);
     await screen.findByRole('button', { name: 'Save feedback' });
     fillRatings();
-    fireEvent.click(screen.getByRole('radio', { name: 'Mixed' }));
-    expect(screen.getByRole('radio', { name: 'Accurate' })).not.toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Mixed' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Very easy' })).toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: '3 — Mixed' }));
+    expect(screen.getByRole('radio', { name: '4 — Accurate' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: '3 — Mixed' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '5 — Very easy' })).toBeChecked();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'For the old report' } });
     rerender(<TutorFeedbackSurvey reportId={'b'.repeat(64)} />);
     await screen.findByRole('button', { name: 'Save feedback' });
@@ -77,7 +86,7 @@ describe('tutor survey', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save feedback' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Storage unavailable');
     expect(screen.getByRole('textbox')).toHaveValue('Keep this draft');
-    expect(screen.getByRole('radio', { name: 'Accurate' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '4 — Accurate' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Save feedback' }));
     expect(await screen.findByText(/your feedback is saved/)).toBeVisible();
   });

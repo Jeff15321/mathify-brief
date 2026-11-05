@@ -100,19 +100,19 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(survey.getByRole("radio")).toHaveCount(15);
   await expect(survey.locator("input:checked")).toHaveCount(0);
   // Native keyboard navigation changes only the focused radio group.
-  await survey.getByRole("radio", { name: "Inaccurate", exact: true }).focus();
+  await survey.getByRole("radio", { name: "2 — Inaccurate", exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(survey.getByRole("radio", { name: "Mixed", exact: true })).toBeChecked();
+  await expect(survey.getByRole("radio", { name: "3 — Mixed", exact: true })).toBeChecked();
   await page.keyboard.press("ArrowRight");
-  await expect(survey.getByRole("radio", { name: "Accurate", exact: true })).toBeChecked();
-  await expect(survey.getByRole("radio", { name: "Accurate", exact: true })).toBeFocused();
+  await expect(survey.getByRole("radio", { name: "4 — Accurate", exact: true })).toBeChecked();
+  await expect(survey.getByRole("radio", { name: "4 — Accurate", exact: true })).toBeFocused();
   await expect(survey.getByRole("group", { name: "Clarity", exact: true }).locator("input:checked")).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(survey.getByRole("radio", { name: "Neither difficult nor easy", exact: true })).toBeVisible();
+  await expect(survey.getByRole("radio", { name: "3 — Neither difficult nor easy", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.getByRole("radio", { name: "Accurate", exact: true }).check();
-  await page.getByRole("radio", { name: "Very easy", exact: true }).check();
-  await page.getByRole("radio", { name: "Somewhat useful", exact: true }).check();
+  await page.getByRole("radio", { name: "4 — Accurate", exact: true }).check();
+  await page.getByRole("radio", { name: "5 — Very easy", exact: true }).check();
+  await page.getByRole("radio", { name: "3 — Somewhat useful", exact: true }).check();
   await page.getByRole("textbox", { name: /What was inaccurate, missing, or unnecessary/ }).fill("A little more context would help.");
   await page.route("**/api/feedback", async (route) => {
     await route.fulfill({ status: 500, json: { error: { message: "Could not save. Please try again." } } });
@@ -138,9 +138,9 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("button", { name: "Submit", exact: true }).click();
   await page.waitForURL("**/brief");
   await expect(page.getByRole("button", { name: "Save feedback", exact: true })).toBeVisible();
-  await page.getByRole("radio", { name: "Accurate", exact: true }).check();
-  await page.getByRole("radio", { name: "Very easy", exact: true }).check();
-  await page.getByRole("radio", { name: "Somewhat useful", exact: true }).check();
+  await page.getByRole("radio", { name: "4 — Accurate", exact: true }).check();
+  await page.getByRole("radio", { name: "5 — Very easy", exact: true }).check();
+  await page.getByRole("radio", { name: "3 — Somewhat useful", exact: true }).check();
 
   // Another tab replaces this report before the tutor submits the unsaved survey.
   expect((await request.post("/api/workspace/start", { multipart: { questionText: "A different question" } })).status()).toBe(201);

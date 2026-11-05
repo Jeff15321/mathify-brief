@@ -91,20 +91,26 @@ function FeedbackForm({ reportId }: { reportId: string }) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
-          <p className="text-sm text-slate-600">Help us improve future reports. Choose one response for each question; all three are required.</p>
+          <p className="text-sm text-slate-600">Rate each item from 1–5. All ratings required.</p>
           <fieldset disabled={status === "saving"} className="space-y-5 disabled:opacity-60">
             <legend className="sr-only">Report ratings</legend>
             {questions.map(({ name, label, description, choices }) => (
               <fieldset key={name} aria-describedby={`${name}-description`}>
                 <legend className="text-sm font-medium text-slate-900">{label}</legend>
                 <p id={`${name}-description`} className="mb-2 text-sm text-slate-600">{description}</p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                  {choices.map((choice, index) => (
-                    <label key={choice} className="flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm leading-snug text-slate-700 hover:border-blue-400 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:font-medium has-checked:text-blue-900 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600">
-                      <input type="radio" name={name} value={index + 1} required className="h-4 w-4 shrink-0 accent-blue-600" />
-                      <span>{choice}</span>
-                    </label>
-                  ))}
+                <div className="w-full max-w-72">
+                  <div className="grid grid-cols-5 gap-2">
+                    {choices.map((choice, index) => (
+                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-lg border border-slate-300 px-1 py-2 text-sm leading-snug text-slate-700 hover:border-blue-400 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:font-medium has-checked:text-blue-900 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600">
+                        <input type="radio" name={name} value={index + 1} required aria-label={`${index + 1} — ${choice}`} className="h-4 w-4 shrink-0 accent-blue-600" />
+                        <span>{index + 1}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="mt-1 flex justify-between gap-2 text-xs text-slate-500" aria-hidden="true">
+                    <span>{choices[0]}</span>
+                    <span className="text-right">{choices[4]}</span>
+                  </div>
                 </div>
               </fieldset>
             ))}
