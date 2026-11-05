@@ -314,10 +314,13 @@ probes; report false positives, missed errors, and call failures separately.
 - Playwright: three passing tests (two synthetic handoff flows, one presentation
   navigation/mobile/print test), with a successful production build.
 - Typecheck and changed-code lint passed.
-- HTML and editable PowerPoint: 11 slides, including sources and Beatrice
+- HTML and editable PowerPoint: six AI-only slides, including sources and Beatrice
   attribution. The reliability review uses message headlines, a traceable synthetic
   case, native editable diagrams, and speaker scripts. The PowerPoint archive was
-  verified to contain 11 speaker-notes slides.
+  verified to contain speaker notes on every slide. The opening diagram shows the
+  intended automatic review architecture with API access, not an executed run.
+  The checker currently remains opt-in; automatic triggering is not yet wired.
+  Product-demo slides are omitted because Alec presents that workflow separately.
   Template source: https://www.slidescarnival.com/template/beatrice-free-presentation-template/66
   License: CC BY 4.0, with attribution retained. Diagrams are original;
   prototype screenshots use mock data. No stock photos or generated images.

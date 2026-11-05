@@ -7,9 +7,11 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
     if (url.protocol.startsWith("http") && url.hostname !== "localhost") external.push(request.url());
   });
   await page.goto("/stakeholder-deck.html");
-  await expect(page.locator(".slide")).toHaveCount(11);
+  await expect(page.locator(".slide")).toHaveCount(6);
   await expect(page.locator(".slide:visible")).toHaveCount(1);
-  await expect(page.getByText("Slide 1 of 11", { exact: true })).toBeVisible();
+  await expect(page.getByText("Slide 1 of 6", { exact: true })).toBeVisible();
+  await expect(page.locator("#slide-01")).toContainText("INTENDED AUTOMATIC FLOW");
+  await expect(page.locator("#slide-01")).toContainText("automatic triggering is not yet wired");
   await expect(page.getByRole("button", { name: "Previous", exact: true })).toBeDisabled();
   for (const slide of await page.locator(".slide").all()) {
     await expect(slide.locator(".slide-canvas")).toHaveCount(1);
@@ -23,7 +25,7 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
     expect(response.ok()).toBe(true);
     expect(response.headers()["content-type"]).toContain("image/png");
   }
-  for (let index = 1; index <= 11; index++) {
+  for (let index = 1; index <= 6; index++) {
     await page.goto(`/stakeholder-deck.html#slide-${String(index).padStart(2, "0")}`);
     const layout = await page.locator(".slide:visible").evaluate(slide => {
       const canvas = slide.querySelector("svg")!;
@@ -51,14 +53,14 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page).toHaveURL(/#slide-02$/);
   await page.keyboard.press("End");
-  await expect(page.getByText("Slide 11 of 11", { exact: true })).toBeVisible();
+  await expect(page.getByText("Slide 6 of 6", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
   await page.keyboard.press("Home");
   await page.keyboard.press("n");
   await expect(page.getByRole("button", { name: "Speaker notes" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#slide-01 .notes")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  for (let index = 1; index <= 11; index++) {
+  for (let index = 1; index <= 6; index++) {
     await page.goto(`/stakeholder-deck.html#slide-${String(index).padStart(2, "0")}`);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator(".slide:visible .slide-canvas")).toBeVisible();
@@ -69,7 +71,7 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ media: "print" });
-  await expect(page.locator(".slide:visible")).toHaveCount(11);
+  await expect(page.locator(".slide:visible")).toHaveCount(6);
   await expect(page.locator(".notes:visible")).toHaveCount(0);
   expect(external).toEqual([]);
 });

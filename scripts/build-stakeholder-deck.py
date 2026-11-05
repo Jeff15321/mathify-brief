@@ -36,87 +36,55 @@ SPARKS = "https://www.wearesparks.com/our-work/google-cloud-next/"
 TEMPLATE = "https://www.slidescarnival.com/template/beatrice-free-presentation-template/66"
 SLIDES = [
     {
-        "section": "PRODUCT CONTEXT",
-        "title": "A focused tutor handoff starts with one problem.",
-        "source": "Product goal, not a measured student outcome.",
-        "script": "Mathify takes a student's math problem and prepares a short handoff for a tutor. The goal is to make it easier to choose a useful first question. That is the product promise, not a proven improvement in learning or tutor time. I will give a quick refresher on the workflow, then focus on the harder question: how do we know the AI-generated material is correct?",
+        "section": "AI ARCHITECTURE",
+        "title": "Generate, check, then review.",
+        "source": "Intended automatic flow with API access. Checker exists; automatic triggering is not yet wired.",
+        "script": "Alec has shown the product, so I'll focus on what happens behind the AI part. Read this diagram from left to right. The first AI call breaks the original problem into concepts and creates the first probe pair. Later pairs are generated as the student moves through the session. Code checks the format, and a separate AI call can review the content against the original problem. The architecture we're aiming for makes that review automatic after generation. The checker itself is built, but connecting it automatically is still work to do. This diagram is the intended flow with API access, not a claim that we've run it.",
     },
     {
-        "section": "WORKFLOW",
-        "title": "Question in. Evidence out.",
-        "script": "The student submits a question, Mathify breaks it into prerequisite concepts, and it generates a main probe plus an easier retry for each step. A wrong or unsure response can lead to that retry. The answers and any whiteboard work are retained in a tutor brief. This is a refresher of the workflow only; the rest of the presentation is about the reliability of the generated content.",
+        "section": "GENERATION",
+        "title": "What does the generator actually produce?",
+        "source": "Illustrative example, not a live-model result.",
+        "script": "Take this equation as a simple example. The generator identifies the concepts involved, such as distribution and inverse operations, then writes a main question and an easier version for each planned step. For distribution, the main question might ask the student to expand two times x plus three. The retry could use smaller numbers, like two times x plus one. Each question also needs options, an answer key, a hint and an explanation. That gives the checker specific things to inspect. Getting the JSON format right is useful, but it doesn't tell us whether the maths is right.",
     },
     {
-        "section": "THE TRUST QUESTION",
-        "title": "How can we trust each AI-written probe?",
-        "source": "Synthetic prototype example. Not a live-model output.",
-        "script": "In this synthetic example, the student misses the main distribution question and gets the easier retry correct. That gives the tutor a possible place to start, not a confirmed diagnosis. More importantly for this presentation, both questions and their answer keys are AI-generated in the real workflow. A polished report is only trustworthy if those underlying pieces are right. The rest of the talk is about what is checked, what we can measure, and what remains unknown.",
+        "section": "AI CHECKER",
+        "title": "The checker gets the problem, not just the answer key.",
+        "source": "Separate review call, same provider. Findings are warnings, not automatic corrections.",
+        "script": "The checker isn't just asked whether the output looks good. It gets the original problem and the generated material, then uses a checklist. For the breakdown, it looks for missing or unnecessary prerequisites. For the probes, it checks the answer key, options, concept match, explanation, hint and retry difficulty. Here's an example: if the generator marks two x plus three as the expansion of two times x plus three, the checker should flag the answer key because the correct result is two x plus six. That's the behaviour we want to measure, not a result we're claiming. It returns findings; it doesn't automatically rewrite the question.",
     },
     {
-        "section": "GENERATION SAFEGUARDS",
-        "title": "Valid structure does not prove correct maths.",
-        "source": "Implemented schema and structural checks. Semantic accuracy is unmeasured.",
-        "script": "The generator has useful engineering checks. It must return the expected fields, a plan of three to five steps, a breakdown of two to six steps, and four option IDs A through D with a key ID that exists. Those checks catch malformed output. They do not prove the marked answer is mathematically correct, that only one choice is right, that distractors diagnose a misconception, or that a hint does not reveal the answer. Structure is a gate, not evidence of correctness.",
+        "section": "RESEARCH",
+        "title": "A second AI opinion still needs a reference.",
+        "source": "Related research informs the design. It does not establish Mathify's accuracy.",
+        "script": "So why not just trust the checker? Research on AI judges gives us a reason to be careful. Thakur and colleagues found differences between model judgements and human ratings, including leniency and sensitivity to the prompt. Yamauchi and colleagues found that clear evaluation criteria mattered. For us, that means asking specific questions like 'is the marked answer correct?' rather than 'is this a good question?' It also means comparing the checker with answers reviewed by a person. Using a second call is another chance to catch a mistake, but using the same provider means it can also repeat the first call's mistake.",
+        "links": [
+            ["Thakur et al., 2025", THAKUR],
+            ["Yamauchi et al., 2026", YAMAUCHI],
+        ],
     },
     {
-        "section": "OPTIONAL AI REVIEW",
-        "title": "A second AI can flag issues. It cannot certify correctness.",
-        "source": "Manual opt-in, off by default, same provider as generation.",
-        "script": "There is a second AI review path for the breakdown and generated probes. Its rubric now checks prerequisites, answer keys, distractors, concept alignment, explanations, hints, and whether the retry is simpler while testing the same concept. It is optional and disabled by default, not an automatic student-flow safeguard. It also uses the same provider as generation, so both calls may share the same blind spots. We should treat its findings as review signals, not ground truth.",
+        "section": "TESTING RELIABILITY",
+        "title": "Can it catch a mistake we already know is there?",
+        "source": "Test runner built. No live accuracy result or tutor feedback is claimed.",
+        "script": "Here's the test in plain terms. Start with a question and answer that a maths educator has checked. Make a copy and deliberately put one mistake in it, like marking the wrong answer. Send both versions to the checker. We want it to flag the changed version and leave the correct version alone. We have built a small runner with two unchanged examples and eight deliberately changed examples, all based on one equation. We haven't run it against the live model, and the examples still need independent educator review. Even a good result on that small set would only be a first check. We'd need more topics and real tutor feedback before making a broader reliability claim.",
         "links": [
             ["Thakur et al., 2025: LLM judge alignment and vulnerabilities", THAKUR],
             ["Yamauchi et al., 2026: judge evaluation design", YAMAUCHI],
         ],
     },
     {
-        "section": "RESEARCH ON AI JUDGES",
-        "title": "AI judges need checks against people.",
-        "source": "Related evidence only. None of these studies validates Mathify.",
+        "section": "SOURCES",
+        "title": "Research and implementation references.",
+        "source": "Full references in speaker notes. No tutor questionnaire responses yet.",
         "links": [
             ["Thakur et al., 2025", THAKUR],
             ["Yamauchi et al., 2026", YAMAUCHI],
-            ["Frontiers education study, 2026", FRONTIERS],
+            ["Frontiers education study, 2026 (background only)", FRONTIERS],
+            ["Mathify research and test plan", "https://github.com/Jeff15321/mathify-brief/blob/feat/luke-excalidraw/docs/prompt-research.md"],
+            ["Beatrice template lineage, SlidesCarnival, CC BY 4.0", TEMPLATE],
         ],
-        "script": "The research changes how confidently we should interpret a second AI opinion. Thakur and colleagues found that judge models can differ from human ratings, with sensitivity to prompt complexity and a tendency toward leniency. Yamauchi and colleagues found that clear evaluation criteria matter, while chain-of-thought added little when criteria were already clear. A 2026 education study compared expert-validated AI and human multiple-choice questions in one Operating Systems course with 42 students; that is bounded evidence in a different subject, not proof about Mathify's math probes. The takeaway is not that AI questions are unusable. It is that rubric-based, human-checked evaluation is necessary.",
-    },
-    {
-        "section": "CHECKER BENCHMARK",
-        "title": "Ten fixtures separate misses from false alarms.",
-        "source": "Two unmodified controls plus eight scripted faults. One fixed equation.",
-        "script": "The checker benchmark is now implemented. It sends two unmodified fixture controls and eight cases with one planted fault each: missing or unrelated prerequisites, a wrong key, ambiguous options, a concept mismatch, a wrong explanation, a leaking hint, or an easier question that is not easier. The report separates per-category fault detection, flags on completed controls, unclassified findings, and API failures. This is a small exploratory harness, not a representative reliability study; the fixture itself still needs an independent educator review.",
-    },
-    {
-        "section": "LIVE BENCHMARK STATUS",
-        "title": "No live checker result yet.",
-        "source": "No ANTHROPIC_API_KEY is configured in this workspace.",
-        "script": "I attempted to move from harness design to a live checker result. This environment has no Anthropic API key configured, so I did not send any benchmark calls. That is an access blocker, not a successful or failed model evaluation. The benchmark refuses to run in mock mode, because the mock checker always returns an empty issue list. The implementation and offline scoring tests can be verified here, but we must not present them as evidence of live checker reliability.",
-    },
-    {
-        "section": "GENERATION EVALUATION",
-        "title": "Every generated probe pair is now retained.",
-        "source": "Eight project-authored examples. Generated content still needs expert scoring.",
-        "script": "The generation harness now keeps the full analysis and every planned main/easier pair across the eight project-authored examples. It records follow-up call latency and failures separately from the analysis call. Topic matching and breakdown length remain sanity checks only. The harness does not decide whether the math, answer key, distractors, concept mapping, hint, or retry is good. A math educator must score those artifacts independently, and a live run still requires credentials.",
-    },
-    {
-        "section": "EVIDENCE BOUNDARY",
-        "title": "Software checks are not AI accuracy evidence.",
-        "source": "Eight reference answers checked. Zero live benchmark results. Zero tutor responses.",
-        "script": "Here is what we can say today. Offline tests verify software behavior, and eight authored reference problems have checked solutions. There are zero live checker benchmark results and zero tutor questionnaire responses. The report confidence label is a deterministic heuristic based on answer patterns and completion, not an AI confidence score or a calibrated probability that the report is accurate. Before making an accuracy claim, we need a live sample, independent math review, and tutor review. Until then, effectiveness remains unknown.\n\nFor reference, the checked answers are x = 4; (x + 2)(x + 3); hypotenuse 5 cm; sin θ = 5/13; 5 cups; (x, y) = (2, 5); circle area 153.9 cm²; x⁴; x ≠ 0. These solve the fixed examples. They are not generated-model results.",
-    },
-    {
-        "section": "SOURCES",
-        "title": "Research, implementation, and scope.",
-        "links": [
-            ["Thakur et al., GEM 2025", THAKUR],
-            ["Yamauchi et al., GEM 2026", YAMAUCHI],
-            ["Frontiers education study, 2026", FRONTIERS],
-            ["Mathify AI reliability research and protocol", "https://github.com/Jeff15321/mathify-brief/blob/feat/luke-excalidraw/docs/prompt-research.md"],
-            ["Public Google Cloud executive deck, February 2020", GOOGLE],
-            ["Sparks: Google Cloud Next keynote design case study", SPARKS],
-            ["Beatrice template lineage, SlidesCarnival", TEMPLATE],
-            ["CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"],
-        ],
-        "script": "The three research sources are relevant to the limits of AI evaluation and educational question generation. None validates Mathify. The evaluation details are in the project research document, and the implementation is visible in the generator and checker harnesses. For design, I inspected a public Google Cloud executive deck and a Google Cloud Next case study; the layouts are original and do not imply Google endorsement. The PowerPoint retains the Beatrice template lineage and CC BY 4.0 attribution. Screenshots use synthetic data.",
+        "script": "These are the references behind this section. The two AI-judge papers are the most relevant to the checker discussion. The education paper is background only; it studied a different subject and doesn't validate our maths questions. The implementation and test plan are in our project research notes. The main point I'd leave you with is that we can explain what the checker looks for, but we shouldn't call it reliable until we compare its decisions with independently reviewed examples. We also don't have tutor questionnaire responses yet.",
     },
 ]
 
@@ -165,100 +133,88 @@ def make_scenes():
         c = Canvas()
         header(c, data, i, PALE if i == 1 else "white")
         if i == 1:
-            c.text(72, 310, "STUDENT QUESTION", 18, BLUE, width=600)
-            c.rect(72, 350, 630, 360, "white", LINE, 16)
-            c.text(104, 402, "2(x + 3) = 14", 49, width=560)
-            c.text(104, 560, "Question or photo", 24, GRAY, width=500)
-            c.line(750, 530, 842, 530, BLUE, 3)
-            c.rect(890, 350, 638, 360, BLUE_PALE, radius=16)
-            c.text(924, 385, "TUTOR STARTING POINT", 18, BLUE, width=560)
-            c.text(924, 447, "Possible gap:\ndistributive property", 37, width=560)
-            c.text(924, 625, "Evidence to confirm, not a diagnosis.", 21, GRAY, width=560)
-        elif i == 2:
-            labels = [
-                ("Question", "Text or photo"),
-                ("Breakdown", "Ordered concepts"),
-                ("Probes", "Main + easier retry"),
-                ("Responses", "Answers + work"),
-                ("Tutor brief", "Priority + evidence"),
+            c.text(72, 245, "INTENDED AUTOMATIC FLOW", 20, BLUE, width=1300)
+            nodes = [
+                (72, "Original problem", "Text + attachments", PALE),
+                (452, "AI generator", "Concepts + probe pairs", BLUE_PALE),
+                (832, "Code checks", "Fields + option IDs", GREEN_PALE),
+                (1212, "AI checker", "Content review", BLUE_PALE),
             ]
-            for j, (name, detail) in enumerate(labels):
-                x = 72 + j * 293
-                c.rect(x, 330, 250, 178, BLUE_PALE if j in {1, 2} else PALE, radius=12)
-                c.text(x + 22, 353, f"0{j + 1}", 18, BLUE, width=205)
-                c.text(x + 22, 395, name, 26, width=212)
-                c.text(x + 22, 447, detail, 18, GRAY, width=214)
-                if j < 4:
-                    c.text(x + 258, 401, "→", 28, BLUE, width=35)
-            c.text(72, 575, "ADAPTIVE STEP", 18, GRAY, width=400)
-            for x, label, color, width in [
-                (72, "Main probe", INK, 250),
-                (383, "Wrong / IDK", AMBER, 250),
-                (752, "Easier retry", INK, 280),
-                (1175, "Both answers saved", GREEN, 350),
+            for x, name, detail, fill in nodes:
+                c.rect(x, 325, 316, 165, fill, LINE, 12)
+                c.text(x + 20, 356, name, 29, width=276)
+                c.text(x + 20, 420, detail, 21, GRAY, width=276)
+                if x < 1212:
+                    c.text(x + 330, 380, "→", 30, BLUE, width=46)
+            c.line(230, 490, 230, 570, GRAY)
+            c.line(230, 570, 1370, 570, GRAY)
+            c.line(1370, 570, 1370, 490, GRAY)
+            c.text(463, 533, "Original problem also supplied to the checker", 21, GRAY, width=850)
+            c.line(1370, 570, 1370, 640, BLUE)
+            c.text(1356, 621, "↓", 28, BLUE, width=40)
+            c.rect(913, 675, 615, 104, "white", LINE, 12)
+            c.text(937, 695, "Review findings: flag issues for inspection", 24, width=565)
+            c.text(72, 662, "First pair with analysis;\nlater pairs generated as needed.", 24, GRAY, width=780)
+        elif i == 2:
+            c.text(72, 265, "Solve 2(x + 3) = 14", 39, width=1300)
+            c.rect(72, 370, 420, 350, PALE, radius=12)
+            tag(c, 96, 394, "CONCEPTS")
+            c.text(96, 475, "Distribution\nInverse operations", 28, width=370)
+            c.text(508, 505, "→", 32, BLUE, width=50)
+            for x, label, question, key in [
+                (578, "MAIN PROBE", "Expand 2(x + 3)", "Key: 2x + 6"),
+                (1068, "EASIER RETRY", "Expand 2(x + 1)", "Key: 2x + 2"),
             ]:
-                c.text(x, 631, label, 28, color, width=width)
-            c.text(657, 632, "→", 30, BLUE, width=55)
-            c.text(1081, 632, "→", 30, BLUE, width=55)
-            c.line(72, 710, 1528, 710)
-            c.text(72, 746, "The report keeps the evidence for the tutor to inspect.", 23, GRAY, width=1200)
+                c.rect(x, 370, 460, 350, BLUE_PALE, radius=12)
+                tag(c, x + 24, 394, label)
+                c.text(x + 24, 477, question, 30, width=412)
+                c.text(x + 24, 547, key, 27, GREEN, width=412)
+            c.text(72, 764, "Each probe also includes four options, a hint and an explanation.", 25, GRAY, width=1456)
         elif i == 3:
-            c.rect(72, 320, 650, 410, PALE, radius=16)
-            tag(c, 103, 345, "MAIN PROBE")
-            c.text(103, 410, "Expand 2(x + 3)", 37, width=570)
-            c.text(103, 492, "Student chose", 19, GRAY, width=235)
-            c.text(405, 492, "Key says", 19, GRAY, width=235)
-            c.text(103, 537, "2x + 3", 44, AMBER, width=250)
-            c.text(405, 537, "2x + 6", 44, GREEN, width=250)
-            c.text(103, 640, "The second term was not multiplied.", 22, AMBER, width=575)
-            c.image(784, 307, 744, 427, "retry", "Synthetic easier-probe example from the prototype.")
-            c.text(72, 766, "How can we trust each AI-written question and answer key?", 22, GRAY, width=1300)
+            c.rect(72, 290, 650, 435, PALE, radius=12)
+            tag(c, 100, 318, "ILLUSTRATIVE ERROR", AMBER, AMBER_PALE, 280)
+            c.text(100, 407, "Expand 2(x + 3)", 34, width=594)
+            c.text(100, 481, "Wrong key: 2x + 3", 32, AMBER, width=594)
+            c.text(100, 565, "Expected flag: answer-key error", 27, width=594)
+            c.text(100, 625, "Correct expansion: 2x + 6", 27, GREEN, width=594)
+            c.text(790, 302, "CHECKER'S CHECKLIST", 20, BLUE, width=738)
+            for y, label in [
+                (379, "Are the prerequisites relevant?"),
+                (458, "Is exactly one option correct?"),
+                (537, "Do the hint and explanation make sense?"),
+                (616, "Is the retry simpler, on the same concept?"),
+            ]:
+                c.circle(793, y + 10, 10, BLUE)
+                c.text(820, y, label, 25, width=708)
+            c.text(72, 766, "This is a test expectation, not an observed checker result.", 24, GRAY, width=1456)
         elif i == 4:
-            c.rect(72, 320, 700, 410, GREEN_PALE, radius=16)
-            c.rect(828, 320, 700, 410, AMBER_PALE, radius=16)
-            tag(c, 102, 345, "CODE ENFORCES", GREEN, "white", 265)
-            tag(c, 858, 345, "NOT PROVEN", AMBER, "white", 265)
-            for y, item in [
-                (420, "Valid fields and types"),
-                (512, "3-5 probe steps; 2-6 breakdown steps"),
-                (604, "Four A-D IDs; key ID must exist"),
+            for x, citation, finding, action in [
+                (72, "Thakur et al., 2025", "AI judges can disagree\nwith human ratings.", "Compare with human-reviewed answers."),
+                (828, "Yamauchi et al., 2026", "Clear evaluation\ncriteria matter.", "Use a specific checklist, not 'looks good'."),
             ]:
-                c.circle(105, y + 8, 12, GREEN)
-                c.text(132, y, item, 22, width=600)
-            for y, item in [
-                (414, "The marked math answer is correct"),
-                (485, "Only one option is correct"),
-                (556, "Distractors and hints are sound"),
-                (627, "The easier retry is actually easier"),
-            ]:
-                c.circle(861, y + 8, 12, AMBER)
-                c.text(888, y, item, 22, width=600)
-            c.text(72, 770, "Schema and structural checks are gates, not correctness evidence.", 22, GRAY, width=1300)
+                c.rect(x, 320, 700, 390, PALE, radius=12)
+                c.text(x + 28, 352, citation, 26, BLUE, width=644)
+                c.text(x + 28, 425, finding, 34, width=644)
+                c.text(x + 28, 604, action, 25, width=644)
+            c.text(72, 760, "Same-provider review can repeat the generator's mistakes.", 27, GRAY, width=1456)
         elif i == 5:
-            c.rect(72, 320, 650, 410, PALE, radius=16)
-            c.rect(778, 320, 750, 410, BLUE_PALE, radius=16)
-            tag(c, 102, 345, "REVIEW TARGETS")
-            for y, text in [
-                (414, "Prerequisites and breakdown"),
-                (492, "Keys, options, and concept match"),
-                (570, "Explanations, hints, and retry level"),
+            for x, label, example, expectation, fill in [
+                (72, "UNCHANGED EXAMPLE", "Expand 2(x + 3)\nKey: 2x + 6", "Should not flag an error", GREEN_PALE),
+                (828, "PLANTED MISTAKE", "Expand 2(x + 3)\nKey: 2x + 3", "Should flag the wrong key", AMBER_PALE),
             ]:
-                c.circle(105, y + 8, 11, BLUE)
-                c.text(132, y, text, 23, width=540)
-            tag(c, 808, 345, "LIMITS")
-            c.text(808, 415, "Off by default", 29, width=650)
-            c.text(808, 458, "Same provider as generation", 24, GRAY, width=650)
-            c.line(808, 512, 1498, 512)
-            c.text(808, 540, "Review signal, not independent proof.", 26, width=650)
-            c.text(808, 600, "Not part of the automatic student flow.", 22, GRAY, width=650)
-            c.text(72, 770, "A second AI can miss the same mistake as the first.", 22, GRAY, width=1300)
+                c.rect(x, 300, 700, 340, fill, radius=12)
+                tag(c, x + 28, 325, label, width=310)
+                c.text(x + 28, 405, example, 34, width=644)
+                c.text(x + 28, 561, expectation, 28, width=644)
+            c.text(72, 690, "Built: small test runner with 2 unchanged + 8 altered examples.", 26, width=1456)
+            c.text(72, 755, "Still needed: live run, independent maths review, broader examples.", 25, GRAY, width=1456)
         elif i == 6:
             studies = [
                 (
                     72,
-                    "LLM-AS-JUDGE",
+                    "AI JUDGES",
                     "Thakur et al., 2025",
-                    "Human ratings differed.\nPrompt sensitivity and\nleniency were observed.",
+                    "Human agreement,\nprompt sensitivity\nand leniency.",
                 ),
                 (
                     572,
@@ -268,9 +224,9 @@ def make_scenes():
                 ),
                 (
                     1072,
-                    "EDUCATION EXAMPLE",
-                    "Frontiers, 2026",
-                    "42 Operating Systems students.\nExpert-reviewed MCQs,\nnot math tutoring.",
+                    "PROJECT REFERENCES",
+                    "Mathify research notes",
+                    "Implementation + test plan.\nBeatrice / SlidesCarnival:\nCC BY 4.0 template lineage.",
                 ),
             ]
             for x, label, citation, detail in studies:
@@ -278,91 +234,7 @@ def make_scenes():
                 tag(c, x + 24, 345, label, BLUE, BLUE_PALE, 270)
                 c.text(x + 24, 414, citation, 26, width=408)
                 c.text(x + 24, 474, detail, 22, GRAY, width=408)
-            c.text(72, 774, "Related research informs our method. It does not validate Mathify.", 22, GRAY, width=1300)
-        elif i == 7:
-            c.rect(72, 320, 375, 420, GREEN_PALE, radius=16)
-            tag(c, 102, 345, "2 CONTROLS", GREEN, "white", 215)
-            c.text(102, 420, "Breakdown\nProbe pairs", 34, width=310)
-            c.text(102, 575, "Unmodified fixed fixture", 21, GRAY, width=310)
-            c.rect(477, 320, 1051, 420, PALE, radius=16)
-            tag(c, 507, 345, "8 SEEDED FAULTS", AMBER, AMBER_PALE, 250)
-            faults = [
-                (507, 414, "Missing prerequisite"),
-                (507, 488, "Unrelated prerequisite"),
-                (507, 562, "Wrong answer key"),
-                (507, 636, "Ambiguous options"),
-                (1038, 414, "Concept mismatch"),
-                (1038, 488, "Wrong explanation"),
-                (1038, 562, "Hint gives away answer"),
-                (1038, 636, "Retry not easier"),
-            ]
-            for x, y, label in faults:
-                c.circle(x + 4, y + 9, 10, AMBER)
-                c.text(x + 28, y, label, 21, width=440)
-            c.text(72, 775, "Measure category detection, false flags on controls, and failed calls.", 22, GRAY, width=1300)
-        elif i == 8:
-            c.rect(72, 320, 535, 420, AMBER_PALE, radius=16)
-            tag(c, 102, 345, "LIVE MODEL", AMBER, "white", 210)
-            c.text(102, 420, "NOT RUN", 66, AMBER, width=450)
-            c.text(102, 535, "No API key is configured.", 27, width=450)
-            c.rect(653, 320, 875, 420, PALE, radius=16)
-            tag(c, 683, 345, "HARNESS STATUS")
-            for y, item in [
-                (420, "10-case benchmark is implemented"),
-                (500, "Offline scoring tests are available"),
-                (580, "Mock output is excluded as evidence"),
-            ]:
-                c.circle(686, y + 9, 11, BLUE)
-                c.text(713, y, item, 25, width=760)
-            c.text(72, 775, "No request was sent. No live model result is claimed.", 22, GRAY, width=1300)
-        elif i == 9:
-            blocks = [
-                (72, "8 CASES", "Project-authored\nreference problems"),
-                (574, "3-5 PAIRS", "Every planned main and\neasier probe retained"),
-                (1076, "REVIEW", "Math and teaching quality\nstill need human scoring"),
-            ]
-            for x, label, detail in blocks:
-                c.rect(x, 350, 452, 265, BLUE_PALE if x == 574 else PALE, radius=16)
-                tag(c, x + 24, 375, label, BLUE, "white", 220)
-                c.text(x + 24, 448, detail, 29, width=400)
-            c.text(72, 678, "Captured separately", 19, GRAY, width=350)
-            c.text(72, 718, "Analysis time  /  follow-up probe time  /  failures", 24, width=1456)
-            c.text(72, 774, "Topic matches and step counts are sanity checks only.", 22, GRAY, width=1300)
-        elif i == 10:
-            metrics = [
-                (72, "PASS", "Offline software\ntests"),
-                (434, "8", "Reference answers\nchecked"),
-                (796, "0", "Live AI results"),
-                (1158, "0", "Tutor responses"),
-            ]
-            for x, number, label in metrics:
-                c.rect(x, 340, 320, 210, PALE, radius=16)
-                c.text(x + 24, 370, number, 58, BLUE if number != "0" else AMBER, width=272)
-                c.text(x + 24, 462, label, 22, GRAY, width=272)
-            c.text(72, 614, "Report confidence is a rule-based heuristic, not calibrated accuracy.", 27, width=1456)
-            c.line(72, 677, 1528, 677)
-            c.text(72, 710, "Before an accuracy claim: live cases + independent math review + tutor review.", 24, GRAY, width=1456)
-        elif i == 11:
-            c.text(72, 270, "AI RELIABILITY RESEARCH", 18, BLUE, width=690)
-            for y, title, detail in [
-                (327, "Thakur et al., GEM 2025", "Judge models differ from human ratings."),
-                (418, "Yamauchi et al., GEM 2026", "Evaluation criteria affect judge reliability."),
-                (509, "Frontiers, 2026", "Expert-validated MCQs in one 42-student course."),
-                (600, "Mathify research notes", "Harness design and limits of current evidence."),
-                (691, "SlidesCarnival", "Beatrice template lineage, CC BY 4.0."),
-            ]:
-                c.text(72, y, title, 25, width=690)
-                c.text(72, y + 39, detail, 19, GRAY, width=690)
-            c.line(811, 270, 811, 786)
-            c.text(870, 270, "DESIGN REFERENCES + ATTRIBUTION", 18, BLUE, width=660)
-            for y, title, detail in [
-                (327, "Google Cloud public deck, 2020", "Hierarchy, whitespace, and diagram-led layouts."),
-                (443, "Sparks / Google Cloud Next", "A coherent visual system for complex ideas."),
-                (559, "Original Mathify compositions", "Native diagrams and synthetic UI screenshots."),
-                (675, "No Google branding", "Design references only; no endorsement."),
-            ]:
-                c.text(870, y, title, 25, width=658)
-                c.text(870, y + 43, detail, 20, GRAY, width=658)
+            c.text(72, 774, "Research informs the design. Accuracy still needs independent testing.", 22, GRAY, width=1456)
         scenes.append(c)
     return scenes
 
@@ -552,8 +424,8 @@ main{width:min(1600px,calc(100vw - 32px),calc((100vh - 86px) * 1.777778));margin
 
 
 def build():
-    if len(SLIDES) != 11:
-        raise ValueError("Expected eleven authored slides.")
+    if len(SLIDES) != 6:
+        raise ValueError("Expected six authored slides.")
     scenes = make_scenes()
     for index, canvas in enumerate(scenes, 1):
         validate_scene(canvas, index)
@@ -561,7 +433,7 @@ def build():
         raise ValueError("Speaker script contains an em dash.")
     render_ppt(Presentation(PPTX), scenes)
     render_html(scenes)
-    print("Built 11 original 16:9 reliability-review layouts with editable shapes and speaker scripts.")
+    print("Built 6 AI-research slides with editable diagrams and conversational speaker scripts.")
 
 
 if __name__ == "__main__":
