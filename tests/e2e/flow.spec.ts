@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// The MVP has one stored workspace, so browser journeys must not overlap.
+test.describe.configure({ mode: "serial" });
+
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
 test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> early submit -> brief", async ({ page }) => {
   await page.goto("/");
@@ -62,13 +65,15 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.waitForURL("**/brief");
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
 
+  await page.screenshot({ path: test.info().outputPath("brief-desktop.png"), fullPage: true });
+
   // Core probes: s1 incorrect, s2 don't know, s3 on screen (unanswered). Retries: both correct.
-  const core = page.locator("section", { hasText: "Core probes" });
-  await expect(core.getByText("0/2")).toBeVisible();
+  const core = page.locator("dl > div", { hasText: "Core probes" });
+  await expect(core.getByText("0/2 correct")).toBeVisible();
   await expect(core.getByText("2 of 3 attempted")).toBeVisible();
-  await expect(core.getByText("1 incorrect · 1 don't know")).toBeVisible();
-  const retries = page.locator("section", { hasText: "Easier retries" });
-  await expect(retries.getByText("2/2")).toBeVisible();
+  await expect(core.getByText("1 incorrect · 1 don't know · 1 unattempted")).toBeVisible();
+  const retries = page.locator("dl > div", { hasText: "Easier retries" });
+  await expect(retries.getByText("2/2 correct")).toBeVisible();
 
   // Both main questions were missed, so both are gaps even though their retries were correct.
   const gaps = page.locator("section", { hasText: "Possible gaps" });
@@ -77,13 +82,20 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(page.locator("section", { hasText: "Observed strengths" }).getByText("None observed.")).toBeVisible();
 
   // Priority: the first missed main question, with the student's pick vs the key.
-  const priority = page.locator("section", { hasText: "Key incorrect step" });
-  await expect(priority.getByText("Distributive property")).toBeVisible();
+  const priority = page.locator("section", { hasText: "Start here" });
+  await expect(priority.getByText("Review Distributive property")).toBeVisible();
+  await expect(priority.getByText("Student selected · A")).toBeHidden();
+  await priority.getByText("View priority question and answer").click();
   await expect(priority.getByText("Student selected · A")).toBeVisible();
   await expect(priority.getByText("Correct · B")).toBeVisible();
-  await expect(priority.getByText(/Easier retry correct · 1\/2 correct for this concept/)).toBeVisible();
+  await expect(priority.getByText(/Easier retry correct/)).toBeVisible();
 
+  await expect(page.getByAltText("Student's whiteboard")).toBeHidden();
+  await page.locator("summary").filter({ hasText: "Question & student work" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByAltText("Student's whiteboard")).toBeVisible();
+  await page.getByRole("button", { name: "View full question" }).click();
+  await expect(page.getByRole("button", { name: "Hide full question" })).toBeVisible();
 
   // Probing results start collapsed and expand to show every question asked.
   const retryItems = page.getByText("Easier retry", { exact: true });
@@ -92,4 +104,23 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(retryItems).toHaveCount(2);
   await expect(retryItems.first()).toBeVisible();
   await expect(page.getByText("Not reached before submitting")).toHaveCount(0);
+});
+
+// Brief disclosures remain usable on a narrow screen, with no document overflow.
+test("mobile brief: no answers gives an honest starting point and accessible details", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  await page.getByLabel("Question (optional if files provided)").fill("Solve 2(x + 3) = 14.");
+  await page.getByRole("button", { name: "Begin Session" }).click();
+  await page.waitForURL("**/workspace");
+  await page.getByRole("button", { name: "Relevant Concepts", exact: true }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.waitForURL("**/brief");
+  await expect(page.getByText(/Not enough evidence yet/)).toBeVisible();
+  await expect(page.getByText("0 incorrect · 0 don't know · 3 unattempted")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath("brief-mobile.png"), fullPage: true });
+  await page.getByText("Probing results", { exact: true }).click();
+  await expect(page.getByText("Selected: Unanswered", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Not reached before submitting:/)).toBeVisible();
 });

@@ -187,18 +187,33 @@ describe("Tutor Brief cards", () => {
 
   it("PriorityStepCard shows the concept, the student's pick vs the correct answer, and the retry result", () => {
     render(<PriorityStepCard results={[briefResult("main", "incorrect"), briefResult("easier", "incorrect")]} priorityStepIndex={0} />);
-    expect(screen.getByText("Dividing out a common factor")).toBeInTheDocument();
+    expect(screen.getByText("Review Dividing out a common factor")).toBeInTheDocument();
     expect(screen.getByText("Student selected · B")).toBeInTheDocument();
     expect(screen.getByText("Correct · C")).toBeInTheDocument();
-    expect(screen.getByText(/Easier retry also incorrect · 0\/2 correct for this concept/)).toBeInTheDocument();
+    expect(screen.getByText(/Easier retry also incorrect/)).toBeInTheDocument();
   });
 
   it("PriorityStepCard has distinct empty states for no misses and no evidence", () => {
     const { unmount } = render(<PriorityStepCard results={[briefResult("main", "correct")]} priorityStepIndex={null} />);
-    expect(screen.getByText(/No incorrect steps/)).toBeInTheDocument();
+    expect(screen.getByText(/All main questions were correct/)).toBeInTheDocument();
     unmount();
     render(<PriorityStepCard results={[briefResult("main", "unanswered")]} priorityStepIndex={null} />);
-    expect(screen.getByText("Not enough evidence yet.")).toBeInTheDocument();
+    expect(screen.getByText(/Not enough evidence yet/)).toBeInTheDocument();
+  });
+
+  it("does not claim completion when correct answers leave unreached concepts", () => {
+    render(<PriorityStepCard results={[briefResult("main", "correct")]} priorityStepIndex={null} notReachedConcepts={["Factoring"]} />);
+    expect(screen.getByText(/Attempted main questions were correct/)).toBeInTheDocument();
+    expect(screen.queryByText(/All main questions were correct/)).not.toBeInTheDocument();
+  });
+
+  it("distinguishes explicit uncertainty from an incorrect answer and discloses details", () => {
+    const { container } = render(<PriorityStepCard results={[briefResult("main", "dont_know"), briefResult("easier", "correct")]} priorityStepIndex={0} />);
+    expect(screen.getByText(/chose “I don't know”/)).toBeInTheDocument();
+    expect(screen.getByText(/Easier retry correct/)).toBeInTheDocument();
+    expect(container.querySelector("details")!.open).toBe(false);
+    fireEvent.click(screen.getByText("View priority question and answer"));
+    expect(container.querySelector("details")!.open).toBe(true);
   });
 
   it("ProbingResultsAccordion starts collapsed and expands on click", () => {

@@ -54,10 +54,12 @@ Automated tests never call the paid Anthropic API, regardless of `.env.local`.
    question on the same concept before moving on; answers lock once you move on. The next
    question is generated in the background while you answer the current one. Expand/restore any
    panel, and click **Submit** at any point (questions not reached count as unanswered).
-4. `/brief` shows the Tutor Brief dashboard, built to be skimmed in seconds: Core probes and
-   Easier retries tallies, strengths and possible gaps (concept names), the priority / key
-   incorrect step (what the student picked vs the correct answer, and how the retry went), a
-   whiteboard preview, and a collapsed Probing results list with every question and answer.
+4. `/brief` puts **Start here** first: the earliest missed main concept and its retry outcome,
+   or an honest next step when evidence is incomplete or all main answers are correct. Compact
+   evidence separates incorrect, "don't know", and unattempted responses; strengths and possible
+   gaps still depend on main questions alone. Expand the priority question for answer details,
+   **Question & student work** for the original question/uploads and whiteboard, or **Probing
+   results** for all served answers and concepts not reached. These sections start collapsed.
 5. **Start a new question** returns to `/` and replaces the current workspace.
 
 With `AI_MOCK_MODE=true` (default) this entire flow runs fully offline against a deterministic

@@ -2,16 +2,13 @@ import Link from "next/link";
 import type { PublicWorkspace, TutorBrief } from "@/types/domain";
 import { BriefHeader } from "./BriefHeader";
 import { CurrentQuestionCard } from "./CurrentQuestionCard";
-import { ProbeTallyCard } from "./ProbeTallyCard";
+import { ProbeEvidenceCard } from "./ProbeEvidenceCard";
 import { ConceptListCard } from "./ConceptListCard";
 import { PriorityStepCard } from "./PriorityStepCard";
 import { WhiteboardPreviewCard } from "./WhiteboardPreviewCard";
 import { ProbingResultsAccordion } from "./ProbingResultsAccordion";
 
-/**
- * Tutor Brief dashboard, laid out to be skimmed in seconds: the most important cards come first
- * (tallies, strengths/gaps, the priority step), with full details collapsed at the bottom.
- */
+/** Recommendation first, with supporting work available on demand. */
 export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspace; brief: TutorBrief }) {
   const analysis = workspace.analysis!;
 
@@ -23,21 +20,32 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
         gradeDifficulty={analysis.gradeDifficulty}
         topic={analysis.topic}
       />
-      <CurrentQuestionCard
-        parsedQuestionMarkdown={analysis.parsedQuestionMarkdown}
-        questionText={workspace.questionText}
-        attachments={workspace.attachments}
-      />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <ProbeTallyCard title="Core probes" tally={brief.core} emptyLabel="No core probes." />
-        <ProbeTallyCard title="Easier retries" tally={brief.retries} emptyLabel="No retries needed." />
-      </div>
+      <PriorityStepCard results={brief.results} priorityStepIndex={brief.priorityStepIndex} notReachedConcepts={brief.notReachedConcepts} />
+      <ProbeEvidenceCard core={brief.core} retries={brief.retries} />
       <div className="grid gap-3 sm:grid-cols-2">
         <ConceptListCard tone="strength" concepts={brief.strengths} />
         <ConceptListCard tone="gap" concepts={brief.gaps} />
       </div>
-      <PriorityStepCard results={brief.results} priorityStepIndex={brief.priorityStepIndex} />
-      <WhiteboardPreviewCard assetId={workspace.whiteboardAsset?.id ?? null} />
+      <p className="text-xs text-slate-500">
+        Strengths and possible gaps reflect main questions. A correct easier retry does not clear a possible gap.
+      </p>
+      <details className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <summary className="cursor-pointer p-4 text-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-blue-600">
+          Question &amp; student work
+          <span className="mt-1 block text-xs font-normal text-slate-500">
+            Original question{workspace.attachments.length > 0 ? ` · ${workspace.attachments.length} uploaded files` : ""}
+            {workspace.whiteboardAsset ? " · Whiteboard available" : " · No whiteboard submitted"}
+          </span>
+        </summary>
+        <div className="flex flex-col gap-3 border-t border-slate-100 p-4">
+          <CurrentQuestionCard
+            parsedQuestionMarkdown={analysis.parsedQuestionMarkdown}
+            questionText={workspace.questionText}
+            attachments={workspace.attachments}
+          />
+          <WhiteboardPreviewCard assetId={workspace.whiteboardAsset?.id ?? null} />
+        </div>
+      </details>
       <ProbingResultsAccordion results={brief.results} notReachedConcepts={brief.notReachedConcepts} />
       <Link
         href="/"
