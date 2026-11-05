@@ -307,7 +307,34 @@ probes; report false positives, missed errors, and call failures separately.
 10. Yamauchi, Y., Yano, T., & Oyamada, M. (2026). "An Empirical Study of LLM-as-a-Judge: How Design Choices Impact Evaluation Reliability." GEM 2026. https://aclanthology.org/2026.gem-main.19/
 11. "LLMs in the Classroom: Outcomes and Perceptions of Questions Written with the Aid of AI." *Frontiers in Education* (2026). https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2026.1837523/full
 
-## Verification snapshot (November 1, 2026)
+## Presentation evidence update (November 5, 2026)
+
+- DeepSeek-R1 reports **97.3% MATH-500 pass@1** in its January 2025
+  paper and official results. The authors describe 64 sampled responses per query
+  to estimate pass@1 on benchmarks requiring sampling; this is not pass@64.
+  Correct-answer rewards are part of its reasoning-oriented reinforcement learning.
+  This supports mathematical-solving capability, not Mathify probe accuracy:
+  Mathify uses Claude, and MATH-500 is not an Ontario curriculum assessment.
+  Sources: https://arxiv.org/html/2501.12948v1 and
+  https://github.com/deepseek-ai/DeepSeek-R1#evaluation-results
+- Evaluation tools are presented as available options, not adopted integrations:
+  LangSmith for traces and prompt-version comparisons, promptfoo for repeated
+  examples and assertions, and DeepEval for criteria-based evaluation tests.
+  Tool availability alone does not demonstrate improved accuracy.
+  Sources: https://docs.langchain.com/langsmith/evaluation,
+  https://www.promptfoo.dev/docs/configuration/expected-outputs/, and
+  https://deepeval.com/docs/getting-started
+- Proposed validation uses Mathify-supplied curriculum-style problems, concept
+  breakdowns and main/easier probe pairs as candidate references. Qualified
+  reviewers must confirm correctness and suitability. Accept valid alternative
+  solutions and probes rather than exact text matches. Reserve held-out examples
+  for final evaluation. Student-derived material requires permission and
+  de-identification before use.
+- Compare review enabled/disabled on the same examples, measuring meaningful
+  errors detected and false alarms on good questions. This is a proposed study;
+  no live accuracy results or tutor questionnaire responses are available.
+
+## Verification snapshot (November 1, 2026; deck updated November 5)
 
 - Full offline Vitest suite: 116 passing tests across 17 files, including eight
   reference-solution checks and consistency checks on the simulated briefs.

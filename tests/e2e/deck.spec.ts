@@ -12,6 +12,15 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
   await expect(page.getByText("Slide 1 of 6", { exact: true })).toBeVisible();
   await expect(page.locator("#slide-01")).toContainText("INTENDED AUTOMATIC FLOW");
   await expect(page.locator("#slide-01")).toContainText("automatic triggering is not yet wired");
+  await expect(page.locator("#slide-02")).toContainText("97.3%");
+  await expect(page.locator("#slide-02")).toContainText("reported pass@1");
+  await expect(page.locator("#slide-02")).toContainText("Mathify uses Claude");
+  await expect(page.locator("#slide-04")).toContainText("LangSmith");
+  await expect(page.locator("#slide-04")).toContainText("promptfoo");
+  await expect(page.locator("#slide-04")).toContainText("DeepEval");
+  await expect(page.locator("#slide-04")).toContainText("not current integrations");
+  await expect(page.locator("#slide-05")).toContainText("held-out examples");
+  await expect(page.locator("#slide-05")).toContainText("not a completed study");
   await expect(page.getByRole("button", { name: "Previous", exact: true })).toBeDisabled();
   for (const slide of await page.locator(".slide").all()) {
     await expect(slide.locator(".slide-canvas")).toHaveCount(1);
@@ -29,7 +38,8 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
     await page.goto(`/stakeholder-deck.html#slide-${String(index).padStart(2, "0")}`);
     const layout = await page.locator(".slide:visible").evaluate(slide => {
       const canvas = slide.querySelector("svg")!;
-      const script = slide.querySelector(".notes p")!;
+      const script = [...slide.querySelectorAll(".notes p")]
+        .map(paragraph => paragraph.textContent ?? "").join(" ");
       const bounds = canvas.getBoundingClientRect();
       const title = [...canvas.querySelectorAll("text")].find(text => text.getAttribute("y") === "150")!;
       return {
@@ -40,7 +50,7 @@ test("static evidence deck supports navigation, notes, mobile, and complete prin
           return box.x >= 0 && box.y >= 0 && box.x + box.width <= 1600 && box.y + box.height <= 900;
         }),
         noOverflow: slide.scrollWidth <= slide.clientWidth,
-        scriptWords: (script.textContent ?? "").split(/\s+/).length,
+        scriptWords: script.split(/\s+/).length,
       };
     });
     expect(layout.leftAligned).toBe(true);

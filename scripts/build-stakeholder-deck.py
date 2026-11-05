@@ -34,6 +34,11 @@ FRONTIERS = "https://www.frontiersin.org/journals/education/articles/10.3389/fed
 GOOGLE = "https://services.google.com/fh/files/misc/goldman_sachs_keynote_google_cloud_thomas_kurian_021120.pdf"
 SPARKS = "https://www.wearesparks.com/our-work/google-cloud-next/"
 TEMPLATE = "https://www.slidescarnival.com/template/beatrice-free-presentation-template/66"
+DEEPSEEK = "https://arxiv.org/html/2501.12948v1"
+DEEPSEEK_RESULTS = "https://github.com/deepseek-ai/DeepSeek-R1#evaluation-results"
+LANGSMITH = "https://docs.langchain.com/langsmith/evaluation"
+PROMPTFOO = "https://www.promptfoo.dev/docs/configuration/expected-outputs/"
+DEEPEVAL = "https://deepeval.com/docs/getting-started"
 SLIDES = [
     {
         "section": "AI ARCHITECTURE",
@@ -42,32 +47,41 @@ SLIDES = [
         "script": "Alec has shown the product, so I'll focus on what happens behind the AI part. Read this diagram from left to right. The first AI call breaks the original problem into concepts and creates the first probe pair. Later pairs are generated as the student moves through the session. Code checks the format, and a separate AI call can review the content against the original problem. The architecture we're aiming for makes that review automatic after generation. The checker itself is built, but connecting it automatically is still work to do. This diagram is the intended flow with API access, not a claim that we've run it.",
     },
     {
-        "section": "GENERATION",
-        "title": "What does the generator actually produce?",
-        "source": "Illustrative example, not a live-model result.",
-        "script": "Take this equation as a simple example. The generator identifies the concepts involved, such as distribution and inverse operations, then writes a main question and an easier version for each planned step. For distribution, the main question might ask the student to expand two times x plus three. The retry could use smaller numbers, like two times x plus one. Each question also needs options, an answer key, a hint and an explanation. That gives the checker specific things to inspect. Getting the JSON format right is useful, but it doesn't tell us whether the maths is right.",
+        "section": "MATHEMATICAL CAPABILITY",
+        "title": "Leading models score highly on mathematics.",
+        "source": "Published DeepSeek-R1 result, not a measured Mathify accuracy score.",
+        "script": "The reason we think AI is a reasonable tool here is that mathematical reasoning has become a genuine strength of leading models. DeepSeek's R1 paper reports 97.3 percent on MATH-500, a benchmark drawn from competition mathematics.\n\nOne part of its training uses rewards for getting mathematical answers right. That gives the training process a concrete correctness signal, rather than only rewarding an answer that sounds convincing.\n\nThis is strong evidence that models can solve challenging mathematics. What it doesn't tell us is whether every question our application generates is correct, clearly worded, or useful for diagnosing a student's understanding. Those are the parts we still need to evaluate.\n\nA couple of details if someone asks: this is reported pass@1, not the chance of getting at least one correct answer in 64 attempts. The authors describe sampling 64 responses per query to estimate pass@1 where sampling is required. MATH-500 is not an Ontario curriculum assessment, and this result belongs to DeepSeek-R1, not the Claude model our application uses. We aren't claiming that AI outperforms every high-school student.",
+        "links": [
+            ["DeepSeek-R1 paper, January 2025", DEEPSEEK],
+            ["Official evaluation results and sampling settings", DEEPSEEK_RESULTS],
+        ],
     },
     {
         "section": "AI CHECKER",
         "title": "The checker gets the problem, not just the answer key.",
         "source": "Separate review call, same provider. Findings are warnings, not automatic corrections.",
-        "script": "The checker isn't just asked whether the output looks good. It gets the original problem and the generated material, then uses a checklist. For the breakdown, it looks for missing or unnecessary prerequisites. For the probes, it checks the answer key, options, concept match, explanation, hint and retry difficulty. Here's an example: if the generator marks two x plus three as the expansion of two times x plus three, the checker should flag the answer key because the correct result is two x plus six. That's the behaviour we want to measure, not a result we're claiming. It returns findings; it doesn't automatically rewrite the question.",
-    },
-    {
-        "section": "RESEARCH",
-        "title": "A second AI opinion still needs a reference.",
-        "source": "Related research informs the design. It does not establish Mathify's accuracy.",
-        "script": "So why not just trust the checker? Research on AI judges gives us a reason to be careful. Thakur and colleagues found differences between model judgements and human ratings, including leniency and sensitivity to the prompt. Yamauchi and colleagues found that clear evaluation criteria mattered. For us, that means asking specific questions like 'is the marked answer correct?' rather than 'is this a good question?' It also means comparing the checker with answers reviewed by a person. Using a second call is another chance to catch a mistake, but using the same provider means it can also repeat the first call's mistake.",
+        "script": "The checker isn't just asked whether the output looks good. It gets the original problem and the generated material, then uses a checklist. For the breakdown, it looks for missing or unnecessary prerequisites. For the probes, it checks the answer key, options, concept match, explanation, hint and retry difficulty. Here's an example: if the generator marks two x plus three as the expansion of two times x plus three, the checker should flag the answer key because the correct result is two x plus six. That's the behaviour we want to measure, not a result we're claiming. It returns findings; it doesn't automatically rewrite the question.\n\nResearch on AI judges helps explain that design choice. Thakur and colleagues found differences from human ratings, including leniency and prompt sensitivity. Yamauchi and colleagues found that clear criteria mattered. That supports using a specific checklist and checking the reviewer's decisions against human-reviewed examples. It doesn't prove that our reviewer is reliable. It uses the same provider as the generator, so it can share the same blind spots.",
         "links": [
             ["Thakur et al., 2025", THAKUR],
             ["Yamauchi et al., 2026", YAMAUCHI],
         ],
     },
     {
-        "section": "TESTING RELIABILITY",
-        "title": "Can it catch a mistake we already know is there?",
-        "source": "Test runner built. No live accuracy result or tutor feedback is claimed.",
-        "script": "Here's the test in plain terms. Start with a question and answer that a maths educator has checked. Make a copy and deliberately put one mistake in it, like marking the wrong answer. Send both versions to the checker. We want it to flag the changed version and leave the correct version alone. We have built a small runner with two unchanged examples and eight deliberately changed examples, all based on one equation. We haven't run it against the live model, and the examples still need independent educator review. Even a good result on that small set would only be a first check. We'd need more topics and real tutor feedback before making a broader reliability claim.",
+        "section": "EVALUATION TOOLS",
+        "title": "Tools can help us measure and improve.",
+        "source": "Available tooling, not current integrations or measured improvements.",
+        "script": "We wouldn't need to build all the evaluation infrastructure ourselves. There are established tools for running examples repeatedly and comparing the results.\n\nWith Mathify, we could feed the same problems through different versions of the generation prompt. We'd check whether the answers are correct, whether the probes target the intended concept, and whether the reviewer catches mistakes.\n\nLangSmith could help us inspect the individual calls and compare runs. promptfoo could repeat a set of examples with automated checks. DeepEval could organize evaluation tests and scoring criteria.\n\nThe tools don't improve accuracy just by being there. They help us identify failures and find out whether a prompt or model change actually improves the result. These are available options, not three tools we're proposing to install together, and none is currently integrated into Mathify. If we use an AI judge for scoring, its ratings still need to be checked against qualified human review.",
+        "links": [
+            ["LangSmith evaluation", LANGSMITH],
+            ["promptfoo assertions", PROMPTFOO],
+            ["DeepEval quickstart", DEEPEVAL],
+        ],
+    },
+    {
+        "section": "REALISTIC VALIDATION",
+        "title": "Mathify examples could ground our evaluation.",
+        "source": "Proposed validation set, not a completed study. No tutor questionnaire responses yet.",
+        "script": "A useful next step would be a set of examples from Mathify, if they're able to provide one. Ideally, that would include real curriculum-style problems, reviewed breakdowns, and examples of good probing-question pairs.\n\nThat would let us evaluate against the work this product actually needs to do, rather than relying only on general maths benchmarks. We wouldn't require the AI to copy the reference question word for word. We'd check whether its alternative is mathematically correct and tests the right concept.\n\nWe could also compare generation with review enabled and disabled, then measure whether the checker catches meaningful errors and how often it flags good material. We don't currently have those results or tutor responses, so this is a proposed validation route, not a completed study.\n\nAny supplied examples would be candidate reference material until qualified reviewers confirm their correctness and suitability. We'd keep some examples held out for final evaluation rather than tuning against the whole set. If examples come from student interactions, we'd need permission and de-identified material. Valid alternative solutions and probes should count, not just exact text matches. Our existing small test runner is a starting point, not a substitute for that review.",
         "links": [
             ["Thakur et al., 2025: LLM judge alignment and vulnerabilities", THAKUR],
             ["Yamauchi et al., 2026: judge evaluation design", YAMAUCHI],
@@ -78,13 +92,17 @@ SLIDES = [
         "title": "Research and implementation references.",
         "source": "Full references in speaker notes. No tutor questionnaire responses yet.",
         "links": [
+            ["DeepSeek-R1 paper and MATH-500 result", DEEPSEEK],
+            ["DeepSeek-R1 official evaluation settings", DEEPSEEK_RESULTS],
             ["Thakur et al., 2025", THAKUR],
             ["Yamauchi et al., 2026", YAMAUCHI],
-            ["Frontiers education study, 2026 (background only)", FRONTIERS],
+            ["LangSmith evaluation", LANGSMITH],
+            ["promptfoo assertions", PROMPTFOO],
+            ["DeepEval quickstart", DEEPEVAL],
             ["Mathify research and test plan", "https://github.com/Jeff15321/mathify-brief/blob/feat/luke-excalidraw/docs/prompt-research.md"],
             ["Beatrice template lineage, SlidesCarnival, CC BY 4.0", TEMPLATE],
         ],
-        "script": "These are the references behind this section. The two AI-judge papers are the most relevant to the checker discussion. The education paper is background only; it studied a different subject and doesn't validate our maths questions. The implementation and test plan are in our project research notes. The main point I'd leave you with is that we can explain what the checker looks for, but we shouldn't call it reliable until we compare its decisions with independently reviewed examples. We also don't have tutor questionnaire responses yet.",
+        "script": "Here's where the evidence comes from. DeepSeek's paper gives us a published result for mathematical solving. The AI-judge papers inform how we design the review step, including why we need clear criteria and human checks. The tool documentation shows what is available for running evaluations; it isn't evidence that we've already used those tools.\n\nThe overall pitch is that published results show strong mathematical capability, a review layer gives us another opportunity to catch errors, and reviewed Mathify examples could tell us how well our particular system performs. We haven't measured that accuracy yet, and we still have no tutor questionnaire responses.",
     },
 ]
 
@@ -156,20 +174,18 @@ def make_scenes():
             c.text(937, 695, "Review findings: flag issues for inspection", 24, width=565)
             c.text(72, 662, "First pair with analysis;\nlater pairs generated as needed.", 24, GRAY, width=780)
         elif i == 2:
-            c.text(72, 265, "Solve 2(x + 3) = 14", 39, width=1300)
-            c.rect(72, 370, 420, 350, PALE, radius=12)
-            tag(c, 96, 394, "CONCEPTS")
-            c.text(96, 475, "Distribution\nInverse operations", 28, width=370)
-            c.text(508, 505, "→", 32, BLUE, width=50)
-            for x, label, question, key in [
-                (578, "MAIN PROBE", "Expand 2(x + 3)", "Key: 2x + 6"),
-                (1068, "EASIER RETRY", "Expand 2(x + 1)", "Key: 2x + 2"),
+            c.text(72, 290, "97.3%", 150, BLUE, width=730)
+            c.text(78, 493, "MATH-500 / DeepSeek-R1 / reported pass@1", 25, width=740)
+            c.text(78, 561, "Competition-maths benchmark", 25, GRAY, width=740)
+            c.line(854, 290, 854, 680)
+            for y, item in [
+                (310, "High accuracy on challenging maths"),
+                (432, "RL rewards correct mathematical answers"),
+                (554, "A foundation, not proof of probe quality"),
             ]:
-                c.rect(x, 370, 460, 350, BLUE_PALE, radius=12)
-                tag(c, x + 24, 394, label)
-                c.text(x + 24, 477, question, 30, width=412)
-                c.text(x + 24, 547, key, 27, GREEN, width=412)
-            c.text(72, 764, "Each probe also includes four options, a hint and an explanation.", 25, GRAY, width=1456)
+                c.circle(902, y + 11, 11, BLUE)
+                c.text(931, y, item, 25, width=597)
+            c.text(72, 747, "Different model: Mathify uses Claude. Solving is not question generation.", 25, GRAY, width=1456)
         elif i == 3:
             c.rect(72, 290, 650, 435, PALE, radius=12)
             tag(c, 100, 318, "ILLUSTRATIVE ERROR", AMBER, AMBER_PALE, 280)
@@ -188,45 +204,60 @@ def make_scenes():
                 c.text(820, y, label, 25, width=708)
             c.text(72, 766, "This is a test expectation, not an observed checker result.", 24, GRAY, width=1456)
         elif i == 4:
-            for x, citation, finding, action in [
-                (72, "Thakur et al., 2025", "AI judges can disagree\nwith human ratings.", "Compare with human-reviewed answers."),
-                (828, "Yamauchi et al., 2026", "Clear evaluation\ncriteria matter.", "Use a specific checklist, not 'looks good'."),
+            for y, tool, description in [
+                (290, "LangSmith", "Trace runs and compare prompt versions"),
+                (440, "promptfoo", "Repeat examples and check expected outputs"),
+                (590, "DeepEval", "Automate scoring against evaluation criteria"),
             ]:
-                c.rect(x, 320, 700, 390, PALE, radius=12)
-                c.text(x + 28, 352, citation, 26, BLUE, width=644)
-                c.text(x + 28, 425, finding, 34, width=644)
-                c.text(x + 28, 604, action, 25, width=644)
-            c.text(72, 760, "Same-provider review can repeat the generator's mistakes.", 27, GRAY, width=1456)
+                c.text(72, y, tool, 34, BLUE, width=770)
+                c.text(72, y + 62, description, 26, GRAY, width=770)
+            c.line(874, 275, 874, 760)
+            for j, label in enumerate([
+                "Reviewed examples",
+                "Run generator + checker",
+                "Check answers + question quality",
+                "Compare versions + inspect failures",
+                "Revise prompts, then test again",
+            ]):
+                y = 266 + j * 105
+                c.rect(926, y, 602, 69, BLUE_PALE if j == 1 else PALE, radius=10)
+                c.text(946, y + 17, label, 25, width=562)
+                if j < 4:
+                    c.text(1205, y + 69, "↓", 23, BLUE, width=44)
         elif i == 5:
-            for x, label, example, expectation, fill in [
-                (72, "UNCHANGED EXAMPLE", "Expand 2(x + 3)\nKey: 2x + 6", "Should not flag an error", GREEN_PALE),
-                (828, "PLANTED MISTAKE", "Expand 2(x + 3)\nKey: 2x + 3", "Should flag the wrong key", AMBER_PALE),
+            c.text(72, 245, "Candidate examples from Mathify, confirmed by qualified reviewers.", 26, width=1456)
+            c.rect(72, 325, 1456, 62, BLUE_PALE, radius=8)
+            c.text(96, 340, "ONE PROPOSED EXAMPLE RECORD", 22, BLUE, width=700)
+            c.text(855, 340, "WHAT WE WOULD CHECK", 22, BLUE, width=645)
+            for y, example, check in [
+                (420, "Problem: solve 2(x + 3) = 14", "Correct interpretation and solution"),
+                (514, "Concepts: distribution, inverse operations", "Relevant and sufficient breakdown"),
+                (608, "Reviewed main + easier probing pair", "Correct keys, wording and difficulty"),
             ]:
-                c.rect(x, 300, 700, 340, fill, radius=12)
-                tag(c, x + 28, 325, label, width=310)
-                c.text(x + 28, 405, example, 34, width=644)
-                c.text(x + 28, 561, expectation, 28, width=644)
-            c.text(72, 690, "Built: small test runner with 2 unchanged + 8 altered examples.", 26, width=1456)
-            c.text(72, 755, "Still needed: live run, independent maths review, broader examples.", 25, GRAY, width=1456)
+                c.text(96, y, example, 27, width=720)
+                c.text(855, y, check, 27, width=645)
+                c.line(96, y + 65, 1504, y + 65)
+            c.text(72, 727, "Compare review on/off: errors caught and good questions wrongly flagged.", 25, width=1456)
+            c.text(72, 774, "Accept valid alternatives. Keep held-out examples for final evaluation.", 22, GRAY, width=1456)
         elif i == 6:
             studies = [
                 (
                     72,
-                    "AI JUDGES",
-                    "Thakur et al., 2025",
-                    "Human agreement,\nprompt sensitivity\nand leniency.",
+                    "MATH CAPABILITY",
+                    "DeepSeek-R1, 2025",
+                    "97.3% MATH-500 pass@1.\nPublished model result,\nnot Mathify accuracy.",
                 ),
                 (
                     572,
-                    "EVALUATION DESIGN",
-                    "Yamauchi et al., 2026",
-                    "Clear criteria mattered.\nChain-of-thought added little\nwhen criteria were clear.",
+                    "REVIEW DESIGN",
+                    "AI-judge research",
+                    "Thakur et al., 2025.\nYamauchi et al., 2026.\nHuman checks + clear criteria.",
                 ),
                 (
                     1072,
-                    "PROJECT REFERENCES",
-                    "Mathify research notes",
-                    "Implementation + test plan.\nBeatrice / SlidesCarnival:\nCC BY 4.0 template lineage.",
+                    "AVAILABLE TOOLS",
+                    "Evaluation documentation",
+                    "LangSmith / promptfoo /\nDeepEval. Not integrated.\nProject + design links in notes.",
                 ),
             ]
             for x, label, citation, detail in studies:
@@ -234,7 +265,7 @@ def make_scenes():
                 tag(c, x + 24, 345, label, BLUE, BLUE_PALE, 270)
                 c.text(x + 24, 414, citation, 26, width=408)
                 c.text(x + 24, 474, detail, 22, GRAY, width=408)
-            c.text(72, 774, "Research informs the design. Accuracy still needs independent testing.", 22, GRAY, width=1456)
+            c.text(72, 774, "Beatrice template lineage: SlidesCarnival, CC BY 4.0. Full source links in notes.", 22, GRAY, width=1456)
         scenes.append(c)
     return scenes
 
