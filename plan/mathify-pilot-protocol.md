@@ -9,7 +9,7 @@ Implementation baseline: `b1c8e0a` (main refreshed 2026-11-09). Research baselin
 3. [PR #11](https://github.com/Jeff15321/mathify-brief/pull/11), `feat/pilot-workspace` → previous branch: one workspace, batch uploads, preparation, whiteboard and recovery.
 4. [PR #12](https://github.com/Jeff15321/mathify-brief/pull/12), `feat/pilot-probes` → previous branch: short probes, hints and evaluation harness.
 5. [PR #13](https://github.com/Jeff15321/mathify-brief/pull/13), `feat/pilot-brief` → previous branch: four-fact tutor overview and evidence detail.
-6. `feat/pilot-verification` → previous branch: integrated journeys, measurement wiring and final documentation.
+6. [PR #14](https://github.com/Jeff15321/mathify-brief/pull/14), `feat/pilot-verification` → previous branch: integrated journeys, measurement wiring and final documentation.
 
 Review and merge in order. Each PR diff is relative to its preceding branch; the last branch contains the integrated candidate. After merging with a merge commit, retarget the next PR to main. If squashing or rebasing, first rebase the remaining branches onto the updated main so prior changes do not reappear in the next diff. Do not deploy from this stack automatically. Human study and live-model quality results remain open dependencies, not implementation tasks an agent can simulate.
 
