@@ -10,7 +10,9 @@ import type { CurrentWorkspace } from "@/types/domain";
 function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorkspace {
   const now = new Date().toISOString();
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
+    workspaceId: crypto.randomUUID(), draftId: crypto.randomUUID(), inputHash: 'test',
+    analysisOperation: null, submissionId: null, whiteboardState: 'none',
     demoProfile: DEMO_PROFILE,
     questionText: "Solve 2(x + 3) = 14.",
     attachments: [],
@@ -61,10 +63,10 @@ describe("Local storage (isolated temp directory)", () => {
     expect(readBack?.questionText).toBe("second");
   });
 
-  it.each([1, 3])("read() treats older schema version %s (including unreviewed v3) as absent", async (schemaVersion) => {
+  it.each([1, 3, 4])("read() preserves unsupported schema version %s and requests an explicit upgrade", async (schemaVersion) => {
     const { workspaceStore } = createStores(dataDir);
     await writeFile(path.join(dataDir, "workspace.json"), JSON.stringify({ ...makeWorkspace(), schemaVersion }));
-    expect(await workspaceStore.read()).toBeNull();
+    await expect(workspaceStore.read()).rejects.toMatchObject({ code: "UPGRADE_REQUIRED" });
   });
 
   it("update() serializes concurrent read-modify-write calls so no update is lost", async () => {

@@ -103,15 +103,21 @@ export const tutorBriefSchema = z.object({
   gaps: z.array(z.string()),
   priorityStepIndex: z.number().int().nonnegative().nullable(),
   generatedAt: z.string().min(1),
-  briefVersion: z.literal(4),
+  briefVersion: z.literal(6),
 });
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
 
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export const currentWorkspaceSchema = z.object({
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
+  workspaceId: z.string().uuid(),
+  draftId: z.string().uuid(),
+  inputHash: z.string(),
+  analysisOperation: z.object({ id: z.string().uuid(), startedAt: z.string(), status: z.enum(['generating', 'failed']) }).nullable(),
+  submissionId: z.string().uuid().nullable(),
+  whiteboardState: z.enum(['none', 'attached', 'omitted']),
   demoProfile: demoProfileSchema,
   questionText: z.string(),
   attachments: z.array(storedAssetSchema),

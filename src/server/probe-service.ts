@@ -4,6 +4,7 @@ import { getStores, type createStores } from './storage';
 import { getAnalysisProvider } from './ai';
 import { probeReviewSchema, reviewApproved } from '@/schemas/review';
 import { ApiError } from './errors';
+import { assertWorkspaceId } from './workspace-identity';
 import { advance, currentProbe, stepToGenerate, toPublicProbing } from './helpers/probe-flow-helper';
 import { toPrivateProbe } from './analysis-service';
 
@@ -30,12 +31,13 @@ function publicProbing(workspace: CurrentWorkspace): PublicProbing {
  * input is only the plan, parsed question and step index.
  * @throws ApiError 502 when the AI call fails; the step is marked `failed` so it can be retried.
  */
-export async function generateNextProbePair(stores: Stores = getStores()): Promise<PublicProbing> {
+export async function generateNextProbePair(stores: Stores = getStores(), workspaceId?: string): Promise<PublicProbing> {
   const { workspaceStore } = stores;
   // Set inside the locked updater when this request claims a step to generate.
   const claim: { value: { stepIndex: number; workspace: CurrentWorkspace } | null } = { value: null };
 
   const afterClaim = await workspaceStore.update((current) => {
+    assertWorkspaceId(current, workspaceId);
     const workspace = requireProbing(current);
     const stepIndex = stepToGenerate(workspace.probeSteps, workspace.cursor, { includeFailed: true });
     if (stepIndex === null) return workspace;
@@ -85,7 +87,7 @@ export async function generateNextProbePair(stores: Stores = getStores()): Promi
 
   const saved = await workspaceStore.update((current) => {
     // Drop the result if a new intake replaced the workspace or probing already ended.
-    if (!current || current.createdAt !== workspace.createdAt || current.phase !== 'ready') {
+    if (!current || current.workspaceId !== workspace.workspaceId || current.phase !== 'ready') {
       return current ?? workspace;
     }
     return {
@@ -117,10 +119,11 @@ export async function generateNextProbePair(stores: Stores = getStores()): Promi
  * @throws ApiError 409 when `probeId` is not the current probe.
  */
 export async function answerCurrentProbe(
-  input: { probeId: string; answer: ProbeAnswer },
+  input: { workspaceId?: string; probeId: string; answer: ProbeAnswer },
   stores: Stores = getStores(),
 ): Promise<PublicProbing> {
   const saved = await stores.workspaceStore.update((current) => {
+    assertWorkspaceId(current, input.workspaceId);
     const workspace = requireProbing(current);
     const probe = currentProbe(workspace.probeSteps, workspace.cursor);
     if (!probe || !workspace.cursor || probe.id !== input.probeId) {

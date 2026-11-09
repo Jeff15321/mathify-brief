@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { analyzeQuestion, ApiClientError, startWorkspace } from "@/lib/api-client";
+import { analyzeQuestion, ApiClientError, startWorkspace, fetchWorkspace } from "@/lib/api-client";
 import {
   MAX_FILES,
   MAX_FILE_SIZE_BYTES,
@@ -39,6 +39,9 @@ function validateClientSide(questionText: string, files: File[]): string | null 
 
 export function QuestionIntakeForm() {
   const router = useRouter();
+  const [draftId] = useState(() => crypto.randomUUID());
+  const [expectedWorkspaceId, setExpectedWorkspaceId] = useState<string | null>(null);
+  useEffect(() => { fetchWorkspace().then(ws => setExpectedWorkspaceId(ws?.workspaceId ?? null)).catch(() => {}); }, []);
   const inputRef = useRef<HTMLInputElement>(null);
   const [questionText, setQuestionText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -57,10 +60,10 @@ export function QuestionIntakeForm() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function runAnalysis() {
+  async function runAnalysis(workspaceId: string) {
     setStatus("analyzing");
     try {
-      await analyzeQuestion();
+      await analyzeQuestion(workspaceId);
       router.push("/workspace");
     } catch (err) {
       setError(
@@ -84,8 +87,8 @@ export function QuestionIntakeForm() {
 
     setStatus("uploading");
     try {
-      await startWorkspace(questionText, files);
-      await runAnalysis();
+      const workspaceId = await startWorkspace(questionText, files, draftId, expectedWorkspaceId);
+      await runAnalysis(workspaceId);
     } catch (err) {
       setError(
         err instanceof ApiClientError

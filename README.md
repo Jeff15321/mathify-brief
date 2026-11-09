@@ -120,3 +120,12 @@ code assumes they exist; adding them is a deliberate, separate migration.
 **Stages 0-4 complete.** The full MVP described in `IMPLEMENTATION_PLAN.md` is implemented and
 verified: platform smoke test, intake/storage, Claude analysis, the three-panel workspace, and the
 Tutor Brief.
+# Next-version pilot stack
+
+See [the pilot protocol](plan/mathify-pilot-protocol.md) for branch order and measurement definitions.
+The pilot uses workspace schema 5 and brief schema 6. Run it with a fresh, isolated
+`LOCAL_DATA_DIR` (for example `/tmp/mathify-pilot-v2`); keep existing demo data unchanged.
+Unsupported saved schemas return `UPGRADE_REQUIRED` instead of silently discarding a report.
+Historical report migration is not included. The existing AI quality-review gate and
+tutor feedback are retained. No human study or live-model efficacy result is implied by tests.
+
