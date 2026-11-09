@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { setupWorkspace, type Stores } from './helpers';
 import { submitBrief } from '@/server/brief-service';
-import { answerCurrentProbe } from '@/server/probe-service';
+import { answerCurrentProbe, generateNextProbePair } from '@/server/probe-service';
 import { startWorkspace } from '@/server/workspace-service';
 import { analyzeCurrentWorkspace } from '@/server/analysis-service';
 import { MockAnalysisProvider } from '@/server/ai/mock-provider';
@@ -83,4 +83,39 @@ it('duplicate analysis observes the existing operation without a second provider
   expect(await analyzeCurrentWorkspace(stores)).toBeNull();
   release(); await first;
   expect(spy).toHaveBeenCalledTimes(1);
+});
+
+it('late analysis cannot replace a newer draft or mark its operation failed', async () => {
+  await startWorkspace({ questionText: 'old', files: [] }, stores);
+  const original = MockAnalysisProvider.prototype.analyzeQuestion;
+  let entered!: () => void; let release!: () => void;
+  const analyzing = new Promise<void>(r => { entered = r; });
+  vi.spyOn(MockAnalysisProvider.prototype, 'analyzeQuestion').mockImplementationOnce(async function(this: MockAnalysisProvider, input) {
+    entered(); await new Promise<void>(r => { release = r; }); return original.call(this, input);
+  });
+  const pending = analyzeCurrentWorkspace(stores);
+  const rejected = expect(pending).rejects.toMatchObject({ code: 'INVALID_STATE' });
+  await analyzing;
+  const replacement = await startWorkspace({ questionText: 'new', files: [] }, stores);
+  const before = await stores.workspaceStore.read();
+  release(); await rejected;
+  expect((await stores.workspaceStore.read())!.workspaceId).toBe(replacement.workspaceId);
+  expect(await stores.workspaceStore.read()).toEqual(before);
+});
+
+it.each(['replacement', 'completion'] as const)('late probe generation leaves %s intact', async action => {
+  const original = MockAnalysisProvider.prototype.generateProbePair;
+  let entered!: () => void; let release!: () => void;
+  const generating = new Promise<void>(r => { entered = r; });
+  vi.spyOn(MockAnalysisProvider.prototype, 'generateProbePair').mockImplementationOnce(async function(this: MockAnalysisProvider, input) {
+    entered(); await new Promise<void>(r => { release = r; }); return original.call(this, input);
+  });
+  const pending = generateNextProbePair(stores);
+  const rejected = expect(pending).rejects.toMatchObject({ code: 'INVALID_STATE' });
+  await generating;
+  if (action === 'replacement') await startWorkspace({ questionText: 'new', files: [] }, stores);
+  else await submitBrief({ whiteboardPng: null, pending: { probeId: 's1-main', answer: 'B' } }, stores);
+  const before = await stores.workspaceStore.read();
+  release(); await rejected;
+  expect(await stores.workspaceStore.read()).toEqual(before);
 });

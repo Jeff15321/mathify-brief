@@ -35,6 +35,7 @@ export const privateProbeSchema = z.object({
 });
 
 export const analysisStoredSchema = z.object({
+  preparationDurationMs: z.number().nonnegative().optional(),
   parsedQuestionMarkdown: z.string().min(1),
   topic: z.string().min(1),
   estimatedQuestionGrade: z.string().min(1),
@@ -55,6 +56,7 @@ export const probeKindSchema = z.enum(['main', 'easier']);
 export const probeStepSchema = z.object({
   index: z.number().int().nonnegative(),
   concept: z.string().min(1),
+  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3']).optional(),
   status: z.enum(['pending', 'generating', 'ready', 'failed']),
   generationStartedAt: z.string().nullable(),
   main: privateProbeSchema.nullable(),

@@ -16,6 +16,7 @@ export default defineConfig({
     reuseExistingServer: false,
     env: {
       AI_MOCK_MODE: 'true',
+      NEXT_PUBLIC_MEASUREMENT_ENABLED: 'true',
       LOCAL_DATA_DIR: `./.playwright-data/run-${Date.now()}`,
     },
   },

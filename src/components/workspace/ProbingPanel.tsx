@@ -14,7 +14,7 @@ export function ProbingPanel({
   onRetry,
   answering,
   onSubmit,
-  submitting, hintOpened, onHintOpened,
+  submitting, hintOpened, onHintOpened, onVisible,
 }: {
   probing: PublicProbing;
   selection: ProbeAnswer | undefined;
@@ -24,6 +24,7 @@ export function ProbingPanel({
   answering: boolean;
   onSubmit: () => void;
   submitting: boolean;
+  onVisible?: () => void;
   hintOpened?: boolean;
   onHintOpened?: () => void;
 }) {
@@ -49,7 +50,7 @@ export function ProbingPanel({
             <ProbeCard
               key={current.id}
               probe={current}
-              hintOpened={hintOpened} onHintOpened={onHintOpened}
+              hintOpened={hintOpened} onHintOpened={onHintOpened} onVisible={onVisible}
               index={progress.stepNumber - 1}
               selected={selection}
               onSelect={onSelect}

@@ -39,26 +39,26 @@ npm run start         # start production server (after build)
 npm run typecheck   # tsc --noEmit
 npm run lint         # eslint
 npm run test          # vitest unit/component tests (always mocked AI, isolated temp storage)
-npm run test:e2e   # one Playwright happy-path end-to-end test (mocked AI)
+npm run test:e2e   # production build + isolated Playwright journeys (mocked AI)
 ```
 
 Automated tests never call the paid Anthropic API, regardless of `.env.local`.
 
 ## Demo walkthrough
 
-1. `npm run dev`, open http://localhost:3000.
-2. Type a question (e.g. `Solve $2(x + 3) = 14$.`) and/or attach PNG/JPEG/WebP/PDF files, click
-   **Begin Session**.
-3. On `/workspace`: draw on the left whiteboard and answer the middle **Relevant Concepts**
-   questions one at a time with **Next**. A wrong or "I don't know" answer shows one easier
-   question on the same concept before moving on; answers lock once you move on. The next
-   question is generated in the background while you answer the current one. Expand/restore any
-   panel, and click **Submit** at any point (questions not reached count as unanswered).
-4. `/brief` shows the Tutor Brief dashboard, built to be skimmed in seconds: Core probes and
-   Easier retries tallies, strengths and possible gaps (concept names), the priority / key
-   incorrect step (what the student picked vs the correct answer, and how the retry went), a
-   whiteboard preview, and a collapsed Probing results list with every question and answer.
-5. **Start a new question** returns to `/` and replaces the current workspace.
+1. `npm run dev`, open http://localhost:3000. The entry route opens `/workspace`.
+2. Type a question (e.g. `Solve $2(x + 3) = 14$.`) and/or add its PNG/JPEG/WebP/PDF sources
+   in one batch. Read the purpose and select **Let’s begin** once.
+3. Draw in the same workspace while questions are prepared. Answer one check at a time with
+   **Next**, or open its optional hint. A wrong or "I don't know" answer shows one simpler
+   check on the same concept. On phones, switch between drawing and checks without losing either.
+4. Finish at any point. The current selected answer is included even without pressing Next.
+   Unreached concepts and shown-but-unanswered questions stay distinct. If drawing export fails,
+   retry or explicitly send without the drawing; the report records the omission.
+5. `/brief` shows the original problem, a suggested teaching start, a supporting response and
+   evidence limits. Open disclosures for detailed results and use the existing tutor feedback form.
+6. **Start a new question** opens a fresh draft. The current server report remains until Begin
+   successfully replaces the singleton workspace.
 
 With `AI_MOCK_MODE=true` (default) this entire flow runs fully offline against a deterministic
 fixture provider. Set `AI_MOCK_MODE=false` with a real `ANTHROPIC_API_KEY` to use live Claude
@@ -78,36 +78,24 @@ arbitrary input. Verdicts and answer keys are never included in student workspac
 A rejected, malformed, or unavailable review returns a generic recoverable error. There is no
 automatic content regeneration loop: retry analysis from intake, or use the existing probe
 retry control for a failed deferred pair. Each retry generates and reviews fresh content.
-Schema version 4 invalidates older saved workspaces, which may contain unreviewed content:
-restart any existing session after upgrading. Uploaded files are left intact.
+Use a fresh `LOCAL_DATA_DIR` for the pilot. Older saved schemas return `UPGRADE_REQUIRED`;
+existing workspace and upload files are preserved. Historical report migration is not included.
 
-Upgrading from an earlier build: a `data/workspace.json` with an older `schemaVersion` is
-ignored (treated as no workspace), and its old upload files are left in `data/uploads/`. Delete
-`data/` to clean up.
+## Verification status (2026-11-09 pilot candidate)
 
-## Verification status (all four stages)
-
-- `npm run typecheck`, `npm run lint`, `npm run build` - all pass with no errors or warnings.
-- `npm run test` - **80/80 Vitest tests passing**: isolated temp-dir storage (including serialized
-  concurrent updates and old-schema handling), every upload-validation rejection path, mocked
-  analysis (plan + first pair, no leaked keys or buffered probes), the pure probe flow (easier
-  retry on wrong/IDK, one retry per step, one-step-ahead buffer, stale/failed generation
-  recovery), probe generation/answering services (idempotent prefetch, locked answers, no lost
-  writes during generation, failure retry), deterministic scoring (served probes, retries,
-  unreached steps, early submit), the brief summary (tallies, strengths/gaps, priority step),
-  brief submission (no AI call), and component tests (one-question panel, Next gating, easier
-  badge, waiting/retry states, radio persistence, Original/Parsed, panel expand/restore keeps
-  children mounted, brief tally/priority cards, collapsed probing results).
-- `npm run test:e2e` - **1/1 Playwright test passing** on its own mock-AI production server
-  (port 3100): intake -> wrong answer -> easier retry -> buffered next question -> "I don't
-  know" -> retry -> draw -> expand/restore -> early Submit -> dashboard tallies, strengths,
-  priority step, whiteboard preview and expandable probing results.
-- Manually verified twice in a real Chrome browser (via the claude-in-chrome tooling): the full
-  intake -> workspace -> brief flow, including whiteboard ink surviving panel expand/restore and
-  the exported whiteboard PNG rendering correctly on the Tutor Brief page.
-- Live Anthropic connectivity: confirmed working with a real key for both the text-only Stage 0
-  smoke call and one full typed-question Stage 2 analysis call (~17s, produced a valid student-safe
-  breakdown + 4 MCQs). Automated tests never call the paid API regardless of `.env.local`.
+- Typecheck, lint and the production build pass. **151 unit/component tests** cover storage,
+  scoring, quality review, feedback, drafts, schema handling and concurrency, including late AI
+  responses after replacement/completion and atomic selected-answer Finish.
+- **16 Chromium journeys** cover the integrated adaptive flow, drawing/selection refresh,
+  two-photo and PDF intake, six report states, mobile tabs, hints, explicit file rejection,
+  network recovery, unavailable draft storage, export omission and opt-in event boundaries.
+  Playwright builds and starts its own mock server with unique temporary data on port 3100.
+- Desktop and phone screenshots were inspected. Mock evaluation produced 48 records / 144
+  pairs across both prompt variants, with zero API calls. This verifies evaluation plumbing.
+- The current prompt has **not** been rated by tutors or evaluated against a live model.
+  Student task success, speed improvement and tutor comprehension after 15 seconds remain
+  unmeasured. Physical camera/gallery, other browser engines and full keyboard/screen-reader
+  acceptance also remain pending. See the [pilot protocol](plan/mathify-pilot-protocol.md).
 
 ## Known future work (intentionally not implemented)
 
@@ -117,10 +105,10 @@ code assumes they exist; adding them is a deliberate, separate migration.
 
 ## Status
 
-**Stages 0-4 complete.** The full MVP described in `IMPLEMENTATION_PLAN.md` is implemented and
-verified: platform smoke test, intake/storage, Claude analysis, the three-panel workspace, and the
-Tutor Brief.
-# Next-version pilot stack
+The original MVP has been extended by six stacked draft PRs. Engineering checks are complete
+for the tested scope; participant evaluation is pending. No deployment or merge is implied.
+
+## Next-version pilot stack
 
 See [the pilot protocol](plan/mathify-pilot-protocol.md) for branch order and measurement definitions.
 The pilot uses workspace schema 5 and brief schema 6. Run it with a fresh, isolated

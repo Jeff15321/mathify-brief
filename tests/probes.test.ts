@@ -24,6 +24,8 @@ describe("Probe generation and answering (mocked AI provider, isolated temp stor
 
     const view = await generateNextProbePair(stores);
     expect(await statuses()).toEqual(["ready", "ready", "pending"]);
+    expect((await stores.workspaceStore.read())!.probeSteps.map(step => step.promptVersion))
+      .toEqual(['analysis-v3', 'probe-pair-v3', undefined]);
     expect(view.needsPrefetch).toBe(false);
 
     await generateNextProbePair(stores);

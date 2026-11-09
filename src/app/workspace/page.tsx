@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { analyzeQuestion, answerProbe, fetchWorkspace, generateNextProbes, startWorkspace, submitBrief } from '@/lib/api-client';
+import { recordPilotEvent, type PilotCounts, type PilotEventName } from '@/lib/measurement';
 import { viewFor } from '@/lib/workspace-flow';
 import type { ProbeAnswer, PublicProbing, PublicWorkspace } from '@/types/domain';
 import { restoreDraft, saveDraft, removeDraft, type BoardSnapshot, type WorkspaceDraft } from '@/lib/workspace-draft';
@@ -40,6 +41,19 @@ export default function WorkspacePage() {
   const [storageError, setStorageError] = useState<string | null>(null);
   const probing = workspace?.probing;
   const workspaceId = workspace?.workspaceId;
+  const generationMode = workspace?.generationMode ?? 'unknown';
+  const promptVersion = workspace?.promptVersion;
+  const track = useCallback((event: PilotEventName, counts: PilotCounts = {}, observed?: PublicWorkspace) => {
+    if (!draftRef.current) return;
+    recordPilotEvent(event, { attemptId: draftRef.current.id, workspaceId: observed?.workspaceId ?? draftRef.current.workspaceId ?? undefined,
+      mode: observed?.generationMode ?? generationMode, promptVersion: observed?.promptVersion ?? promptVersion }, counts);
+  }, [generationMode, promptVersion]);
+  const currentProbeId = probing?.current?.id;
+  const probeVisible = useCallback(() => { if (currentProbeId) track('probe_visible', { probeId: currentProbeId }); }, [track, currentProbeId]);
+  const analysisReady = Boolean(workspace?.analysis);
+  const serverDurationMs = workspace?.analysis?.preparationDurationMs;
+  useEffect(() => { if (currentProbeId) track('probe_ready', { probeId: currentProbeId }); }, [currentProbeId, track]);
+  useEffect(() => { if (analysisReady) track('analysis_ready', { serverDurationMs }); }, [analysisReady, workspaceId, track, serverDurationMs]);
   const hintOpened = draft?.selectedProbeId === probing?.current?.id && draft?.hintOpened === true;
   const selection = draft?.selectedProbeId === probing?.current?.id ? draft?.selection : undefined;
 
@@ -51,7 +65,8 @@ export default function WorkspacePage() {
     setSaveStatus('Saving…');
     const pending = saving.current.catch(() => {}).then(() => saveDraft(snapshot));
     saving.current = pending;
-    void pending.then(() => { if (saving.current === pending && draftRef.current === source && !stopped.current) { setSaveStatus('Saved on this device'); setStorageError(null); } }, () => {
+    void pending.then(() => { if (saving.current === pending && draftRef.current === source && !stopped.current) { setSaveStatus('Saved on this device'); setStorageError(null); recordPilotEvent('draft_saved', { attemptId: source.id, workspaceId: source.workspaceId ?? undefined, mode: 'unknown' }); } }, () => {
+      recordPilotEvent('draft_save_failed', { attemptId: source.id, workspaceId: source.workspaceId ?? undefined, mode: 'unknown' });
       setSaveStatus('Not saved'); setStorageError('This device could not save your draft. Keep this page open and retry saving before refreshing.');
     });
     return pending;
@@ -103,6 +118,7 @@ export default function WorkspacePage() {
         if (active) next.workspaceId = active.workspaceId;
         draftRef.current = next; setInitialBoard(next.board);
         setDraft(next); setWorkspace(active); setLoaded(true); setError(null);
+        recordPilotEvent(recovered ? 'draft_restored' : 'draft_opened', { attemptId: next.id, workspaceId: next.workspaceId ?? undefined, mode: active?.generationMode ?? 'unknown', promptVersion: active?.promptVersion });
         history.replaceState(null, '', `/workspace?draft=${next.id}`);
       } catch (err) { if (!cancelled) setError(message(err)); }
     }
@@ -142,26 +158,30 @@ export default function WorkspacePage() {
     return () => clearTimeout(timer);
   }, [workspace, probing, refresh]);
 
-  async function prepare(id: string) {
+  async function prepare(id: string, observed?: PublicWorkspace) {
+    track('analysis_started', {}, observed);
     setPreparing(true); setError(null);
     try { await analyzeQuestion(id); await refresh(); }
-    catch (err) { setError(message(err)); await refresh().catch(() => {}); }
+    catch (err) { track('analysis_failed', {}, observed); setError(message(err)); await refresh().catch(() => {}); }
     finally { setPreparing(false); }
   }
   async function begin() {
     if (!draftRef.current || uploading) return;
     setUploading(true); setError(null);
+    track('begin_clicked', { fileCount: draftRef.current.files.length });
+    const uploadStarted = performance.now();
     try {
       await flush().catch(() => {});
       const value = draftRef.current;
       const id = await startWorkspace(value.questionText, value.files, value.id, value.expectedWorkspaceId);
       changeDraft({ workspaceId: id }, true);
+      track('upload_succeeded', { durationMs: performance.now() - uploadStarted });
       const next = await fetchWorkspace();
       if (!next || next.workspaceId !== id) throw new Error('The workspace changed. Reload to continue.');
       setWorkspace(next);
       setUploading(false);
-      if (!next.analysis) await prepare(id);
-    } catch (err) { setError(message(err)); }
+      if (!next.analysis) await prepare(id, next);
+    } catch (err) { track('upload_failed'); setError(message(err)); }
     finally { setUploading(false); }
   }
   async function next() {
@@ -169,6 +189,7 @@ export default function WorkspacePage() {
     setAnswering(true); setError(null);
     try {
       const result = await answerProbe(probing.current.id, selection, workspaceId, hintOpened);
+      track('answer_saved', { probeId: probing.current.id });
       changeDraft({ selectedProbeId: undefined, selection: undefined, hintOpened: false }, true);
       applyProbing(result);
     } catch (err) { setError(message(err)); await refresh().catch(() => {}); }
@@ -177,14 +198,18 @@ export default function WorkspacePage() {
   async function finish(omit = false) {
     if (!workspaceId || !draftRef.current || submitting || answering) return;
     setSubmitting(true); setError(null);
+    track('finish_clicked');
+    if (omit) track('export_omitted');
     changeDraft({ submissionId: draftRef.current.submissionId ?? crypto.randomUUID() }, true);
     let png: Blob | null = null;
     try {
       if (!omit) {
         try { if (!board.current) throw new Error('The drawing board is still loading.'); png = await board.current.exportPng(); }
-        catch (err) { setExportFailed(true); throw err; }
+        catch (err) { setExportFailed(true); track('export_failed'); throw err; }
       }
-      await submitBrief(png, workspaceId, draftRef.current.submissionId!, probing?.current && (selection || hintOpened) ? { probeId: probing.current.id, answer: selection ?? null, hintOpened: hintOpened } : undefined, omit);
+      const brief = await submitBrief(png, workspaceId, draftRef.current.submissionId!, probing?.current && (selection || hintOpened) ? { probeId: probing.current.id, answer: selection ?? null, hintOpened: hintOpened } : undefined, omit);
+      track('brief_saved', { coreAnswered: brief.core.attempted, corePlanned: brief.core.total });
+      if (selection && probing?.current) track('answer_saved', { probeId: probing.current.id });
       stopped.current = true;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       await saving.current.catch(() => {});
@@ -206,13 +231,13 @@ export default function WorkspacePage() {
     <div className="min-h-0 flex-1"><ThreePanelLayout
       whiteboard={<WhiteboardPanel ref={board} disabled={submitting} attachments={workspace?.attachments} initialBoard={initialBoard} onBoardChange={boardChanged} onFlush={() => void flush().catch(() => {})} />}
       probing={<div className="flex h-full min-h-0 flex-col gap-3">
-        {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onChange={(text, files) => changeDraft({ questionText: text, files })} onBegin={() => void begin()} /></div>}
+        {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
         {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
         {workspace?.analysis && probing && <>
           <div className="space-y-2 text-sm"><p className="text-slate-700">{PURPOSE}</p><BreakdownPanel analysis={workspace.analysis} />
             <details><summary className="cursor-pointer text-blue-700">Your original problem</summary><div className="max-h-48 overflow-y-auto"><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.analysis.parsedQuestionMarkdown} attachments={workspace.attachments} /></div></details>
           </div>
-          <div className="min-h-0 flex-1"><ProbingPanel probing={probing} selection={selection} hintOpened={hintOpened} onHintOpened={() => changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true)} onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)} onNext={() => void next()} onRetry={prefetch} answering={answering} onSubmit={() => void finish()} submitting={submitting} /></div>
+          <div className="min-h-0 flex-1"><ProbingPanel probing={probing} selection={selection} hintOpened={hintOpened} onVisible={probeVisible} onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }} onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)} onNext={() => void next()} onRetry={prefetch} answering={answering} onSubmit={() => void finish()} submitting={submitting} /></div>
         </>}
       </div>} />
     </div>

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { MathText } from "@/components/shared/MathText";
 import type { ProbeAnswer, PublicProbe } from "@/types/domain";
 
@@ -14,7 +15,7 @@ export function ProbeCard({
   selected,
   onSelect,
   onNext,
-  hintOpened = false, onHintOpened,
+  hintOpened = false, onHintOpened, onVisible,
   saving = false,
   disabled = false,
 }: {
@@ -23,18 +24,28 @@ export function ProbeCard({
   selected: ProbeAnswer | undefined;
   onSelect: (answer: ProbeAnswer) => void;
   onNext: () => void;
+  onVisible?: () => void;
   hintOpened?: boolean;
   onHintOpened?: () => void;
   saving?: boolean;
   disabled?: boolean;
 }) {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!root.current || !onVisible || typeof IntersectionObserver === 'undefined') return;
+    let intersects = false; let visible = false;
+    const announce = () => { const next = intersects && document.visibilityState === 'visible'; if (next && !visible) onVisible(); visible = next; };
+    const observer = new IntersectionObserver(entries => { intersects = entries.some(e => e.isIntersecting && e.intersectionRatio >= 0.1); announce(); }, { threshold: 0.1 });
+    observer.observe(root.current); document.addEventListener('visibilitychange', announce);
+    return () => { observer.disconnect(); document.removeEventListener('visibilitychange', announce); };
+  }, [onVisible, probe.id]);
   const choices: { id: ProbeAnswer; textMarkdown: string }[] = [
     ...probe.options,
     { id: "IDK", textMarkdown: "I don't know" },
   ];
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div ref={root} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Question {index + 1}

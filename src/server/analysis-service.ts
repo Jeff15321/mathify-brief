@@ -55,6 +55,7 @@ export async function analyzeCurrentWorkspace(stores: Stores = getStores(), work
 }
 
 async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operationId: string): Promise<QuestionAnalysisPublic> {
+  const started = performance.now();
   const { workspaceStore, assetStore } = stores;
   const files = [];
   for (const attachment of workspace.attachments) {
@@ -103,6 +104,7 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
 
   const now = new Date().toISOString();
   const stored: QuestionAnalysisStored = {
+    preparationDurationMs: performance.now() - started,
     parsedQuestionMarkdown: parsed.data.parsedQuestionMarkdown,
     topic: parsed.data.topic,
     estimatedQuestionGrade: parsed.data.estimatedQuestionGrade,
@@ -118,6 +120,7 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
   const probeSteps: ProbeStep[] = parsed.data.probePlan.map((item, index) => ({
     index,
     concept: item.concept,
+    promptVersion: index === 0 ? ANALYSIS_PROMPT_VERSION : undefined,
     status: index === 0 ? 'ready' : 'pending',
     generationStartedAt: null,
     main: index === 0 ? toPrivateProbe(parsed.data.firstPair.main, 0, 'main') : null,
