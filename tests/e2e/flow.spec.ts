@@ -53,6 +53,9 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.waitForURL("**/brief");
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
 
+  await page.screenshot({ path: "artifacts/pilot/tutor-desktop.png", fullPage: true });
+  await page.getByText("Counts and additional concepts", { exact: true }).click();
+
   // Core probes: s1 incorrect, s2 don't know, s3 on screen (unanswered). Retries: both correct.
   const core = page.locator("section", { hasText: "Core probes" });
   await expect(core.getByText("0/2")).toBeVisible();
