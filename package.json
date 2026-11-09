@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "postinstall": "node scripts/copy-excalidraw-assets.mjs"
+    "postinstall": "node scripts/copy-excalidraw-assets.mjs",
+    "evaluate:probes": "node --import tsx scripts/evaluate-probes.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.134.0",
@@ -39,6 +40,7 @@
     "fake-indexeddb": "^6.2.8",
     "jsdom": "^30.1.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.4"
   },

@@ -40,6 +40,7 @@ export default function WorkspacePage() {
   const [storageError, setStorageError] = useState<string | null>(null);
   const probing = workspace?.probing;
   const workspaceId = workspace?.workspaceId;
+  const hintOpened = draft?.selectedProbeId === probing?.current?.id && draft?.hintOpened === true;
   const selection = draft?.selectedProbeId === probing?.current?.id ? draft?.selection : undefined;
 
   const flush = useCallback(() => {
@@ -167,7 +168,7 @@ export default function WorkspacePage() {
     if (!workspaceId || !probing?.current || !selection || answering) return;
     setAnswering(true); setError(null);
     try {
-      const result = await answerProbe(probing.current.id, selection, workspaceId);
+      const result = await answerProbe(probing.current.id, selection, workspaceId, hintOpened);
       changeDraft({ selectedProbeId: undefined, selection: undefined, hintOpened: false }, true);
       applyProbing(result);
     } catch (err) { setError(message(err)); await refresh().catch(() => {}); }
@@ -183,7 +184,7 @@ export default function WorkspacePage() {
         try { if (!board.current) throw new Error('The drawing board is still loading.'); png = await board.current.exportPng(); }
         catch (err) { setExportFailed(true); throw err; }
       }
-      await submitBrief(png, workspaceId, draftRef.current.submissionId!, probing?.current && selection ? { probeId: probing.current.id, answer: selection } : undefined, omit);
+      await submitBrief(png, workspaceId, draftRef.current.submissionId!, probing?.current && (selection || hintOpened) ? { probeId: probing.current.id, answer: selection ?? null, hintOpened: hintOpened } : undefined, omit);
       stopped.current = true;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       await saving.current.catch(() => {});
@@ -211,7 +212,7 @@ export default function WorkspacePage() {
           <div className="space-y-2 text-sm"><p className="text-slate-700">{PURPOSE}</p><BreakdownPanel analysis={workspace.analysis} />
             <details><summary className="cursor-pointer text-blue-700">Your original problem</summary><div className="max-h-48 overflow-y-auto"><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.analysis.parsedQuestionMarkdown} attachments={workspace.attachments} /></div></details>
           </div>
-          <div className="min-h-0 flex-1"><ProbingPanel probing={probing} selection={selection} onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer }, true)} onNext={() => void next()} onRetry={prefetch} answering={answering} onSubmit={() => void finish()} submitting={submitting} /></div>
+          <div className="min-h-0 flex-1"><ProbingPanel probing={probing} selection={selection} hintOpened={hintOpened} onHintOpened={() => changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true)} onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)} onNext={() => void next()} onRetry={prefetch} answering={answering} onSubmit={() => void finish()} submitting={submitting} /></div>
         </>}
       </div>} />
     </div>

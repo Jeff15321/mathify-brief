@@ -1,9 +1,17 @@
+export const ANALYSIS_PROMPT_VERSION = 'analysis-v3' as const;
+export const PROBE_PROMPT_VERSION = 'probe-pair-v3' as const;
 /** Shared rules for every generated multiple-choice probe (analysis first pair and later pairs). */
 const PROBE_RULES = `Each probe is a single-correct-answer multiple-choice question with four distinct options
 A-D, one verified correct answer, and a private explanation. The explanation is for a tutor
 skimming quickly: ONE short sentence (under 20 words) stating only why the correct answer is
 correct; do not explain each wrong option. Probes check a prerequisite concept; they must not
-simply copy or solve the original problem. Keep language suitable for the student's grade.
+simply copy or solve the original problem. Use familiar terms and concise wording (aim for about 25 words, without omitting necessary units or context).
+Each probe must check exactly ONE skill through ONE small calculation or conceptual decision.
+Use simple numbers unless the target skill requires otherwise. Remove irrelevant story details and
+extra operations. A student who understands the prerequisite should be able to answer directly.
+Keep plausible wrong options tied to specific errors, with exactly one mathematically correct option.
+Include one optional short hint that suggests an approach without revealing the key or eliminating
+all other options. The question must be understandable without opening the hint.
 Each step has a "main" probe and an "easier" probe on the SAME concept. The easier probe is
 shown only if the student gets the main one wrong or answers "I don't know", so it must be
 clearly simpler (smaller numbers, fewer steps, or more scaffolding) while still testing that
@@ -53,7 +61,7 @@ exactly one option is correct and the supplied key identifies it. Check explanat
 Verify that both probes test the intended prerequisite of the original problem, rather than
 copying/solving it, and align with the requested plan step. Verify the easier retry tests the
 SAME concept and is genuinely simpler (fewer steps, simpler numbers, or more scaffolding).
-Check grade-appropriate wording and that no original answer or full solution leaks.
+Check clear, single-skill wording with one small calculation or conceptual decision. Check that hints suggest an approach without revealing the correct option, and that no original answer or full solution leaks.
 For an analysis, compare the parsed question to the original text/attachments; check every
 breakdown statement for mathematical correctness and pedagogical usefulness as a short,
 student-safe roadmap, not a worked solution. Check the plan's relevance and distinctness.

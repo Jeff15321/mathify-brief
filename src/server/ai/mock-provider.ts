@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
@@ -71,30 +72,33 @@ const MOCK_PAIRS: ModelProbePair[] = [
   {
     main: {
       concept: 'Solving for x',
-      questionMarkdown: 'Given $2x = 8$, what is $x$?',
+      questionMarkdown: 'Given $3x = 15$, what is $x$?',
       options: [
         { id: 'A', textMarkdown: '$x = 2$' },
-        { id: 'B', textMarkdown: '$x = 4$' },
+        { id: 'B', textMarkdown: '$x = 5$' },
         { id: 'C', textMarkdown: '$x = 6$' },
         { id: 'D', textMarkdown: '$x = 16$' },
       ],
       correctOptionId: 'B',
-      explanation: 'Dividing both sides by 2 gives $x = 4$.',
+      explanation: 'Dividing both sides by 3 gives $x = 5$.',
     },
     easier: {
       concept: 'Solving for x',
-      questionMarkdown: 'If $2x = 4$, what is $x$?',
+      questionMarkdown: 'If $2x = 6$, what is $x$?',
       options: [
         { id: 'A', textMarkdown: '$x = 1$' },
-        { id: 'B', textMarkdown: '$x = 2$' },
-        { id: 'C', textMarkdown: '$x = 4$' },
+        { id: 'B', textMarkdown: '$x = 3$' },
+        { id: 'C', textMarkdown: '$x = 5$' },
         { id: 'D', textMarkdown: '$x = 8$' },
       ],
       correctOptionId: 'B',
-      explanation: 'Dividing both sides by 2 gives $x = 2$.',
+      explanation: 'Dividing both sides by 2 gives $x = 3$.',
     },
   },
 ];
+
+const HINTS = ['Think about what the number outside the brackets acts on.', 'Think about undoing the change to the variable term.', 'Think about equal groups.'];
+MOCK_PAIRS.forEach((pair, index) => { pair.main.hint = HINTS[index]; pair.easier.hint = HINTS[index]; });
 
 const MOCK_ANALYSIS: ModelAnalysis = {
   parsedQuestionMarkdown: 'Solve $2(x + 3) = 14$.',
@@ -131,13 +135,13 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
 
   /** Offline allowlist only: never approves arbitrary mathematical content. */
   async reviewAnalysis(_input: AnalyzeQuestionInput, candidate: ModelAnalysis) {
-    const approved = JSON.stringify(candidate) === JSON.stringify(MOCK_ANALYSIS);
+    const approved = isDeepStrictEqual(candidate, MOCK_ANALYSIS);
     return analysisReviewSchema.parse(Object.fromEntries(Object.keys(analysisReviewSchema.shape).map((key) => [key, approved])));
   }
 
   async reviewProbePair(input: GenerateProbePairInput, candidate: ModelProbePair) {
-    const approved = JSON.stringify(candidate) === JSON.stringify(MOCK_PAIRS[input.stepIndex])
-      && JSON.stringify(input.plan) === JSON.stringify(MOCK_PLAN)
+    const approved = isDeepStrictEqual(candidate, MOCK_PAIRS[input.stepIndex])
+      && isDeepStrictEqual(input.plan, MOCK_PLAN)
       && input.parsedQuestionMarkdown === MOCK_ANALYSIS.parsedQuestionMarkdown;
     return probeReviewSchema.parse(Object.fromEntries(Object.keys(probeReviewSchema.shape).map((key) => [key, approved])));
   }

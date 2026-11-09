@@ -1,0 +1,11 @@
+# Probe evaluation set
+
+Twenty synthetic normal cases span algebra, fractions/proportion, geometry/measurement and linear relations. Ten are marked development and ten held out. Four negative cases have insufficient context or multiple problems. Images, two-page inputs and PDFs are deterministic synthetic sources; “handwriting-style” is a rendered font, not real student handwriting. `node scripts/render-probe-fixtures.mjs` regenerates these sources locally.
+
+All cases are marked **human review pending**. Two math tutors must independently check the sources, keys and acceptable recovery before participant use. Generated pairs need ratings for: correct key, exactly one mathematically correct option, relevant single skill, concise wording, plausible distractors, simpler same-skill follow-up and no solution/hint leakage. Correctness, ambiguity and leakage are blockers, not averaged into readability. Record independent ratings and adjudication outside Git under `artifacts/pilot/`.
+
+Run offline plumbing: `npm run evaluate:probes -- --limit 24 --runs 1 --variant both`. Mock output is fixed and ignores input content; it proves neither quality nor negative-case rejection.
+
+Live runs require `RUN_PROBE_EVAL=1`, an explicit `ANTHROPIC_MODEL`, a configured server key, and `--live --max-calls N` (1–400). Never commit keys or student data. Use `--variant both` to interleave frozen b1c8e0a prompts with candidate v3; the mandatory quality gate stays active for both. `--runs 2` exposes some variability. Requests have no SDK retries and stop at the stated call cap. Output contains commit/prompt/input provenance, response model/token usage, timings, rejected content, failures and incomplete cases. Request limits bound calls, not dollar spend; estimate token cost before choosing a live cap.
+
+The output is a new JSONL file per run; existing files are never overwritten. Rejected initial analysis is retained for review. Negative-case generation without appropriate recovery is a quality failure for human scoring even if a model reviewer approves it. Do not interpret mock reviewer approval or word count as correctness evidence. A prompt change after viewing held-out results needs a fresh held-out check before making a new improvement claim.

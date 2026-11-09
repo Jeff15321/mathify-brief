@@ -14,6 +14,7 @@ export function ProbeCard({
   selected,
   onSelect,
   onNext,
+  hintOpened = false, onHintOpened,
   saving = false,
   disabled = false,
 }: {
@@ -22,6 +23,8 @@ export function ProbeCard({
   selected: ProbeAnswer | undefined;
   onSelect: (answer: ProbeAnswer) => void;
   onNext: () => void;
+  hintOpened?: boolean;
+  onHintOpened?: () => void;
   saving?: boolean;
   disabled?: boolean;
 }) {
@@ -53,6 +56,7 @@ export function ProbeCard({
           >
             <input
               type="radio"
+              disabled={saving || disabled}
               name={probe.id}
               value={choice.id}
               checked={selected === choice.id}
@@ -63,6 +67,10 @@ export function ProbeCard({
           </label>
         ))}
       </div>
+      {probe.hint && <div className="text-sm">
+        {hintOpened ? <div className="rounded bg-blue-50 p-3"><span className="font-medium">Hint: </span><MathText text={probe.hint} /></div>
+          : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-blue-700 underline">Show a hint</button>}
+      </div>}
       <button
         type="button"
         onClick={onNext}

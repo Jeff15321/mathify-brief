@@ -29,6 +29,7 @@ export const privateProbeSchema = z.object({
   concept: z.string().min(1),
   questionMarkdown: z.string().min(1),
   options: z.array(probeOptionSchema),
+  hint: z.string().optional(),
   correctOptionId: optionIdSchema,
   explanation: z.string().min(1),
 });
@@ -42,7 +43,7 @@ export const analysisStoredSchema = z.object({
   probePlan: z.array(probePlanItemSchema),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.literal('analysis-v2'),
+  promptVersion: z.enum(['analysis-v2', 'analysis-v3']),
   analysisVersion: z.literal(1),
 });
 
@@ -61,6 +62,8 @@ export const probeStepSchema = z.object({
   mainAnswer: probeAnswerSchema.nullable(),
   easierAnswer: probeAnswerSchema.nullable(),
   easierServed: z.boolean(),
+  mainHintOpened: z.boolean().optional(),
+  easierHintOpened: z.boolean().optional(),
 });
 
 export const probeCursorSchema = z.object({
@@ -71,6 +74,7 @@ export const probeCursorSchema = z.object({
 export const probeOutcomeSchema = z.enum(['correct', 'incorrect', 'dont_know', 'unanswered']);
 
 export const probeResultSchema = z.object({
+  hintOpened: z.boolean().nullable().optional(),
   probeId: z.string().min(1),
   stepIndex: z.number().int().nonnegative(),
   kind: probeKindSchema,

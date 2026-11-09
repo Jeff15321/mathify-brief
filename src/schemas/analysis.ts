@@ -10,7 +10,8 @@ export const probeOptionSchema = z.object({
 export const modelProbeSchema = z.object({
   concept: z.string().min(1),
   questionMarkdown: z.string().min(1),
-  options: z.array(probeOptionSchema),
+  options: z.array(probeOptionSchema).length(4),
+  hint: z.string().min(1).optional(),
   correctOptionId: optionIdSchema,
   explanation: z.string().min(1),
 });
@@ -65,9 +66,11 @@ export function validateProbe(probe: ModelProbe, label: string): string[] {
   const errors: string[] = [];
   const ids = probe.options.map((option) => option.id);
   const uniqueIds = new Set(ids);
-  if (uniqueIds.size !== 4 || !ALL_OPTION_IDS.every((id) => uniqueIds.has(id))) {
+  if (ids.length !== 4 || uniqueIds.size !== 4 || !ALL_OPTION_IDS.every((id) => uniqueIds.has(id))) {
     errors.push(`${label} must have exactly four unique options A-D`);
   }
+  const optionTexts = probe.options.map(option => option.textMarkdown.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase());
+  if (new Set(optionTexts).size !== 4) errors.push(`${label} options must have distinct content`);
   if (!ids.includes(probe.correctOptionId)) {
     errors.push(`${label}.correctOptionId must match one of its options`);
   }
