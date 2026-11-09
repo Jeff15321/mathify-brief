@@ -2,12 +2,12 @@ import { expect, test } from "@playwright/test";
 
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
 test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> brief -> tutor feedback", async ({ page, request }) => {
-  await page.goto("/");
+  await page.goto("/workspace?new=1");
 
   await page.getByLabel("Question (optional if files provided)").fill("Solve 2(x + 3) = 14.");
-  await page.getByRole("button", { name: "Begin Session" }).click();
+  await page.getByRole("button", { name: "Let’s begin" }).click();
 
-  await page.waitForURL("**/workspace");
+  await page.waitForURL(/\/workspace\?draft=/);
   await expect(page.getByRole("heading", { name: "Relevant Concepts" })).toBeVisible();
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
 
@@ -29,7 +29,8 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
 
   // Draw on the whiteboard, then expand/restore; the current selection must survive.
   await page.locator('input[name="s2-easier"][value="B"]').check();
-  const canvas = page.locator("canvas");
+  await page.getByRole("radio", { name: "Draw", exact: true }).locator("..").click();
+  const canvas = page.locator("canvas.excalidraw__canvas.interactive");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("whiteboard canvas not found");
   await page.mouse.move(box.x + 50, box.y + 50);
@@ -37,19 +38,9 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.mouse.move(box.x + 200, box.y + 150);
   await page.mouse.up();
 
-  // Regression: the whole dotted area must be drawable, including its top-left corner.
-  const area = await canvas.locator("xpath=..").boundingBox();
-  if (!area) throw new Error("whiteboard area not found");
-  await page.mouse.move(area.x + 15, area.y + 15);
-  await page.mouse.down();
-  await page.mouse.move(area.x + 40, area.y + 18);
-  await page.mouse.up();
-  const cornerHasInk = await canvas.evaluate((el: HTMLCanvasElement) => {
-    const ratio = el.width / el.getBoundingClientRect().width;
-    const { data } = el.getContext("2d")!.getImageData(10 * ratio, 10 * ratio, 35 * ratio, 15 * ratio);
-    return data.some((value, i) => i % 4 === 3 && value !== 0);
-  });
-  expect(cornerHasInk).toBe(true);
+  await expect(page.getByRole("status").filter({ hasText: "Saved on this device" })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
   await page.getByLabel("Expand Whiteboard").click();
   await page.getByLabel("Restore Whiteboard").click();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
@@ -57,7 +48,7 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
 
   // Step 3 shows; submit early without answering it.
   await expect(page.getByText("Question 3 of 3")).toBeVisible();
-  await page.getByRole("button", { name: "Submit" }).click();
+  await page.getByRole("button", { name: "Send to tutor" }).click();
 
   await page.waitForURL("**/brief");
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
@@ -130,12 +121,12 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   // Start another question; the saved feedback is retained independently of the workspace.
   await page.getByRole("link", { name: "Start a new question" }).click();
   await page.getByLabel("Question (optional if files provided)").fill("Solve 4x = 12.");
-  await page.getByRole("button", { name: "Begin Session" }).click();
-  await page.waitForURL("**/workspace");
+  await page.getByRole("button", { name: "Let’s begin" }).click();
+  await page.waitForURL(/\/workspace\?draft=/);
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
   const saved = await (await request.get(`/api/feedback?reportId=${reportId}`)).json();
   expect(saved.feedback.reportId).toBe(reportId);
-  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.getByRole("button", { name: "Send to tutor", exact: true }).click();
   await page.waitForURL("**/brief");
   await expect(page.getByRole("button", { name: "Save feedback", exact: true })).toBeVisible();
   await page.getByRole("radio", { name: "4 — Accurate", exact: true }).check();
@@ -143,7 +134,7 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("radio", { name: "3 — Somewhat useful", exact: true }).check();
 
   // Another tab replaces this report before the tutor submits the unsaved survey.
-  expect((await request.post("/api/workspace/start", { multipart: { questionText: "A different question" } })).status()).toBe(201);
+  expect((await request.post("/api/workspace/start", { multipart: { questionText: "A different question", draftId: crypto.randomUUID(), expectedWorkspaceId: (await (await request.get("/api/workspace")).json()).workspace.workspaceId } })).status()).toBe(201);
   await page.getByRole("button", { name: "Save feedback", exact: true }).click();
   await expect(page.getByRole("region", { name: "Tutor feedback" }).getByRole("alert")).toHaveText(/report has changed or been replaced/);
 });

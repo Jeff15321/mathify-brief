@@ -64,7 +64,7 @@ export function ThreePanelLayout({
 }) {
   const [expanded, setExpanded] = useState<PanelKey | "none">("none");
   const narrow = useIsNarrow(900);
-  const [activeTab, setActiveTab] = useState<PanelKey>("whiteboard");
+  const [activeTab, setActiveTab] = useState<PanelKey>("probing");
 
   function toggle(panel: PanelKey) {
     setExpanded((current) => (current === panel ? "none" : panel));
@@ -72,52 +72,24 @@ export function ThreePanelLayout({
 
   const content: Record<PanelKey, ReactNode> = { whiteboard, probing };
 
-  if (narrow) {
-    return (
-      <div className="flex h-full flex-col bg-slate-50">
-        <div className="flex border-b border-slate-200 bg-white">
-          {PANEL_ORDER.map((panel) => (
-            <button
-              key={panel}
-              type="button"
-              onClick={() => setActiveTab(panel)}
-              className={`flex-1 px-3 py-2 text-xs font-medium ${
-                activeTab === panel
-                  ? "border-b-2 border-blue-600 text-blue-700"
-                  : "text-slate-500"
-              }`}
-            >
-              {PANEL_TITLES[panel]}
-            </button>
-          ))}
-        </div>
-        <div className="min-h-0 flex-1 overflow-hidden p-3">{content[activeTab]}</div>
-      </div>
-    );
-  }
-
   const gridTemplateColumns = PANEL_ORDER.map((panel) => {
     if (expanded === "none") return `${BASE_FR[panel]}fr`;
     return `${panel === expanded ? EXPANDED_FR : SHRUNK_FR}fr`;
   }).join(" ");
 
   return (
-    <div
-      className="grid h-full bg-slate-50 motion-reduce:transition-none"
-      style={{
-        gridTemplateColumns,
-        transition: "grid-template-columns 300ms ease",
-      }}
-    >
-      {PANEL_ORDER.map((panel) => (
-        <div
-          key={panel}
-          className="flex min-w-0 flex-col overflow-hidden border-r border-slate-200 last:border-r-0"
-        >
-          <PanelHeader panel={panel} expanded={expanded === panel} onToggle={() => toggle(panel)} />
+    <div className="flex h-full flex-col bg-slate-50">
+      {narrow && <div className="flex border-b border-slate-200 bg-white" aria-label="Workspace panels">
+        {PANEL_ORDER.map(panel => <button key={panel} type="button" aria-pressed={activeTab === panel}
+          onClick={() => setActiveTab(panel)} className={`flex-1 px-3 py-3 text-sm ${activeTab === panel ? 'border-b-2 border-blue-600 text-blue-700' : 'text-slate-600'}`}>{PANEL_TITLES[panel]}</button>)}
+      </div>}
+      <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: narrow ? '1fr' : gridTemplateColumns }}>
+        {PANEL_ORDER.map(panel => <section key={panel} hidden={narrow && activeTab !== panel}
+          className={`${narrow && activeTab !== panel ? 'hidden' : 'flex'} min-w-0 min-h-0 flex-col overflow-hidden border-r border-slate-200`}>
+          {!narrow && <PanelHeader panel={panel} expanded={expanded === panel} onToggle={() => toggle(panel)} />}
           <div className="min-h-0 flex-1 overflow-hidden p-3">{content[panel]}</div>
-        </div>
-      ))}
+        </section>)}
+      </div>
     </div>
   );
 }

@@ -27,6 +27,7 @@ export interface StudentBreakdownStep {
 export type OptionId = 'A' | 'B' | 'C' | 'D';
 
 export interface QuestionAnalysisPublic {
+  concepts?: string[];
   parsedQuestionMarkdown: string;
   topic: string;
   estimatedQuestionGrade: string;
@@ -199,6 +200,7 @@ export function toPublicProbe(probe: PrivateProbe): PublicProbe {
 
 export function toPublicAnalysis(analysis: QuestionAnalysisStored): QuestionAnalysisPublic {
   return {
+    concepts: analysis.probePlan.map(item => item.concept),
     parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
     topic: analysis.topic,
     estimatedQuestionGrade: analysis.estimatedQuestionGrade,

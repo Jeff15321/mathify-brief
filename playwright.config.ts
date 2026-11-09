@@ -6,7 +6,8 @@ const E2E_URL = `http://localhost:${E2E_PORT}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
   retries: 0,
   webServer: {
     command: `npx next build && npx next start -p ${E2E_PORT}`,
@@ -15,7 +16,7 @@ export default defineConfig({
     reuseExistingServer: false,
     env: {
       AI_MOCK_MODE: 'true',
-      LOCAL_DATA_DIR: process.env.LOCAL_DATA_DIR || './.playwright-data',
+      LOCAL_DATA_DIR: `./.playwright-data/run-${Date.now()}`,
     },
   },
   use: {

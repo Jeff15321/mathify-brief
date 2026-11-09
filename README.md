@@ -129,3 +129,17 @@ Unsupported saved schemas return `UPGRADE_REQUIRED` instead of silently discardi
 Historical report migration is not included. The existing AI quality-review gate and
 tutor feedback are retained. No human study or live-model efficacy result is implied by tests.
 
+
+The student route is now `/workspace`: add all sources, then select **Let’s begin** once.
+Original sources are fixed after Begin; start a new question to correct them. Inserted board
+images are working material and do not regenerate checks. PDFs open separately. Drafts
+(files, scene binaries and the current selection) are saved in IndexedDB on this device,
+expire after 24 hours of inactivity on the next visit, and are cleared after a successful handoff.
+Watch the save status before refreshing. Storage failure is shown explicitly.
+
+Excalidraw 0.18.1 is loaded only in the browser with locally copied fonts. Its older Radix
+transitive packages emit React peer-range warnings; production-build Chromium journeys
+exercise the editor with React 19.3.0. Scoped Nano ID and lodash-es overrides address the
+new high-severity dependency findings. Production audit still reports low-severity KaTeX
+transitive findings (including existing markdown dependencies); no zero-vulnerability claim
+is made. Do not run a blanket `npm audit fix --force`.

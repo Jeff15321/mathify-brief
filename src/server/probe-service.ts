@@ -88,7 +88,7 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
   const saved = await workspaceStore.update((current) => {
     // Drop the result if a new intake replaced the workspace or probing already ended.
     if (!current || current.workspaceId !== workspace.workspaceId || current.phase !== 'ready') {
-      return current ?? workspace;
+      throw new ApiError(409, 'INVALID_STATE', 'The workspace changed while questions were being prepared');
     }
     return {
       ...current,

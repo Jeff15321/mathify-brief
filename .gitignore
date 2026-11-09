@@ -49,3 +49,5 @@ next-env.d.ts
 /playwright-report
 /test-results
 /artifacts/pilot/
+
+/public/excalidraw-assets/
