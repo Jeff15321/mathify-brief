@@ -5,8 +5,8 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { AnthropicAnalysisProvider } from '../src/server/ai/anthropic-provider';
 import { MockAnalysisProvider } from '../src/server/ai/mock-provider';
-import { validateAnalysisStructure, validateProbePair } from '../src/schemas/analysis';
-import { reviewApproved } from '../src/schemas/review';
+import { validateAnalysisStructure, validateProbePair, type ModelProbePair } from '../src/schemas/analysis';
+import { reviewApproved, type ProbeReview } from '../src/schemas/review';
 import type { MimeType } from '../src/types/domain';
 import { ANALYSIS_PROMPT_VERSION, PROBE_PROMPT_VERSION } from '../src/server/ai/prompts';
 import { ANALYSIS_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from '../tests/fixtures/probe-evaluation/baseline-prompts';
@@ -45,22 +45,27 @@ async function main() {
       const input = { grade: 9, questionText: files.length ? '' : item.questionText, files };
       const inputHash = createHash('sha256').update(JSON.stringify([input.questionText, ...files.map(f => createHash('sha256').update(f.bytes).digest('hex'))])).digest('hex');
       const started = performance.now();
-      const pairs: unknown[] = [];
+      const pairs: Array<{ stepIndex: number; pair: ModelProbePair; verdict: ProbeReview | null; humanRating: null }> = [];
       let analysis: unknown = null; let analysisVerdict: unknown = null; let failure: string | null = null;
       try {
         const candidate = await provider.analyzeQuestion(input); analysis = candidate;
+        // Retain generated content even if validation or the subsequent review request fails.
+        const first: typeof pairs[number] = { stepIndex: 0, pair: candidate.firstPair, verdict: null, humanRating: null };
+        pairs.push(first);
         const errors = validateAnalysisStructure(candidate);
         if (errors.length) throw new Error(errors.join('; '));
         const verdict = await provider.reviewAnalysis(input, candidate); analysisVerdict = verdict;
+        first.verdict = verdict;
         if (!reviewApproved(verdict)) throw new Error('Initial quality gate rejected content');
-        pairs.push({ stepIndex: 0, pair: candidate.firstPair, verdict, humanRating: null });
         for (let stepIndex = 1; stepIndex < candidate.probePlan.length; stepIndex++) {
           const pairInput = { grade: 9, parsedQuestionMarkdown: candidate.parsedQuestionMarkdown, plan: candidate.probePlan, stepIndex };
           const pair = await provider.generateProbePair(pairInput);
+          const entry: typeof pairs[number] = { stepIndex, pair, verdict: null, humanRating: null };
+          pairs.push(entry);
           const issues = validateProbePair(pair);
           if (issues.length) throw new Error(issues.join('; '));
           const pairVerdict = await provider.reviewProbePair(pairInput, pair);
-          pairs.push({ stepIndex, pair, verdict: pairVerdict, humanRating: null });
+          entry.verdict = pairVerdict;
           if (!reviewApproved(pairVerdict)) throw new Error('Deferred quality gate rejected content');
         }
       } catch (error) { failure = error instanceof Error ? error.message : 'Unknown evaluation failure'; }

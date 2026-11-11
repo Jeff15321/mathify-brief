@@ -27,6 +27,7 @@ export interface StudentBreakdownStep {
 export type OptionId = 'A' | 'B' | 'C' | 'D';
 
 export interface QuestionAnalysisPublic {
+  preparationDurationMs?: number;
   concepts?: string[];
   parsedQuestionMarkdown: string;
   topic: string;
@@ -55,6 +56,7 @@ export interface ProbePlanItem {
 }
 
 export interface QuestionAnalysisStored {
+  preparationDurationMs?: number;
   parsedQuestionMarkdown: string;
   topic: string;
   estimatedQuestionGrade: string;
@@ -83,6 +85,8 @@ export type StepStatus = 'pending' | 'generating' | 'ready' | 'failed';
 export interface ProbeStep {
   index: number;
   concept: string;
+  /** Absent for pending or previously persisted pairs with unknown provenance. */
+  promptVersion?: 'analysis-v3' | 'probe-pair-v3';
   status: StepStatus;
   generationStartedAt: string | null;
   main: PrivateProbe | null;
@@ -177,6 +181,8 @@ export interface PublicProbing {
 }
 
 export interface PublicWorkspace {
+  generationMode: 'mock' | 'live';
+  promptVersion: string;
   workspaceId: string;
   draftId: string;
   analysisStatus: 'idle' | 'generating' | 'failed' | 'ready';
@@ -205,6 +211,7 @@ export function toPublicProbe(probe: PrivateProbe): PublicProbe {
 
 export function toPublicAnalysis(analysis: QuestionAnalysisStored): QuestionAnalysisPublic {
   return {
+    preparationDurationMs: analysis.preparationDurationMs,
     concepts: analysis.probePlan.map(item => item.concept),
     parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
     topic: analysis.topic,

@@ -4,8 +4,8 @@ export type PilotEventName = 'draft_opened' | 'files_added' | 'file_rejected' | 
   | 'probe_ready' | 'probe_visible' | 'hint_opened' | 'answer_saved' | 'finish_clicked'
   | 'brief_saved' | 'brief_visible' | 'export_failed' | 'export_omitted'
   | 'draft_saved' | 'draft_restored' | 'draft_save_failed';
-export interface PilotContext { attemptId: string; workspaceId?: string; mode: 'mock' | 'live' | 'reviewed-fixture' }
-export interface PilotCounts { fileCount?: number; coreAnswered?: number; corePlanned?: number; durationMs?: number }
+export interface PilotContext { attemptId: string; workspaceId?: string; mode: 'mock' | 'live' | 'reviewed-fixture' | 'unknown'; promptVersion?: string }
+export interface PilotCounts { fileCount?: number; coreAnswered?: number; corePlanned?: number; durationMs?: number; serverDurationMs?: number; probeId?: string }
 export interface PilotEvent extends PilotContext, PilotCounts {
   eventId: string; eventName: PilotEventName; viewId: string; sequence: number;
   elapsedMs: number; uiVersion: string; promptVersion: string; device: 'narrow' | 'wide';
@@ -20,14 +20,15 @@ export function recordPilotEvent(eventName: PilotEventName, context: PilotContex
     const event: PilotEvent = {
       eventId: crypto.randomUUID(), eventName, attemptId: context.attemptId,
       workspaceId: context.workspaceId, mode: context.mode, viewId, sequence: ++sequence,
-      elapsedMs: performance.now(), uiVersion: 'pilot-v2', promptVersion: 'analysis-v3',
+      elapsedMs: performance.now(), uiVersion: 'pilot-v2', promptVersion: context.promptVersion ?? 'unknown',
       device: window.innerWidth <= 900 ? 'narrow' : 'wide',
     };
     // An allowlist protects exported data even if a caller has extra runtime properties.
-    for (const key of ['fileCount', 'coreAnswered', 'corePlanned', 'durationMs'] as const) {
+    for (const key of ['fileCount', 'coreAnswered', 'corePlanned', 'durationMs', 'serverDurationMs'] as const) {
       const value = counts[key];
       if (typeof value === 'number' && Number.isFinite(value) && value >= 0) event[key] = value;
     }
+    if (counts.probeId && /^s[1-5]-(main|easier)$/.test(counts.probeId)) event.probeId = counts.probeId;
     const events = readPilotEvents();
     // Never silently rotate away a failed attempt's start or denominator.
     if (events.length >= 10_000) return false;

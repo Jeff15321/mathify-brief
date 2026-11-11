@@ -7,6 +7,7 @@ import { ApiError } from './errors';
 import { assertWorkspaceId } from './workspace-identity';
 import { advance, currentProbe, stepToGenerate, toPublicProbing } from './helpers/probe-flow-helper';
 import { toPrivateProbe } from './analysis-service';
+import { PROBE_PROMPT_VERSION } from './ai/prompts';
 
 type Stores = ReturnType<typeof createStores>;
 
@@ -99,6 +100,7 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
           ? {
               ...step,
               status: 'ready',
+              promptVersion: PROBE_PROMPT_VERSION,
               generationStartedAt: null,
               main: toPrivateProbe(pair.main, stepIndex, 'main'),
               easier: toPrivateProbe(pair.easier, stepIndex, 'easier'),

@@ -14,8 +14,8 @@ export function validateIntake(text: string, files: File[], requireInput = true)
   if (files.reduce((sum, f) => sum + f.size, 0) > MAX_TOTAL_SIZE_BYTES) return 'Keep the combined files under 20 MB. No files from this selection were added.';
   return null;
 }
-export function QuestionIntakeForm({ questionText, files, onChange, onBegin, busy }: {
-  questionText: string; files: File[]; onChange: (text: string, files: File[]) => void; onBegin: () => void; busy: boolean;
+export function QuestionIntakeForm({ questionText, files, onChange, onBegin, busy, onRejected }: {
+  questionText: string; files: File[]; onChange: (text: string, files: File[]) => void; onBegin: () => void; busy: boolean; onRejected?: () => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
     if (busy || addingRef.current || !incoming.length) return;
     const next = [...files, ...incoming];
     const issue = validateIntake(questionText, next, false);
-    if (issue) { setError(issue); return; }
+    if (issue) { setError(issue); onRejected?.(); return; }
     addingRef.current = true; setAdding(true); setError(null);
     try {
       const hashes = await Promise.all(next.map(async f => {

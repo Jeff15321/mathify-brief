@@ -16,6 +16,8 @@ type Stores = ReturnType<typeof createStores>;
  */
 export function toPublicWorkspace(workspace: CurrentWorkspace): PublicWorkspace {
   return {
+    generationMode: workspace.analysis ? (workspace.analysis.model === 'mock-provider' ? 'mock' : 'live') : process.env.AI_MOCK_MODE === 'false' ? 'live' : 'mock',
+    promptVersion: workspace.analysis?.promptVersion ?? 'analysis-v3',
     workspaceId: workspace.workspaceId,
     draftId: workspace.draftId,
     analysisStatus: workspace.analysis ? 'ready' : workspace.analysisOperation?.status === 'generating'
