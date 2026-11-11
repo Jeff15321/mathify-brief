@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     let pending;
     const raw = formData.get('pending');
     if (raw) {
-      try { pending = z.object({ probeId: z.string().min(1), answer: probeAnswerSchema, hintOpened: z.boolean().optional() }).parse(JSON.parse(String(raw))); }
+      try { pending = z.object({ probeId: z.string().min(1), answer: probeAnswerSchema.nullable(), hintOpened: z.boolean().optional() }).parse(JSON.parse(String(raw))); }
       catch { throw new ApiError(400, 'INVALID_INPUT', 'Invalid selected answer'); }
     }
     const brief = await submitBrief({ workspaceId, submissionId: submissionId.data, pending, whiteboardPng, exportOmitted: formData.get('exportOmitted') === 'true' });

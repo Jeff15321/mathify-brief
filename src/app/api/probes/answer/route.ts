@@ -9,6 +9,7 @@ export const runtime = 'nodejs';
 const answerRequestSchema = z.object({
   probeId: z.string().min(1),
   answer: probeAnswerSchema,
+  hintOpened: z.boolean().optional(),
 });
 
 /** Records the answer to the current probe and returns the next one (or a waiting state). */

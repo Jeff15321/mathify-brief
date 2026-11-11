@@ -57,11 +57,11 @@ export async function generateNextProbes(workspaceId: string): Promise<PublicPro
 }
 
 /** Submits the answer to the probe on screen; resolves with the next probing state. */
-export async function answerProbe(probeId: string, answer: ProbeAnswer, workspaceId: string): Promise<PublicProbing> {
+export async function answerProbe(probeId: string, answer: ProbeAnswer, workspaceId: string, hintOpened = false): Promise<PublicProbing> {
   const res = await fetch('/api/probes/answer', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-workspace-id': workspaceId },
-    body: JSON.stringify({ probeId, answer }),
+    body: JSON.stringify({ probeId, answer, hintOpened }),
   });
   if (!res.ok) await parseErrorResponse(res);
   const body = await res.json();
@@ -69,7 +69,7 @@ export async function answerProbe(probeId: string, answer: ProbeAnswer, workspac
 }
 
 /** Ends probing and generates the Tutor Brief, attaching the whiteboard PNG when it is not blank. */
-export async function submitBrief(whiteboardPng: Blob | null, workspaceId: string, submissionId: string, pending?: { probeId: string; answer: ProbeAnswer; hintOpened?: boolean }, exportOmitted = false): Promise<TutorBrief> {
+export async function submitBrief(whiteboardPng: Blob | null, workspaceId: string, submissionId: string, pending?: { probeId: string; answer: ProbeAnswer | null; hintOpened?: boolean }, exportOmitted = false): Promise<TutorBrief> {
   const formData = new FormData();
   if (whiteboardPng) {
     formData.set('whiteboard', whiteboardPng, 'whiteboard.png');

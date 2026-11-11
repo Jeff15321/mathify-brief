@@ -28,12 +28,19 @@ const BRIEF_MAX_TOKENS = 4096;
  * The Anthropic Messages API implementation of the Mathify model operations. Only `analyzeQuestion`
  * and `generateProbePair` are called today; `generateTutorBrief` is kept for future whiteboard analysis.
  */
+export interface ProviderInstrumentation {
+  beforeRequest?: () => void;
+  onUsage?: (usage: { operation: string; model: string; inputTokens: number; outputTokens: number; durationMs: number }) => void;
+  analysisPrompt?: string;
+  pairPrompt?: string;
+  maxRetries?: number;
+}
 export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   private client: Anthropic;
   private model: string;
 
-  constructor() {
-    this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  constructor(private readonly instrumentation: ProviderInstrumentation = {}) {
+    this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: instrumentation.maxRetries, timeout: 90_000 });
     this.model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
   }
 
@@ -60,7 +67,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     const textSummary = input.questionText.trim().length > 0 ? input.questionText.trim() : null;
 
     const parsed = await this.createStructured({
-      system: ANALYSIS_SYSTEM_PROMPT,
+      system: this.instrumentation.analysisPrompt ?? ANALYSIS_SYSTEM_PROMPT,
       maxTokens: ANALYSIS_MAX_TOKENS,
       schema: modelAnalysisSchema,
       operation: 'an analysis',
@@ -87,7 +94,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     const step = input.plan[input.stepIndex];
 
     const parsed = await this.createStructured({
-      system: PROBE_PAIR_SYSTEM_PROMPT,
+      system: this.instrumentation.pairPrompt ?? PROBE_PAIR_SYSTEM_PROMPT,
       maxTokens: PROBE_PAIR_MAX_TOKENS,
       schema: modelProbePairSchema,
       operation: 'probe questions',
@@ -175,6 +182,8 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     content: Anthropic.ContentBlockParam[];
     operation: string;
   }): Promise<z.infer<T>> {
+    this.instrumentation.beforeRequest?.();
+    const started = performance.now();
     const message = await this.client.messages.create({
       model: this.model,
       max_tokens: maxTokens,
@@ -183,6 +192,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       output_config: { format: zodOutputFormat(schema) },
     });
 
+    this.instrumentation.onUsage?.({ operation, model: message.model, inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens, durationMs: performance.now() - started });
     if (message.stop_reason === 'refusal') {
       throw new Error(`Model refused to generate ${operation} for this input`);
     }

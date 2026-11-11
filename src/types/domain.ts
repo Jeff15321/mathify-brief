@@ -36,6 +36,7 @@ export interface QuestionAnalysisPublic {
 }
 
 export interface PublicProbe {
+  hint?: string;
   id: string;
   concept: string;
   questionMarkdown: string;
@@ -62,7 +63,7 @@ export interface QuestionAnalysisStored {
   probePlan: ProbePlanItem[];
   generatedAt: string;
   model: string;
-  promptVersion: 'analysis-v2';
+  promptVersion: 'analysis-v2' | 'analysis-v3';
   analysisVersion: 1;
 }
 
@@ -89,6 +90,8 @@ export interface ProbeStep {
   mainAnswer: ProbeAnswer | null;
   easierAnswer: ProbeAnswer | null;
   easierServed: boolean;
+  mainHintOpened?: boolean;
+  easierHintOpened?: boolean;
 }
 
 /** The probe currently in front of the student; null once every step is done. */
@@ -101,6 +104,7 @@ export interface ProbeCursor {
 export type ProbeOutcome = 'correct' | 'incorrect' | 'dont_know' | 'unanswered';
 
 export interface ProbeResult {
+  hintOpened?: boolean | null;
   probeId: string;
   stepIndex: number;
   kind: ProbeKind;
@@ -191,6 +195,7 @@ export interface PublicWorkspace {
 
 export function toPublicProbe(probe: PrivateProbe): PublicProbe {
   return {
+    hint: probe.hint,
     id: probe.id,
     concept: probe.concept,
     questionMarkdown: probe.questionMarkdown,

@@ -1,3 +1,4 @@
+import { ANALYSIS_PROMPT_VERSION } from './ai/prompts';
 import { randomUUID } from 'node:crypto';
 import { assertWorkspaceId } from './workspace-identity';
 import type { CurrentWorkspace } from '@/types/domain';
@@ -110,7 +111,7 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
     probePlan: parsed.data.probePlan,
     generatedAt: now,
     model: resolveModelLabel(),
-    promptVersion: 'analysis-v2',
+    promptVersion: ANALYSIS_PROMPT_VERSION,
     analysisVersion: 1,
   };
 
@@ -124,6 +125,7 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
     mainAnswer: null,
     easierAnswer: null,
     easierServed: false,
+    mainHintOpened: false, easierHintOpened: false,
   }));
 
   await workspaceStore.update((current) => {
