@@ -17,6 +17,7 @@ const WAITING_POLL_MS = 1500;
 export default function WorkspacePage() {
   const router = useRouter();
   const whiteboardRef = useRef<SimpleWhiteboardHandle>(null);
+  const submissionId = useRef<string | null>(null);
   const prefetchRef = useRef<Promise<void> | null>(null);
   const [workspace, setWorkspace] = useState<PublicWorkspace | null>(null);
   const [probing, setProbing] = useState<PublicProbing | null>(null);
@@ -38,13 +39,14 @@ export default function WorkspacePage() {
   /** Fills the buffer (next step's pair) in the background; concurrent callers share one request. */
   const prefetch = useCallback((): Promise<void> => {
     if (prefetchRef.current) return prefetchRef.current;
+    if (!workspace) return Promise.resolve();
     const run = (async () => {
       try {
-        let next = await generateNextProbes();
+        let next = await generateNextProbes(workspace.workspaceId);
         applyProbing(next);
         // The cursor may have moved while generating; top the buffer up once more if needed.
         if (next.needsPrefetch) {
-          next = await generateNextProbes();
+          next = await generateNextProbes(workspace.workspaceId);
           applyProbing(next);
         }
       } catch {
@@ -56,7 +58,7 @@ export default function WorkspacePage() {
     })();
     prefetchRef.current = run;
     return run;
-  }, [applyProbing, refreshProbing]);
+  }, [applyProbing, refreshProbing, workspace]);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,11 +99,11 @@ export default function WorkspacePage() {
   }, [probing, refreshProbing]);
 
   async function handleNext() {
-    if (!probing?.current || !selection) return;
+    if (!workspace || !probing?.current || !selection) return;
     setAnswering(true);
     setError(null);
     try {
-      applyProbing(await answerProbe(probing.current.id, selection));
+      applyProbing(await answerProbe(probing.current.id, selection, workspace.workspaceId));
       setSelection(undefined);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Could not save your answer. Please try again.");
@@ -112,11 +114,13 @@ export default function WorkspacePage() {
   }
 
   async function handleSubmit() {
+    if (!workspace) return;
+    submissionId.current ??= crypto.randomUUID();
     setSubmitting(true);
     setError(null);
     try {
       const whiteboardPng = (await whiteboardRef.current?.exportPng()) ?? null;
-      await submitBrief(whiteboardPng);
+      await submitBrief(whiteboardPng, workspace.workspaceId, submissionId.current, probing?.current && selection ? { probeId: probing.current.id, answer: selection } : undefined);
       router.push("/brief");
     } catch (err) {
       setError(

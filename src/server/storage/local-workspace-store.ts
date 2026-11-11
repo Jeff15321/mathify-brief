@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { ApiError } from '../errors';
 import crypto from 'node:crypto';
 import { CURRENT_SCHEMA_VERSION, currentWorkspaceSchema } from '@/schemas/workspace';
 import type { CurrentWorkspace } from '@/types/domain';
@@ -42,9 +43,7 @@ export class LocalWorkspaceStore implements CurrentWorkspaceStore {
 
     const version = (json as { schemaVersion?: unknown } | null)?.schemaVersion;
     if (version !== CURRENT_SCHEMA_VERSION) {
-      // An older local demo workspace: treat it as absent so a new intake can replace it.
-      console.warn(`Ignoring workspace.json with schemaVersion ${String(version)}; expected ${CURRENT_SCHEMA_VERSION}.`);
-      return null;
+      throw new ApiError(409, 'UPGRADE_REQUIRED', 'This saved workspace uses an older format. Preserve its data and select a fresh LOCAL_DATA_DIR for the pilot.');
     }
 
     const parsed = currentWorkspaceSchema.safeParse(json);

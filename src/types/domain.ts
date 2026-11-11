@@ -135,13 +135,19 @@ export interface TutorBrief {
   gaps: string[];                 // concepts missed on the main probe (incorrect or IDK), whatever the retry outcome
   priorityStepIndex: number | null; // first step whose main answer was incorrect or "I don't know"
   generatedAt: string;
-  briefVersion: 4;
+  briefVersion: 6;
 }
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 
 export interface CurrentWorkspace {
-  schemaVersion: 4;
+  schemaVersion: 5;
+  workspaceId: string;
+  draftId: string;
+  inputHash: string;
+  analysisOperation: { id: string; startedAt: string; status: 'generating' | 'failed' } | null;
+  submissionId: string | null;
+  whiteboardState: 'none' | 'attached' | 'omitted';
   demoProfile: DemoProfile;
   questionText: string;
   attachments: StoredAsset[];
@@ -166,6 +172,10 @@ export interface PublicProbing {
 }
 
 export interface PublicWorkspace {
+  workspaceId: string;
+  draftId: string;
+  analysisStatus: 'idle' | 'generating' | 'failed' | 'ready';
+  whiteboardState: 'none' | 'attached' | 'omitted';
   /** Fingerprint of the exact completed report, computed on the server. */
   feedbackReportId?: string | null;
   profile: DemoProfile;

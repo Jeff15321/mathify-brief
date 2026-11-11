@@ -39,7 +39,7 @@ export function PriorityStepCard({
         icon={<CheckCircle2 size={16} className="text-emerald-600" aria-hidden="true" />}
       >
         <p className="text-sm text-slate-600">
-          {anyAttempted ? "No incorrect steps. Every main question was answered correctly." : "Not enough evidence yet."}
+          {anyAttempted ? "No incorrect answers were recorded. Check coverage before drawing conclusions." : "Not enough evidence yet."}
         </p>
       </BriefCard>
     );

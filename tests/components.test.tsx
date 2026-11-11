@@ -195,7 +195,8 @@ describe("Tutor Brief cards", () => {
 
   it("PriorityStepCard has distinct empty states for no misses and no evidence", () => {
     const { unmount } = render(<PriorityStepCard results={[briefResult("main", "correct")]} priorityStepIndex={null} />);
-    expect(screen.getByText(/No incorrect steps/)).toBeInTheDocument();
+    expect(screen.getByText(/No incorrect answers were recorded/)).toBeInTheDocument();
+    expect(screen.queryByText(/Every main question was answered correctly/)).not.toBeInTheDocument();
     unmount();
     render(<PriorityStepCard results={[briefResult("main", "unanswered")]} priorityStepIndex={null} />);
     expect(screen.getByText("Not enough evidence yet.")).toBeInTheDocument();

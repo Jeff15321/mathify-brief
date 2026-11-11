@@ -1,4 +1,5 @@
 export type ApiErrorCode =
+  | 'UPGRADE_REQUIRED'
   | 'INVALID_INPUT'
   | 'NOT_FOUND'
   | 'INVALID_STATE'

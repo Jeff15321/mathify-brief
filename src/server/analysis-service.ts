@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { assertWorkspaceId } from './workspace-identity';
+import type { CurrentWorkspace } from '@/types/domain';
 import { modelAnalysisSchema, validateAnalysisStructure, type ModelProbe } from '@/schemas/analysis';
 import type { PrivateProbe, ProbeKind, ProbeStep, QuestionAnalysisPublic, QuestionAnalysisStored } from '@/types/domain';
 import { toPublicAnalysis } from '@/types/domain';
@@ -25,17 +28,33 @@ export function toPrivateProbe(probe: ModelProbe, stepIndex: number, kind: Probe
  * main + easier probes. Later steps start as `pending` and are generated on demand.
  * @returns The public analysis (no probes or keys).
  */
-export async function analyzeCurrentWorkspace(stores: Stores = getStores()): Promise<QuestionAnalysisPublic> {
+export async function analyzeCurrentWorkspace(stores: Stores = getStores(), workspaceId?: string): Promise<QuestionAnalysisPublic | null> {
+  const operationId = randomUUID();
+  let ownsClaim = false;
+  const workspace = await stores.workspaceStore.update(current => {
+    assertWorkspaceId(current, workspaceId);
+    if (!current) throw new ApiError(404, 'NOT_FOUND', 'No current workspace to analyze');
+    if (current.phase !== 'intake' || current.analysis) throw new ApiError(409, 'INVALID_STATE', 'Workspace has already been analyzed');
+    const operation = current.analysisOperation;
+    if (operation?.status === 'generating' && Date.now() - Date.parse(operation.startedAt) < 120_000) return current;
+    ownsClaim = true;
+    return { ...current, analysisOperation: { id: operationId, startedAt: new Date().toISOString(), status: 'generating' } };
+  });
+  if (!ownsClaim) return null; // The browser observes the existing operation via GET.
+  try {
+    return await runAnalysis(workspace, stores, operationId);
+  } catch (error) {
+    await stores.workspaceStore.update(current => {
+      if (!current) throw error;
+      if (current.workspaceId !== workspace.workspaceId || current.analysisOperation?.id !== operationId) return current;
+      return { ...current, analysisOperation: { ...current.analysisOperation, status: 'failed' } };
+    }).catch(() => {});
+    throw error;
+  }
+}
+
+async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operationId: string): Promise<QuestionAnalysisPublic> {
   const { workspaceStore, assetStore } = stores;
-  const workspace = await workspaceStore.read();
-
-  if (!workspace) {
-    throw new ApiError(404, 'NOT_FOUND', 'No current workspace to analyze');
-  }
-  if (workspace.phase !== 'intake' || workspace.analysis !== null) {
-    throw new ApiError(409, 'INVALID_STATE', 'Workspace has already been analyzed');
-  }
-
   const files = [];
   for (const attachment of workspace.attachments) {
     const loaded = await assetStore.get(attachment.id);
@@ -108,12 +127,13 @@ export async function analyzeCurrentWorkspace(stores: Stores = getStores()): Pro
   }));
 
   await workspaceStore.update((current) => {
-    if (!current || current.createdAt !== workspace.createdAt || current.analysis !== null) {
+    if (!current || current.workspaceId !== workspace.workspaceId || current.analysis !== null || current.analysisOperation?.id !== operationId) {
       throw new ApiError(409, 'INVALID_STATE', 'The workspace changed while it was being analyzed');
     }
     return {
       ...current,
       analysis: stored,
+      analysisOperation: null,
       probeSteps,
       cursor: { stepIndex: 0, kind: 'main' },
       phase: 'ready',

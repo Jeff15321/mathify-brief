@@ -1,3 +1,4 @@
+import { requestWorkspaceId } from '@/server/workspace-identity';
 import { z } from 'zod';
 import { probeAnswerSchema } from '@/schemas/workspace';
 import { answerCurrentProbe } from '@/server/probe-service';
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       throw new ApiError(400, 'INVALID_INPUT', `Invalid answer: ${parsed.error.message}`);
     }
 
-    const probing = await answerCurrentProbe(parsed.data);
+    const probing = await answerCurrentProbe({ ...parsed.data, workspaceId: requestWorkspaceId(request) });
     return Response.json({ probing }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
     return toApiErrorResponse(err);
