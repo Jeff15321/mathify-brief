@@ -77,13 +77,14 @@ export function ProbingPanel({
 
           {finished && (
             <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              You&apos;ve answered every question. Press Submit when you&apos;re ready.
+              You&apos;ve answered every question. Send them to your tutor when you&apos;re ready.
             </p>
           )}
         </div>
       </div>
 
       <div className="sticky bottom-0 border-t border-slate-200 bg-slate-50 pt-3">
+        <p className="mb-2 text-xs text-slate-600">You can send this now, even if you haven’t answered every check.</p>
         <button
           type="button"
           onClick={onSubmit}
@@ -94,7 +95,7 @@ export function ProbingPanel({
               : "border border-blue-600 bg-white text-blue-700 hover:bg-blue-50"
           }`}
         >
-          {submitting ? "Submitting…" : "Submit"}
+          {submitting ? "Sending…" : "Send to tutor"}
         </button>
       </div>
     </div>

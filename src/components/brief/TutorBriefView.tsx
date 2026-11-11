@@ -42,7 +42,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       <ProbingResultsAccordion results={brief.results} notReachedConcepts={brief.notReachedConcepts} />
       {workspace.feedbackReportId && <TutorFeedbackSurvey reportId={workspace.feedbackReportId} />}
       <Link
-        href="/"
+        href="/workspace?new=1"
         className="self-start rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
       >
         Start a new question
