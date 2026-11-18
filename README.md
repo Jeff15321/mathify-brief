@@ -128,7 +128,7 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   | GET | `/api/sessions/[id]/assets/[assetId]` | whiteboard image; 404 if not in that session |
 
 - **Navigation:** `AppNav` (`src/components/shared/AppNav.tsx`, rendered from the root layout)
-  links Workspace, Tutor Brief, Sessions and Learner profile (`/profile` is not built yet). On
+  links Workspace, Tutor Brief, Sessions and Learner profile. On
   desktop it is a left sidebar that collapses to an icon rail; it starts collapsed on `/workspace`
   and remembers the last toggle in `localStorage`. Narrow screens get a top bar with a menu.
 - **`/sessions`:** upload a transcript with up to 5 whiteboard images, a session date and optional
@@ -161,6 +161,18 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   | GET | `/api/profile` | `{ profile }` |
   | PATCH | `/api/profile` | JSON `{ nextFocus? (≤ 300), tutorNotes? (≤ 2000), upsertItems? (≤ 20, text ≤ 300), deleteItemIds? }`; upserted items, including edited AI items, become `source: 'tutor'` and keep their evidence |
   | POST | `/api/profile/rebuild` | rebuilds now; 502 on failure (previous profile kept) |
+
+- **`/profile`** (`src/components/profile/`): a student card (initials, name, grade, session count,
+  last session date, when the profile was updated and rebuilt) with **Rebuild from sessions**,
+  which spins while rebuilding and turns into **Retry rebuild** after a failure. Below it the next
+  session focus, marked as suggested by AI or written by the tutor; editing it makes it the tutor's,
+  and **Let AI suggest** clears it and rebuilds. Then Struggles, Strengths, What works when teaching
+  and Habits (two columns on wide screens): each item has a status pill (active amber, improving
+  blue, resolved emerald), a Tutor chip for tutor items, and evidence date chips that open the
+  session (the quote is the tooltip). Items can be edited (text and status), deleted after a
+  confirmation, or added per section as tutor items. Tutor notes save on blur or with Save and are
+  never changed by the AI. Every change shows the server's response. The page refreshes every 3 s
+  while a rebuild or a session summary is running. With no sessions it links to `/sessions`.
 
 ## Known future work (intentionally not implemented)
 
