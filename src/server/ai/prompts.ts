@@ -1,5 +1,10 @@
-export const ANALYSIS_PROMPT_VERSION = 'analysis-v3' as const;
-export const PROBE_PROMPT_VERSION = 'probe-pair-v3' as const;
+export const ANALYSIS_PROMPT_VERSION = 'analysis-v4' as const;
+export const PROBE_PROMPT_VERSION = 'probe-pair-v4' as const;
+/** Shared by the analysis and probe pair prompts; the context is never student-facing. */
+const LEARNER_CONTEXT_RULE = `The user message may include tutor-only learner context from past sessions. If learner context
+shows a recurring struggle with a technique this problem needs, give that technique its own step
+with a simpler main probe rather than assuming it or folding it into a harder step. Stay within
+3-5 steps. Never mention the learner context or past sessions to the student.`;
 /** Shared rules for every generated multiple-choice probe (analysis first pair and later pairs). */
 const PROBE_RULES = `Each probe is a single-correct-answer multiple-choice question with four distinct options
 A-D, one verified correct answer, and a private explanation. The explanation is for a tutor
@@ -31,6 +36,8 @@ describing exactly what that step's probe should check. Steps must not overlap. 
 firstPair: the main and easier probes for probePlan[0] only; later steps are generated
 separately from the plan.
 
+${LEARNER_CONTEXT_RULE}
+
 ${PROBE_RULES}
 
 Also estimate estimatedQuestionGrade: the grade/curriculum level this problem's content is
@@ -47,6 +54,8 @@ export const PROBE_PAIR_SYSTEM_PROMPT = `You write one step of a short diagnosti
 You are given the parsed problem, the full ordered probe plan, and the index of the step to
 write. Write the main and easier probes for THAT step only, testing its concept and intent;
 stay within that step and do not overlap the other plan steps.
+
+${LEARNER_CONTEXT_RULE}
 
 ${PROBE_RULES}
 
