@@ -8,7 +8,7 @@ import { DEMO_PROFILE, type TutorSession } from '@/types/domain';
 
 type Stores = ReturnType<typeof createStores>;
 
-function resolveSummaryModelLabel(): string {
+export function resolveSummaryModelLabel(): string {
   if (process.env.AI_MOCK_MODE !== 'false') return 'mock-provider';
   return process.env.ANTHROPIC_SUMMARY_MODEL || 'claude-haiku-5-5';
 }

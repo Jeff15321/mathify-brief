@@ -6,6 +6,7 @@ import { localToday, sessionDateSchema, sessionUpdateSchema, tutorNotesSchema } 
 import type { PublicSessionSummary, StoredAsset, TutorSession } from '@/types/domain';
 import { validateFileCandidate, type UploadCandidate } from './upload-validation';
 import { summarizeStoredSession } from './session-summary-service';
+import { rebuildProfile } from './learner-profile-service';
 import type { WhiteboardMimeType } from './storage/local-session-store';
 import { ApiError } from './errors';
 import { getStores, type createStores } from './storage';
@@ -51,8 +52,14 @@ function validateWhiteboards(files: UploadCandidate[]): void {
   if (errors.length > 0) throw new ApiError(400, 'INVALID_INPUT', errors.join('; '));
 }
 
-/** Hook for issue #20: rebuild the learner profile after sessions are summarized, edited or deleted. */
-async function afterSessionsChanged(_stores: Stores): Promise<void> {}
+/** Rebuilds the learner profile after sessions are summarized, edited or deleted; never fails the caller. */
+async function afterSessionsChanged(stores: Stores): Promise<void> {
+  try {
+    await rebuildProfile(stores);
+  } catch (error) {
+    console.error('Learner profile rebuild failed:', error);
+  }
+}
 
 /**
  * Validates and saves the session as `pending` first, then summarizes it, so an AI failure never
