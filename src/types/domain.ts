@@ -222,6 +222,17 @@ export interface TutorSession {
   model: string | null; promptVersion: string | null; summarizedAt: string | null;
 }
 
+/** List view of a session, without the transcript. */
+export interface PublicSessionSummary {
+  id: string;
+  title: string | null;
+  summary: string | null;
+  sessionDate: string;
+  status: SessionStatus;
+  whiteboardCount: number;
+  observationCount: number;
+}
+
 export function toPublicProbe(probe: PrivateProbe): PublicProbe {
   return {
     hint: probe.hint,

@@ -1,4 +1,22 @@
 import { z } from 'zod';
+import { MAX_TUTOR_NOTES_LENGTH } from '@/lib/constants';
+
+/** Today's date (`YYYY-MM-DD`) in the server's local time zone. */
+export function localToday(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+export const sessionDateSchema = z.iso
+  .date({ error: 'sessionDate must be a valid YYYY-MM-DD date' })
+  .refine((date) => date <= localToday(), 'sessionDate cannot be in the future');
+
+export const tutorNotesSchema = z.string().trim().max(MAX_TUTOR_NOTES_LENGTH, `tutorNotes must be at most ${MAX_TUTOR_NOTES_LENGTH} characters`);
+
+export const sessionUpdateSchema = z.object({
+  sessionDate: sessionDateSchema.optional(),
+  tutorNotes: tutorNotesSchema.optional(),
+});
 
 export const observationCategorySchema = z.enum(['struggle', 'strength', 'what_works', 'habit']);
 
