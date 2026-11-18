@@ -97,6 +97,21 @@ existing workspace and upload files are preserved. Historical report migration i
   unmeasured. Physical camera/gallery, other browser engines and full keyboard/screen-reader
   acceptance also remain pending. See the [pilot protocol](plan/mathify-pilot-protocol.md).
 
+## Session tracker
+
+Work in progress: tutors will upload past tutoring sessions and see patterns across them.
+
+- **Storage:** `LocalSessionStore` (`sessionStore` from `createStores`) saves each session to
+  `LOCAL_DATA_DIR/sessions/<id>.json`, with whiteboard images in `sessions/<id>/`. It is
+  separate from `workspace.json` and the asset store, so starting a new question never deletes
+  sessions. Writes are atomic, and updates are serialized per session.
+- **Transcript format:** plain text with optional header lines and `[HH:MM:SS] Speaker: text`
+  turns. Unlabelled text is also accepted. See [`docs/TRANSCRIPT_FORMAT.md`](docs/TRANSCRIPT_FORMAT.md).
+- **Samples:** four Grade 9 algebra sessions and three whiteboard images that tell one story,
+  in [`samples/sessions/`](samples/sessions/README.md).
+
+There is no UI, route or AI summary yet.
+
 ## Known future work (intentionally not implemented)
 
 Sessions/history, Supabase persistence, Vercel direct-upload migration, student/tutor auth, AI
