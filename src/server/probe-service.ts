@@ -6,6 +6,7 @@ import { probeReviewSchema, reviewApproved } from '@/schemas/review';
 import { ApiError } from './errors';
 import { assertWorkspaceId } from './workspace-identity';
 import { advance, currentProbe, stepToGenerate, toPublicProbing } from './helpers/probe-flow-helper';
+import { buildLearnerContext } from './helpers/learner-context-helper';
 import { toPrivateProbe } from './analysis-service';
 import { PROBE_PROMPT_VERSION } from './ai/prompts';
 
@@ -29,7 +30,7 @@ function publicProbing(workspace: CurrentWorkspace): PublicProbing {
  * Generates the next missing probe pair within the buffer window (the cursor's step or the one
  * after it). Idempotent: when nothing needs generating, or another request is already generating
  * that step, it returns the current state without calling the AI. Steps are independent, so the
- * input is only the plan, parsed question and step index.
+ * input is only the plan, parsed question, step index and the learner context (if any).
  * @throws ApiError 502 when the AI call fails; the step is marked `failed` so it can be retried.
  */
 export async function generateNextProbePair(stores: Stores = getStores(), workspaceId?: string): Promise<PublicProbing> {
@@ -63,11 +64,13 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
   let failure: string | null = null;
   try {
     const provider = getAnalysisProvider();
+    const learnerContext = buildLearnerContext(await stores.profileStore.read());
     const input = {
       grade: workspace.demoProfile.grade,
       parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
       plan: analysis.probePlan,
       stepIndex,
+      ...(learnerContext ? { learnerContext } : {}),
     };
     const raw = await provider.generateProbePair(input);
     const parsed = modelProbePairSchema.safeParse(raw);
