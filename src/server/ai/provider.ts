@@ -1,6 +1,7 @@
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import type { AnalysisReview, ProbeReview } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
+import type { ModelSessionSummary } from '@/schemas/session';
 import type { MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored } from '@/types/domain';
 
 export interface StoredFile {
@@ -51,4 +52,5 @@ export interface MathAnalysisProvider {
   analyzeQuestion(input: AnalyzeQuestionInput): Promise<ModelAnalysis>;
   generateProbePair(input: GenerateProbePairInput): Promise<ModelProbePair>;
   generateTutorBrief(input: GenerateTutorBriefInput): Promise<ModelBrief>;
+  summarizeSession(input: SummarizeSessionInput): Promise<ModelSessionSummary>;
 }

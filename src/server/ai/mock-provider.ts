@@ -2,12 +2,23 @@ import { isDeepStrictEqual } from 'node:util';
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
+import type { ModelSessionSummary } from '@/schemas/session';
 import type {
   AnalyzeQuestionInput,
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
+  SummarizeSessionInput,
 } from './provider';
+
+/** Matches the storyline of the sample sessions in samples/sessions/. */
+const MOCK_OBSERVATIONS: ModelSessionSummary['observations'] = [
+  { category: 'struggle', text: 'Multiplied only the first term inside brackets.', quote: 'So it\'s 2x plus 3?' },
+  { category: 'struggle', text: 'Kept the sign when moving a term across the equals sign.' },
+  { category: 'strength', text: 'Solved one-step equations quickly and correctly.' },
+  { category: 'what_works', text: 'Asking "What would you try first?" led to a good first move.' },
+  { category: 'habit', text: 'Skips substitution checks unless asked.', quote: 'I\'m sure that\'s right.' },
+];
 
 const MOCK_PLAN: ModelAnalysis['probePlan'] = [
   { concept: 'Distributive property', intent: 'Check that the student multiplies every term inside the brackets.' },
@@ -180,6 +191,15 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
       whiteboardObservations: input.whiteboardPng ? ['Work shown is legible and follows the expected solution steps.'] : [],
       suggestedStartingPoint: 'Review the distributive property before moving to multi-step equations.',
       limitations: hasMissingEvidence ? ['Not enough evidence for unanswered or unreached probes.'] : [],
+    };
+  }
+
+  async summarizeSession(input: SummarizeSessionInput): Promise<ModelSessionSummary> {
+    const header = input.transcriptText.match(/^Session:\s*(.+)$/m)?.[1].trim();
+    return {
+      title: (header || `Session on ${input.sessionDate}`).slice(0, 80),
+      summary: `Mock summary of the ${input.sessionDate} session with ${input.whiteboards.length} whiteboard image(s). Practiced solving linear equations.`,
+      observations: structuredClone(MOCK_OBSERVATIONS),
     };
   }
 }
