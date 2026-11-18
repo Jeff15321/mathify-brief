@@ -1,5 +1,5 @@
 import type { ProfileUpdate } from '@/schemas/profile';
-import type { LearnerProfile, ProbeAnswer, PublicProbing, PublicSessionSummary, PublicWorkspace, TutorBrief, TutorSession } from '@/types/domain';
+import type { BriefHistory, LearnerProfile, ProbeAnswer, PublicProbing, PublicSessionSummary, PublicWorkspace, TutorBrief, TutorSession } from '@/types/domain';
 
 export class ApiClientError extends Error {
   constructor(
@@ -83,6 +83,13 @@ export async function submitBrief(whiteboardPng: Blob | null, workspaceId: strin
   if (!res.ok) await parseErrorResponse(res);
   const body = await res.json();
   return body.brief;
+}
+
+/** "Relevant from past sessions" for the current brief; generated on the first call, then cached. */
+export async function fetchBriefHistory(workspaceId: string): Promise<BriefHistory> {
+  const res = await fetch('/api/brief/history', { method: 'POST', headers: { 'x-workspace-id': workspaceId } });
+  if (!res.ok) await parseErrorResponse(res);
+  return (await res.json()).history;
 }
 
 export async function fetchSessions(): Promise<PublicSessionSummary[]> {
