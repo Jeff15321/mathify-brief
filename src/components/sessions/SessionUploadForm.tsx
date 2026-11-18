@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { MAX_SESSION_WHITEBOARDS, MAX_TUTOR_NOTES_LENGTH, TRANSCRIPT_EXTENSIONS } from '@/lib/constants';
 import { uploadSession } from '@/lib/api-client';
 import { localToday } from '@/schemas/session';
@@ -8,12 +8,15 @@ import { FileAttachmentList } from '@/components/intake/FileAttachmentList';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const subscribeNever = () => () => {};
 
 export function SessionUploadForm({ onUploaded }: { onUploaded: (session: TutorSession) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const [transcript, setTranscript] = useState<File | null>(null);
   const [whiteboards, setWhiteboards] = useState<File[]>([]);
-  const [sessionDate, setSessionDate] = useState(localToday);
+  // The page is prerendered, so "today" is read on the client only; an empty date means today.
+  const today = useSyncExternalStore(subscribeNever, localToday, () => '');
+  const [sessionDate, setSessionDate] = useState('');
   const [tutorNotes, setTutorNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export function SessionUploadForm({ onUploaded }: { onUploaded: (session: TutorS
     try {
       const session = await uploadSession(data);
       form.current?.reset();
-      setTranscript(null); setWhiteboards([]); setSessionDate(localToday()); setTutorNotes('');
+      setTranscript(null); setWhiteboards([]); setSessionDate(''); setTutorNotes('');
       onUploaded(session);
     } catch (err) { setError(err instanceof Error ? err.message : 'The session could not be uploaded. Please try again.'); }
     finally { setBusy(false); }
@@ -58,7 +61,7 @@ export function SessionUploadForm({ onUploaded }: { onUploaded: (session: TutorS
       </div>
       <div className="space-y-1">
         <label htmlFor="sessionDate" className="block text-sm font-medium">Session date</label>
-        <input id="sessionDate" type="date" required value={sessionDate} max={localToday()} onChange={e => setSessionDate(e.target.value)} className="rounded-lg border border-slate-300 bg-white p-2 text-sm" />
+        <input id="sessionDate" type="date" value={sessionDate || today} max={today || undefined} onChange={e => setSessionDate(e.target.value)} className="rounded-lg border border-slate-300 bg-white p-2 text-sm" />
       </div>
       <div className="space-y-1">
         <label htmlFor="tutorNotes" className="block text-sm font-medium">Tutor notes for this session (optional)</label>
