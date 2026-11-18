@@ -11,7 +11,7 @@ const locks = (globalLocks.__mathifyProfileLocks ??= new Map<string, Promise<unk
 
 export function emptyLearnerProfile(): LearnerProfile {
   return {
-    schemaVersion: 1, nextFocus: '', items: [], tutorNotes: '', updatedAt: new Date().toISOString(),
+    schemaVersion: 1, nextFocus: '', nextFocusSource: 'ai', items: [], tutorNotes: '', updatedAt: new Date().toISOString(),
     rebuiltAt: null, rebuildStatus: 'idle', model: null, promptVersion: null,
   };
 }

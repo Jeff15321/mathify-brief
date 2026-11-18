@@ -37,7 +37,7 @@ describe("learner profile (mock AI, isolated temp directory)", () => {
 
   it("returns an empty profile without writing a file", async () => {
     expect(await getProfile(stores)).toMatchObject({
-      schemaVersion: 1, nextFocus: "", items: [], tutorNotes: "", rebuiltAt: null, rebuildStatus: "idle", model: null, promptVersion: null,
+      schemaVersion: 1, nextFocus: "", nextFocusSource: "ai", items: [], tutorNotes: "", rebuiltAt: null, rebuildStatus: "idle", model: null, promptVersion: null,
     });
     expect(await readdir(dataDir)).toEqual([]);
   });
@@ -74,6 +74,20 @@ describe("learner profile (mock AI, isolated temp directory)", () => {
     expect(rebuilt.items).toContainEqual(tutorItem);
     expect(spy.mock.calls[0][0]).toMatchObject({ tutorNotes: "Quiz Friday." });
     expect(spy.mock.calls[0][0].currentItems).toContainEqual({ source: "tutor", category: "what_works", text: "Number lines help.", status: "active" });
+  });
+
+  it("keeps a tutor next focus through rebuilds until the tutor hands it back with an empty value", async () => {
+    await uploadTwo();
+    const aiFocus = (await getProfile(stores)).nextFocus;
+    expect(await updateProfile({ nextFocus: " Fractions first. " }, stores)).toMatchObject({ nextFocus: "Fractions first.", nextFocusSource: "tutor" });
+    const spy = vi.spyOn(MockAnalysisProvider.prototype, "buildLearnerProfile");
+
+    expect(await rebuildProfile(stores)).toMatchObject({ nextFocus: "Fractions first.", nextFocusSource: "tutor" });
+    expect(spy.mock.calls[0][0].tutorNextFocus).toBe("Fractions first.");
+
+    expect(await updateProfile({ nextFocus: "" }, stores)).toMatchObject({ nextFocus: "", nextFocusSource: "ai" });
+    expect(await rebuildProfile(stores)).toMatchObject({ nextFocus: aiFocus, nextFocusSource: "ai" });
+    expect(spy.mock.calls[1][0].tutorNextFocus).toBe("");
   });
 
   it("converts an edited AI item to a tutor item that keeps its evidence, and deletes items", async () => {
@@ -181,7 +195,7 @@ describe("AnthropicAnalysisProvider.buildLearnerProfile (SDK mocked, no network)
   it("uses the cheap summary model and sends the sessions", async () => {
     create.mockResolvedValue({ model: "x", usage: { input_tokens: 1, output_tokens: 1 }, stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(output) }] });
     vi.stubEnv("ANTHROPIC_SUMMARY_MODEL", "");
-    const input = { grade: 9, currentItems: [], tutorNotes: "", sessions: [{ sessionId: "s1", date: "2026-10-03", title: "T", observations: [] }] };
+    const input = { grade: 9, currentItems: [], tutorNotes: "", tutorNextFocus: "", sessions: [{ sessionId: "s1", date: "2026-10-03", title: "T", observations: [] }] };
 
     expect(await new AnthropicAnalysisProvider().buildLearnerProfile(input)).toEqual(output);
     expect(create.mock.calls[0][0].model).toBe("claude-haiku-5-5");

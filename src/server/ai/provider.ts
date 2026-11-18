@@ -52,6 +52,8 @@ export interface BuildLearnerProfileInput {
   grade: number;
   currentItems: Pick<LearnerProfileItem, 'source' | 'category' | 'text' | 'status'>[];
   tutorNotes: string;
+  /** The tutor's own next focus, '' when the AI owns it. */
+  tutorNextFocus: string;
   sessions: { sessionId: string; date: string; title: string | null; observations: SessionObservation[] }[];
 }
 

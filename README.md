@@ -150,8 +150,9 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   `ready`, after a session edit and after a delete; rebuilds are serialized, and a failed rebuild
   is only logged there. Merge rules: tutor items are kept, AI items are replaced, evidence for
   deleted sessions is dropped (dates follow session date edits), and AI items left without
-  evidence are dropped. A failure keeps the previous profile with `rebuildStatus: 'failed'`. Mock
-  mode groups identical observation texts.
+  evidence are dropped. A failure keeps the previous profile with `rebuildStatus: 'failed'`. A
+  tutor-written `nextFocus` (`nextFocusSource: 'tutor'`) survives rebuilds; PATCHing it to `""`
+  hands it back to the AI. Mock mode groups identical observation texts.
 
   | Method | Path | Behaviour |
   | --- | --- | --- |

@@ -242,7 +242,7 @@ export interface LearnerProfileItem {
 
 /** The single demo student's profile, rebuilt by AI from every ready session; tutor items are kept. */
 export interface LearnerProfile {
-  schemaVersion: 1; nextFocus: string; items: LearnerProfileItem[]; tutorNotes: string;
+  schemaVersion: 1; nextFocus: string; nextFocusSource: 'ai' | 'tutor'; items: LearnerProfileItem[]; tutorNotes: string;
   updatedAt: string; rebuiltAt: string | null; rebuildStatus: 'idle' | 'rebuilding' | 'failed';
   model: string | null; promptVersion: string | null;
 }

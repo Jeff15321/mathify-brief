@@ -28,7 +28,8 @@ export async function updateProfile(input: unknown, stores: Stores = getStores()
       const next: LearnerProfileItem = { evidence: existing?.evidence ?? [], ...edit, id, source: 'tutor' };
       items = existing ? items.map((item) => (item === existing ? next : item)) : [...items, next];
     }
-    return { ...current, ...fields, items, updatedAt: new Date().toISOString() };
+    const focus = fields.nextFocus === undefined ? {} : { nextFocusSource: fields.nextFocus ? 'tutor' as const : 'ai' as const };
+    return { ...current, ...fields, ...focus, items, updatedAt: new Date().toISOString() };
   });
 }
 
@@ -59,6 +60,7 @@ async function runRebuild({ profileStore, sessionStore }: Stores): Promise<Learn
           grade: DEMO_PROFILE.grade,
           currentItems: profile.items.map(({ source, category, text, status }) => ({ source, category, text, status })),
           tutorNotes: profile.tutorNotes,
+          tutorNextFocus: profile.nextFocusSource === 'tutor' ? profile.nextFocus : '',
           sessions: sessions.map((session) => ({ sessionId: session.id, date: session.sessionDate, title: session.title, observations: session.observations })),
         });
       } catch {
@@ -78,7 +80,7 @@ async function runRebuild({ profileStore, sessionStore }: Stores): Promise<Learn
         .filter((item) => item.source === 'tutor')
         .map((item) => ({ ...item, evidence: withSessionDates(item.evidence) }));
       return {
-        ...current, nextFocus: output.nextFocus, items: [...tutorItems, ...aiItems], updatedAt: now, rebuiltAt: now,
+        ...current, nextFocus: current.nextFocusSource === 'tutor' ? current.nextFocus : output.nextFocus, items: [...tutorItems, ...aiItems], updatedAt: now, rebuiltAt: now,
         rebuildStatus: 'idle', model: resolveSummaryModelLabel(), promptVersion: PROFILE_PROMPT_VERSION,
       };
     });
