@@ -12,7 +12,7 @@ const locks = (globalLocks.__mathifyProfileLocks ??= new Map<string, Promise<unk
 export function emptyLearnerProfile(): LearnerProfile {
   return {
     schemaVersion: 1, nextFocus: '', nextFocusSource: 'ai', items: [], tutorNotes: '', updatedAt: new Date().toISOString(),
-    rebuiltAt: null, rebuildStatus: 'idle', model: null, promptVersion: null,
+    rebuiltAt: null, rebuildStatus: 'idle', model: null, promptVersion: null, dismissed: [],
   };
 }
 
@@ -27,7 +27,8 @@ export class LocalProfileStore {
   /** @returns The stored profile, or an empty one when none was saved yet. */
   async read(): Promise<LearnerProfile> {
     try {
-      return JSON.parse(await readFile(this.filePath, 'utf8')) as LearnerProfile;
+      const profile = JSON.parse(await readFile(this.filePath, 'utf8')) as LearnerProfile;
+      return { ...profile, dismissed: profile.dismissed ?? [] };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') return emptyLearnerProfile();
       throw error;

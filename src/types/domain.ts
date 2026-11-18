@@ -247,6 +247,8 @@ export interface LearnerProfile {
   schemaVersion: 1; nextFocus: string; nextFocusSource: 'ai' | 'tutor'; items: LearnerProfileItem[]; tutorNotes: string;
   updatedAt: string; rebuiltAt: string | null; rebuildStatus: 'idle' | 'rebuilding' | 'failed';
   model: string | null; promptVersion: string | null;
+  /** AI items the tutor deleted, newest last; rebuilds never re-add them. */
+  dismissed: { category: ObservationCategory; text: string }[];
 }
 
 export function toPublicProbe(probe: PrivateProbe): PublicProbe {

@@ -14,7 +14,7 @@ const PROFILE: LearnerProfile = {
       evidence: [{ sessionId: 'a', date: '2026-10-17', quote: 'So it is 4x + 5?' }, { sessionId: 'b', date: '2026-11-07' }] },
     { id: '22222222-2222-4222-8222-222222222222', category: 'strength', text: 'One-step equations.', status: 'resolved', source: 'tutor', evidence: [] },
   ],
-  updatedAt: '2026-11-08T12:00:00.000Z', rebuiltAt: '2026-11-08T12:00:00.000Z', rebuildStatus: 'idle', model: 'mock', promptVersion: 'profile-v1',
+  updatedAt: '2026-11-08T12:00:00.000Z', rebuiltAt: '2026-11-08T12:00:00.000Z', rebuildStatus: 'idle', model: 'mock', promptVersion: 'profile-v1', dismissed: [],
 };
 const session = (id: string, sessionDate: string): PublicSessionSummary => ({ id, title: id, summary: null, sessionDate, status: 'ready', whiteboardCount: 0, observationCount: 1 });
 const SESSIONS = [session('b', '2026-11-07'), session('a', '2026-10-17')];

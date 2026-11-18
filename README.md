@@ -144,7 +144,7 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
 - **Learner profile** (`src/server/learner-profile-service.ts`): one profile for the demo student
   in `LOCAL_DATA_DIR/learner-profile.json` (`profileStore`; empty until the first rebuild, atomic,
   serialized writes). `rebuildProfile` sends every `ready` session's observations, plus the tutor's
-  items and notes as read-only context, to `ANTHROPIC_SUMMARY_MODEL` (`profile-v1`), which returns
+  items and notes as read-only context, to `ANTHROPIC_SUMMARY_MODEL` (`profile-v2`), which returns
   `nextFocus` and up to 20 merged items (struggle, strength, what works, habit) with a status
   (`active`, `improving`, `resolved`) and evidence per session. It runs after a summary becomes
   `ready`, after a session edit and after a delete; rebuilds are serialized, and a failed rebuild
@@ -154,12 +154,14 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   tutor-written `nextFocus` (`nextFocusSource: 'tutor'`) survives rebuilds; PATCHing it to `""`
   hands it back to the AI. An edited AI item keeps its AI wording as `originText`, and rebuilt AI
   items whose normalized text matches a tutor item's `text` or `originText` in the same category
-  are dropped. Mock mode groups identical observation texts.
+  are dropped. Deleting an AI item adds its category and text to `dismissed` (latest 100 kept;
+  deleting a tutor item does not); dismissed items are sent to the model as removed by the tutor,
+  and rebuilt AI items matching one are dropped the same way. Mock mode groups identical observation texts.
 
   | Method | Path | Behaviour |
   | --- | --- | --- |
   | GET | `/api/profile` | `{ profile }` |
-  | PATCH | `/api/profile` | JSON `{ nextFocus? (≤ 300), tutorNotes? (≤ 2000), upsertItems? (≤ 20, text ≤ 300), deleteItemIds? }`; upserted items, including edited AI items, become `source: 'tutor'` and keep their evidence |
+  | PATCH | `/api/profile` | JSON `{ nextFocus? (≤ 300), tutorNotes? (≤ 2000), upsertItems? (≤ 20, text ≤ 300), deleteItemIds? }`; upserted items, including edited AI items, become `source: 'tutor'` and keep their evidence; deleted AI items are dismissed |
   | POST | `/api/profile/rebuild` | rebuilds now; 502 on failure (previous profile kept) |
 
 - **`/profile`** (`src/components/profile/`): a student card (initials, name, grade, session count,
