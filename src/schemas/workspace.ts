@@ -44,8 +44,9 @@ export const analysisStoredSchema = z.object({
   probePlan: z.array(probePlanItemSchema),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.enum(['analysis-v2', 'analysis-v3']),
+  promptVersion: z.enum(['analysis-v2', 'analysis-v3', 'analysis-v4']),
   analysisVersion: z.literal(1),
+  profileUpdatedAt: z.string().optional(),
 });
 
 /** One student answer: a generated option A-D, or "I don't know" (never part of the AI's output format). */
@@ -56,7 +57,7 @@ export const probeKindSchema = z.enum(['main', 'easier']);
 export const probeStepSchema = z.object({
   index: z.number().int().nonnegative(),
   concept: z.string().min(1),
-  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3']).optional(),
+  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3', 'analysis-v4', 'probe-pair-v4']).optional(),
   status: z.enum(['pending', 'generating', 'ready', 'failed']),
   generationStartedAt: z.string().nullable(),
   main: privateProbeSchema.nullable(),

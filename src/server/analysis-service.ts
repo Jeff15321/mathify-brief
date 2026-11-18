@@ -10,6 +10,7 @@ import { getAnalysisProvider } from './ai';
 import { analysisReviewSchema, reviewApproved } from '@/schemas/review';
 import { ApiError } from './errors';
 import { probeIdFor } from './helpers/probe-flow-helper';
+import { buildLearnerContext } from './helpers/learner-context-helper';
 
 type Stores = ReturnType<typeof createStores>;
 
@@ -56,7 +57,7 @@ export async function analyzeCurrentWorkspace(stores: Stores = getStores(), work
 
 async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operationId: string): Promise<QuestionAnalysisPublic> {
   const started = performance.now();
-  const { workspaceStore, assetStore } = stores;
+  const { workspaceStore, assetStore, profileStore } = stores;
   const files = [];
   for (const attachment of workspace.attachments) {
     const loaded = await assetStore.get(attachment.id);
@@ -67,14 +68,18 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
   }
 
   const provider = getAnalysisProvider();
+  const profile = await profileStore.read();
+  const learnerContext = buildLearnerContext(profile);
+  const input = {
+    grade: workspace.demoProfile.grade,
+    questionText: workspace.questionText,
+    files,
+    ...(learnerContext ? { learnerContext } : {}),
+  };
 
   let rawResult;
   try {
-    rawResult = await provider.analyzeQuestion({
-      grade: workspace.demoProfile.grade,
-      questionText: workspace.questionText,
-      files,
-    });
+    rawResult = await provider.analyzeQuestion(input);
   } catch {
     throw new ApiError(
       502,
@@ -94,9 +99,7 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
   }
 
   try {
-    const verdict = analysisReviewSchema.parse(await provider.reviewAnalysis({
-      grade: workspace.demoProfile.grade, questionText: workspace.questionText, files,
-    }, parsed.data));
+    const verdict = analysisReviewSchema.parse(await provider.reviewAnalysis(input, parsed.data));
     if (!reviewApproved(verdict)) throw new Error('Review rejected');
   } catch {
     throw new ApiError(502, 'AI_PROVIDER_ERROR', 'The generated content could not pass quality review. Please retry analysis.');
@@ -115,6 +118,7 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
     model: resolveModelLabel(),
     promptVersion: ANALYSIS_PROMPT_VERSION,
     analysisVersion: 1,
+    ...(learnerContext ? { profileUpdatedAt: profile.updatedAt } : {}),
   };
 
   const probeSteps: ProbeStep[] = parsed.data.probePlan.map((item, index) => ({

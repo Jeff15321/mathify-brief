@@ -65,8 +65,10 @@ export interface QuestionAnalysisStored {
   probePlan: ProbePlanItem[];
   generatedAt: string;
   model: string;
-  promptVersion: 'analysis-v2' | 'analysis-v3';
+  promptVersion: 'analysis-v2' | 'analysis-v3' | 'analysis-v4';
   analysisVersion: 1;
+  /** `updatedAt` of the learner profile whose context was sent; absent when none was. */
+  profileUpdatedAt?: string;
 }
 
 /** A student's response to one probe: one of the generated options, or "I don't know". */
@@ -86,7 +88,7 @@ export interface ProbeStep {
   index: number;
   concept: string;
   /** Absent for pending or previously persisted pairs with unknown provenance. */
-  promptVersion?: 'analysis-v3' | 'probe-pair-v3';
+  promptVersion?: 'analysis-v3' | 'probe-pair-v3' | 'analysis-v4' | 'probe-pair-v4';
   status: StepStatus;
   generationStartedAt: string | null;
   main: PrivateProbe | null;

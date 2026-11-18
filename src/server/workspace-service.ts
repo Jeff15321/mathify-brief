@@ -7,6 +7,7 @@ import { validateFileBatch, type UploadCandidate } from './upload-validation';
 import { ApiError } from './errors';
 import { getStores, type createStores } from './storage';
 import { toPublicProbing } from './helpers/probe-flow-helper';
+import { ANALYSIS_PROMPT_VERSION } from './ai/prompts';
 
 type Stores = ReturnType<typeof createStores>;
 
@@ -17,7 +18,7 @@ type Stores = ReturnType<typeof createStores>;
 export function toPublicWorkspace(workspace: CurrentWorkspace): PublicWorkspace {
   return {
     generationMode: workspace.analysis ? (workspace.analysis.model === 'mock-provider' ? 'mock' : 'live') : process.env.AI_MOCK_MODE === 'false' ? 'live' : 'mock',
-    promptVersion: workspace.analysis?.promptVersion ?? 'analysis-v3',
+    promptVersion: workspace.analysis?.promptVersion ?? ANALYSIS_PROMPT_VERSION,
     workspaceId: workspace.workspaceId,
     draftId: workspace.draftId,
     analysisStatus: workspace.analysis ? 'ready' : workspace.analysisOperation?.status === 'generating'

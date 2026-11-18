@@ -15,6 +15,8 @@ export interface AnalyzeQuestionInput {
   grade: number;
   questionText: string;
   files: StoredFile[];
+  /** Tutor-only learner profile summary (`buildLearnerContext`); absent for an empty profile. */
+  learnerContext?: string;
 }
 
 /** Input for one step's main + easier probes. Deliberately excludes student answers: steps are independent. */
@@ -23,6 +25,7 @@ export interface GenerateProbePairInput {
   parsedQuestionMarkdown: string;
   plan: ProbePlanItem[];
   stepIndex: number;
+  learnerContext?: string;
 }
 
 /**

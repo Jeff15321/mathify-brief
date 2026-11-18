@@ -38,6 +38,30 @@ describe('Anthropic review requests (SDK mocked, no network)', () => {
     expect(request.output_config.format.schema.properties).toHaveProperty('exactlyOneCorrectOption');
   });
 
+  it('sends the learner context to generation and review only when present', async () => {
+    const learnerContext = '- Struggle (active, last seen 2026-10-03): Multiplies only the first term.';
+    const mock = new MockAnalysisProvider();
+    const analysis = await mock.analyzeQuestion(input);
+    const pairInput = { grade: 9, parsedQuestionMarkdown: analysis.parsedQuestionMarkdown, plan: analysis.probePlan, stepIndex: 1 };
+    const provider = new AnthropicAnalysisProvider();
+    create.mockResolvedValue(response(JSON.stringify(analysis)));
+    await provider.analyzeQuestion(input);
+    await provider.analyzeQuestion({ ...input, learnerContext });
+    create.mockResolvedValue(response(JSON.stringify(await mock.generateProbePair(pairInput))));
+    await provider.generateProbePair(pairInput);
+    await provider.generateProbePair({ ...pairInput, learnerContext });
+    create.mockResolvedValue(response(JSON.stringify(verdict)));
+    await provider.reviewAnalysis(input, analysis);
+    await provider.reviewAnalysis({ ...input, learnerContext }, analysis);
+
+    const texts: string[] = create.mock.calls.map(([request]) => request.messages[0].content[0].text);
+    const line = `Learner context (tutor-only, from past sessions):\n${learnerContext}`;
+    [texts[0], texts[2]].forEach((text) => expect(text).not.toContain('Learner context'));
+    [texts[1], texts[3]].forEach((text) => expect(text).toContain(line));
+    expect(JSON.parse(texts[4])).not.toHaveProperty('learnerContext');
+    expect(JSON.parse(texts[5]).learnerContext).toBe(learnerContext);
+  });
+
   it.each([
     response('{}'), response('not json'),
     { stop_reason: 'max_tokens', content: [{ type: 'text', text: JSON.stringify(verdict) }] },
