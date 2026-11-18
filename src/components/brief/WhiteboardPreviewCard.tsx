@@ -3,7 +3,7 @@ import { BriefCard } from "./BriefCard";
 /** The student's final whiteboard, or a note that nothing was drawn. */
 export function WhiteboardPreviewCard({ assetId }: { assetId: string | null }) {
   return (
-    <BriefCard title="Attached work">
+    <BriefCard title="Attached work" className={assetId ? "" : "flex-1"}>
       {assetId ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

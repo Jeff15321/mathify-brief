@@ -60,7 +60,8 @@ test('session upload -> detail -> learner profile -> brief shows relevant past s
   const section = page.getByRole('region', { name: 'Relevant from past sessions' });
   await expect(section).toBeVisible();
   await expect(section.getByRole('listitem')).toHaveCount(2);
-  await expect(section.getByText('Multiplied only the first term inside brackets. Seen 2026-10-03.')).toBeVisible();
+  await expect(section.getByText('Worth revisiting: Multiplied only the first term inside brackets')).toBeVisible();
+  await expect(section.getByText('Oct 3')).toHaveCount(2);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await section.getByRole('link', { name: 'View learner profile' }).click();

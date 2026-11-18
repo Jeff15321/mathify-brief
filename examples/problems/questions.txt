@@ -1,0 +1,3 @@
+1. Solve 2(x + 3) = 14.
+2. Solve 5x + 4 = 2x + 13.
+3. A rectangle’s length is 4 cm more than its width. The perimeter is 48 cm. Find the dimensions.

@@ -1,0 +1,99 @@
+Session: Multi-step linear equations
+Date: 2026-09-26
+Tutor: Ms. Patel
+Student: Demo Student
+
+[00:00:07] Tutor: Hi! I'm Ms. Patel. Today we're going to look at solving equations, starting easy and building up. Sound good?
+[00:00:46] Student: Yeah, sounds good.
+[00:00:58] Tutor: Warm-up. Solve x + 5 = 12.
+[00:01:19] Student: x is 7.
+[00:01:32] Tutor: How did you get it?
+[00:01:59] Student: I took away 5 from both sides. 12 minus 5 is 7.
+[00:02:10] Tutor: Perfect. Next: 3x = 21.
+[00:02:34] Student: 7 again. Divide both sides by 3.
+[00:02:51] Tutor: Nice and quick. What about x/4 = 6?
+[00:03:05] Student: Multiply by 4, so x = 24.
+[00:03:18] Tutor: And x - 9 = -2?
+[00:03:26] Student: Add 9 to both sides... x = 7.
+[00:03:33] Tutor: You're very solid on one-step equations. Let's try two steps: 2x + 3 = 11.
+[00:04:01] Student: Subtract 3 first, so 2x = 8, then x = 4.
+[00:04:15] Tutor: Great. Now one with brackets: 2(x + 3) = 14.
+[00:04:49] Student: Okay, so first I get rid of the brackets. That's 2x + 3 = 14.
+[00:05:01] Tutor: Hmm, let's pause there. What does the 2 outside the brackets mean?
+[00:05:26] Student: Times 2?
+[00:05:35] Tutor: Times 2 of what, exactly?
+[00:05:54] Student: Times the x?
+[00:06:05] Tutor: It multiplies everything inside the brackets. So 2 times x and 2 times...?
+[00:06:26] Student: Oh, 2 times 3. So 2x + 6.
+[00:06:32] Tutor: Right. So the equation is 2x + 6 = 14. Keep going.
+[00:07:05] Student: Minus 6, 2x = 8, x = 4.
+[00:07:18] Tutor: Good. Can you check that x = 4 works in the original equation?
+[00:07:50] Student: I mean, I'm pretty sure it's right.
+[00:07:59] Tutor: Humour me. Put 4 into 2(x + 3).
+[00:08:15] Student: 4 plus 3 is 7, times 2 is 14. Yeah it works.
+[00:08:30] Tutor: That's the check. It only takes a few seconds and it catches mistakes. Let's try another: 3(x - 2) = 12.
+[00:09:02] Student: 3x - 2 = 12.
+[00:09:09] Tutor: Same thing as before. What does the 3 multiply?
+[00:09:44] Student: Ugh, both. 3x - 6 = 12.
+[00:09:53] Tutor: Exactly. Finish it.
+[00:10:16] Student: Add 6, 3x = 18, x = 6.
+[00:10:28] Tutor: And the check?
+[00:10:45] Student: Do I have to?
+[00:10:58] Tutor: Quick one.
+[00:11:20] Student: 6 minus 2 is 4, times 3 is 12. Okay.
+[00:11:30] Tutor: Now, variables on both sides. 5x + 4 = 2x + 13. What would you try first?
+[00:11:57] Student: Get the x's together I think.
+[00:12:10] Tutor: Good plan. Go for it.
+[00:12:35] Student: So I move the 2x over, 5x + 2x = 13 + 4... wait, I moved the 4 too. 7x = 17?
+[00:12:51] Tutor: Let's slow down. When the 2x leaves the right side, what do we actually do to both sides?
+[00:13:30] Student: Subtract 2x?
+[00:13:42] Tutor: Yes. So the left side becomes 5x - 2x + 4. What's that?
+[00:14:18] Student: 3x + 4.
+[00:14:29] Tutor: And the right side?
+[00:14:58] Student: Just 13.
+[00:15:09] Tutor: So 3x + 4 = 13. Now the 4.
+[00:15:43] Student: Subtract 4 from both sides, 3x = 9, x = 3.
+[00:15:53] Tutor: Great. When you "move" a term, it really means doing the opposite operation to both sides. The sign flips because you subtracted, not because it crossed the equals sign.
+[00:16:37] Student: Okay. I always just flip it but sometimes I forget.
+[00:16:51] Tutor: Let's practise that. 7x - 5 = 3x + 11.
+[00:17:12] Student: 7x - 3x = 11 - 5, so 4x = 6?
+[00:17:27] Tutor: Look at the -5. What do we do to both sides to get rid of it?
+[00:17:49] Student: Add 5. Oh. So it's 11 + 5, which is 16. 4x = 16, x = 4.
+[00:18:05] Tutor: Exactly. Can you check it?
+[00:18:21] Student: 7 times 4 is 28, minus 5 is 23. 3 times 4 is 12, plus 11 is 23. Yeah.
+[00:18:34] Tutor: The check confirmed it. One more of these: 6x + 2 = 4x - 8.
+[00:19:11] Student: 6x - 4x = -8 + 2... no wait. Subtract 2, so -8 - 2 = -10. 2x = -10, x = -5.
+[00:19:23] Tutor: You caught yourself that time. What made you stop?
+[00:19:33] Student: You said do the opposite to both sides. Plus 2 means subtract 2.
+[00:19:42] Tutor: Perfect reasoning. Let's combine everything: 4(x + 1) = 2x + 10. What would you try first?
+[00:20:07] Student: The brackets.
+[00:20:13] Tutor: Go.
+[00:20:28] Student: 4x + 1 = 2x + 10.
+[00:20:39] Tutor: Look at the brackets one more time.
+[00:20:55] Student: 4x + 4. I keep doing that.
+[00:21:01] Tutor: It's a really common slip. Keep going.
+[00:21:10] Student: 4x - 2x = 10 - 4, 2x = 6, x = 3.
+[00:21:19] Tutor: Nice, the signs were right that time. Check?
+[00:21:33] Student: Can we skip it this time?
+[00:21:40] Tutor: Let's do it together. 4 times (3 + 1)?
+[00:21:50] Student: 16. And 2 times 3 plus 10 is 16. Fine.
+[00:21:58] Tutor: Here's a challenge: 5(2x - 1) = 3(x + 4).
+[00:22:22] Student: 10x - 5 = 3x + 12. I did both terms!
+[00:22:29] Tutor: You did, on both sides. Nice.
+[00:22:52] Student: 10x - 3x = 12 + 5, 7x = 17... x = 17/7?
+[00:23:07] Tutor: That's right. Fractions are allowed as answers.
+[00:23:34] Student: It looks weird.
+[00:23:40] Tutor: It's fine. How could you be sure it's right?
+[00:24:01] Student: Check it, I know. But with fractions it's annoying.
+[00:24:11] Tutor: Fair. Let's do it together: 10 times 17/7 is 170/7, minus 35/7 is 135/7. 3 times 17/7 is 51/7, plus 84/7 is 135/7.
+[00:24:32] Student: Okay, that's actually cool.
+[00:24:39] Tutor: Last one. -2(x - 4) = 10.
+[00:25:09] Student: -2x - 4 = 10?
+[00:25:15] Tutor: Two things to look at: what multiplies the -4, and what's negative two times negative four?
+[00:25:29] Student: -2 times -4... positive 8. So -2x + 8 = 10.
+[00:25:45] Tutor: Now finish.
+[00:26:03] Student: Subtract 8, -2x = 2, x = -1.
+[00:26:18] Tutor: Correct. Quick summary: your one-step equations are fast and accurate. The two things to watch are multiplying every term inside the brackets, and doing the opposite operation to both sides instead of just flipping signs.
+[00:26:44] Student: And checking.
+[00:26:55] Tutor: And checking. See you next week.
+[00:27:10] Student: Bye!

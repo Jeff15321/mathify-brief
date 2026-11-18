@@ -163,6 +163,22 @@ const MOCK_ANALYSIS: ModelAnalysis = {
   firstPair: MOCK_PAIRS[0],
 };
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "2026-10-03" becomes "Oct 3". Unrecognized values are left unchanged. */
+function shortDate(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return iso;
+  return `${MONTHS[Number(match[2]) - 1]} ${Number(match[3])}`;
+}
+
+function citeDates(dates: string[]): string {
+  const labels = dates.map(shortDate);
+  if (labels.length <= 1) return labels[0] ?? '';
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(', ')}, and ${labels.at(-1)}`;
+}
+
 /**
  * Deterministic, schema-valid fixture provider. Used whenever AI_MOCK_MODE=true and in all
  * automated tests, regardless of whether an ANTHROPIC_API_KEY is configured (IMPLEMENTATION_PLAN.md
@@ -253,9 +269,18 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
 
   /** Cites the first three profile items with their evidence dates; `[]` for an empty profile. */
   async relevantHistory(input: RelevantHistoryInput): Promise<ModelHistory> {
+    const opening: Record<string, string> = {
+      struggle: 'Worth revisiting',
+      strength: 'Already reliable',
+      what_works: 'Has worked before',
+      habit: 'Still needs a nudge',
+    };
     return {
-      bullets: input.profile.items.slice(0, 3).map((item) =>
-        item.evidence.length > 0 ? `${item.text} Seen ${item.evidence.map((entry) => entry.date).join(', ')}.` : item.text),
+      bullets: input.profile.items.slice(0, 3).map((item) => {
+        if (item.evidence.length === 0) return item.text;
+        const note = item.text.replace(/\.\s*$/, '');
+        return `${opening[item.category] ?? 'From earlier'}: ${note} (${citeDates(item.evidence.map((entry) => entry.date))}).`;
+      }),
     };
   }
 }

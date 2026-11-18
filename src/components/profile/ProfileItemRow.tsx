@@ -9,7 +9,7 @@ import { formatDate } from '@/components/sessions/SessionCard';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const ITEM_STATUS: Record<ProfileItemStatus, { label: string; className: string }> = {
-  active: { label: 'Active', className: 'bg-amber-100 text-amber-800' },
+  active: { label: 'Active', className: 'bg-emerald-50 text-emerald-700' },
   improving: { label: 'Improving', className: 'bg-blue-100 text-blue-700' },
   resolved: { label: 'Resolved', className: 'bg-emerald-100 text-emerald-700' },
 };
