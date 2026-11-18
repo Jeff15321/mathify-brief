@@ -67,6 +67,7 @@ describe('SessionsPage', () => {
     expect(screen.getByRole('link', { name: 'Summarizing…' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Summary failed' })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Retry' })).toHaveLength(1);
+    expect(screen.queryByRole('heading', { name: 'Upload a session' })).not.toBeInTheDocument();
     await vi.advanceTimersByTimeAsync(3000);
     expect(api.fetchSessions).toHaveBeenCalledTimes(2);
   });
@@ -84,6 +85,12 @@ describe('SessionsPage', () => {
     vi.mocked(api.fetchSessions).mockResolvedValue([]);
     render(<SessionsPage />);
     expect(await screen.findByText('No sessions yet')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Transcript')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add session' }));
+    expect(screen.getByLabelText('Transcript')).toBeInTheDocument();
+    expect(screen.queryByText('No sessions yet')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to sessions' }));
+    expect(screen.getByText('No sessions yet')).toBeInTheDocument();
   });
 });
 

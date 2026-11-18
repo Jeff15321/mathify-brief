@@ -8,7 +8,6 @@ import type { LearnerProfile, ObservationCategory, PublicSessionSummary } from '
 import { StudentCard } from '@/components/profile/StudentCard';
 import { NextFocusCard } from '@/components/profile/NextFocusCard';
 import { ProfileSection } from '@/components/profile/ProfileSection';
-import { TutorNotesCard } from '@/components/profile/TutorNotesCard';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { LoadingState } from '@/components/shared/LoadingState';
 
@@ -25,7 +24,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [sessions, setSessions] = useState<PublicSessionSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [rebuildError, setRebuildError] = useState<string | null>(null);
   const load = useCallback(() => Promise.all([fetchProfile(), fetchSessions()]).then(([nextProfile, nextSessions]) => {
     setProfile(nextProfile); setSessions(nextSessions); setError(null);
   }, err => setError(message(err))), []);
@@ -40,10 +38,9 @@ export default function ProfilePage() {
 
   async function save(changes: ProfileUpdate) { setProfile(await updateProfile(changes)); }
   async function rebuild() {
-    setRebuildError(null);
     setProfile(current => current && { ...current, rebuildStatus: 'rebuilding' });
     try { setProfile(await rebuildProfile()); }
-    catch (err) { setRebuildError(message(err)); setProfile(current => current && { ...current, rebuildStatus: 'failed' }); void load(); }
+    catch { setProfile(current => current && { ...current, rebuildStatus: 'failed' }); void load(); }
   }
 
   const empty = sessions?.length === 0 && profile?.items.length === 0 && !profile.nextFocus;
@@ -52,8 +49,7 @@ export default function ProfilePage() {
       {error && <ErrorBanner message={error} onRetry={() => void load()} />}
       {(!profile || !sessions) && !error && <LoadingState label="Loading learner profile…" />}
       {profile && sessions && <>
-        <StudentCard profile={profile} sessionCount={sessions.length} lastSessionDate={sessions.map(s => s.sessionDate).sort().at(-1) ?? null}
-          rebuildError={rebuildError} onRebuild={() => void rebuild()} />
+        <StudentCard profile={profile} sessionCount={sessions.length} lastSessionDate={sessions.map(s => s.sessionDate).sort().at(-1) ?? null} />
         {empty
           ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
             <h2 className="font-medium text-slate-900">No sessions yet</h2>
@@ -65,7 +61,6 @@ export default function ProfilePage() {
               {SECTIONS.map(section => <ProfileSection key={section.category} {...section} items={profile.items.filter(item => item.category === section.category)} onSave={save} />)}
             </div>
           </>}
-        <TutorNotesCard notes={profile.tutorNotes} onSave={tutorNotes => save({ tutorNotes })} />
       </>}
     </div>
   </main>;

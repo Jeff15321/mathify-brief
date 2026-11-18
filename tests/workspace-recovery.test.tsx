@@ -16,6 +16,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 vi.mock('@/lib/api-client', () => ({
   fetchWorkspace: vi.fn(), generateNextProbes: vi.fn(), answerProbe: vi.fn(),
   submitBrief: vi.fn(), startWorkspace: vi.fn(), analyzeQuestion: vi.fn(),
+  fetchBriefHistory: vi.fn().mockResolvedValue({ status: 'ready', bullets: [] }),
 }));
 // Canvas rendering needs a browser; keep draft storage, page state and server transitions real.
 vi.mock('@/components/workspace/WhiteboardPanel', async () => {
@@ -35,6 +36,7 @@ beforeEach(async () => {
   ({ stores, cleanup: cleanStore } = await setupWorkspace('workspace-recovery'));
   draftId = (await stores.workspaceStore.read())!.draftId;
   vi.mocked(api.fetchWorkspace).mockImplementation(() => getPublicWorkspace(stores));
+  vi.mocked(api.fetchBriefHistory).mockResolvedValue({ status: 'ready', bullets: [] });
   vi.mocked(api.generateNextProbes).mockImplementation(() => generateNextProbePair(stores));
   vi.mocked(api.answerProbe).mockImplementation((probeId, answer, workspaceId, hintOpened) =>
     answerCurrentProbe({ probeId, answer, workspaceId, hintOpened }, stores));
@@ -76,7 +78,7 @@ it('opens the saved report and removes its draft when Retry recovers a lost Fini
   fireEvent.click(screen.getByRole('button', { name: 'Send to tutor' }));
   await screen.findByText('Response lost');
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/brief'));
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Tutor Brief' })).toBeInTheDocument());
   expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
   expect(await drafts.restoreDraft(null, draftId)).toBeNull();
   expect((await stores.workspaceStore.read())!.brief!.results[0].selectedOptionId).toBe('B');
@@ -111,6 +113,6 @@ it('opens a completed report even when local draft storage cannot be read', asyn
   await submitBrief({ whiteboardPng: null }, stores);
   vi.spyOn(drafts, 'restoreDraft').mockRejectedValue(new Error('Storage unavailable'));
   render(<WorkspacePage />);
-  await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/brief'));
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Tutor Brief' })).toBeInTheDocument());
   expect(screen.queryByText(/Saved drafts could not be read/)).not.toBeInTheDocument();
 });

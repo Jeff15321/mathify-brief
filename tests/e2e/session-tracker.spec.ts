@@ -16,8 +16,8 @@ async function completeQuestion(page: Page) {
   await page.locator('input[name="s1-main"][value="A"]').check();
   const history = page.waitForResponse('**/api/brief/history');
   await page.getByRole('button', { name: 'Send to tutor' }).click();
-  await page.waitForURL('**/brief');
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
+  await expect(page).toHaveURL(/\/workspace/);
   expect((await history).status()).toBe(200);
 }
 
@@ -31,6 +31,7 @@ test('with no sessions the brief has no past-sessions section', async ({ page })
 test('session upload -> detail -> learner profile -> brief shows relevant past sessions', async ({ page }) => {
   await page.goto('/sessions');
   await expect(page.getByText('No sessions yet')).toBeVisible();
+  await page.getByRole('button', { name: 'Add session' }).click();
   await page.getByLabel('Transcript').setInputFiles('samples/sessions/2026-10-03-linear-equations-review.txt');
   await page.getByLabel('Whiteboard images (optional)').setInputFiles('samples/sessions/2026-10-17-whiteboard-area-model-3-x-plus-7.png');
   await page.getByLabel('Session date').fill('2026-10-03');
@@ -39,7 +40,7 @@ test('session upload -> detail -> learner profile -> brief shows relevant past s
   const card = page.getByRole('listitem').filter({ hasText: 'Linear equations review' });
   await expect(card).toBeVisible();
   await expect(card.getByText('Ready')).toBeVisible();
-  await expect(card.getByText('5 observations · 1 whiteboard')).toBeVisible();
+  await expect(card.getByText('2 observations · 1 whiteboard')).toBeVisible();
 
   await card.getByRole('link', { name: 'Linear equations review' }).click();
   await page.waitForURL(/\/sessions\/[0-9a-f-]+$/);
@@ -58,7 +59,7 @@ test('session upload -> detail -> learner profile -> brief shows relevant past s
   await completeQuestion(page);
   const section = page.getByRole('region', { name: 'Relevant from past sessions' });
   await expect(section).toBeVisible();
-  await expect(section.getByRole('listitem')).toHaveCount(3);
+  await expect(section.getByRole('listitem')).toHaveCount(2);
   await expect(section.getByText('Multiplied only the first term inside brackets. Seen 2026-10-03.')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

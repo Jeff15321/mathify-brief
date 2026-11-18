@@ -1,7 +1,6 @@
 import { StartingPointCard } from "./StartingPointCard";
 import { EvidenceSummary } from "./EvidenceSummary";
 import { PastSessionsCard } from "./PastSessionsCard";
-import Link from "next/link";
 import { TutorFeedbackSurvey } from "./TutorFeedbackSurvey";
 import type { PublicWorkspace, TutorBrief } from "@/types/domain";
 import { BriefHeader } from "./BriefHeader";
@@ -52,12 +51,12 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       </details>
       <ProbingResultsAccordion results={brief.results} notReachedConcepts={brief.notReachedConcepts} />
       {workspace.feedbackReportId && <TutorFeedbackSurvey reportId={workspace.feedbackReportId} />}
-      <Link
+      <a
         href="/workspace?new=1"
         className="self-start rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
       >
         Start a new question
-      </Link>
+      </a>
     </div>
   );
 }

@@ -44,11 +44,13 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
     <div><h1 className="text-xl font-semibold text-slate-900">Get ready for your tutor</h1><p className="mt-2 text-sm text-slate-700">{PURPOSE}</p></div>
     <fieldset disabled={busy || adding} className="flex min-w-0 flex-col gap-4 disabled:opacity-60">
       <div className="space-y-2 rounded-xl border-2 border-dashed border-blue-200 bg-white p-4">
-        <label htmlFor="fileInput" className="block font-medium text-sm">Problem photos or PDFs</label>
-        <p className="text-sm text-slate-600">Select several at once, drop them here, or paste images. Include all pages of one problem.</p>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <label htmlFor="fileInput" className="font-medium text-sm">Problem photos or PDFs</label>
+          <span className="text-sm text-slate-600">{files.length === 0 ? 'No file chosen' : `${files.length} file${files.length === 1 ? '' : 's'} chosen`}</span>
+        </div>
         <input ref={input} id="fileInput" type="file" multiple accept={TYPES.join(',')}
-          onChange={e => { const selected = Array.from(e.target.files ?? []); e.target.value = ''; void addFiles(selected); }} className="block w-full text-sm" />
-        <p className="text-xs text-slate-500">Up to 5 files · 10 MB each · 20 MB total. PDFs open separately from the drawing board.</p>
+          onChange={e => { const selected = Array.from(e.target.files ?? []); e.target.value = ''; void addFiles(selected); }} className="sr-only" />
+        <button type="button" onClick={() => input.current?.click()} className="self-start text-sm font-medium text-blue-700 underline">Choose files</button>
         <FileAttachmentList files={files} onRemove={index => { setDuplicate(false); onChange(questionText, files.filter((_, i) => i !== index)); }}
           onMove={(index, direction) => { const next = [...files]; [next[index], next[index + direction]] = [next[index + direction], next[index]]; onChange(questionText, next); }} />
       </div>

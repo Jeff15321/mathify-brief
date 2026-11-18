@@ -50,14 +50,16 @@ describe("learner profile (mock AI, isolated temp directory)", () => {
     expect(profile).toMatchObject({ rebuildStatus: "idle", model: "mock-provider", promptVersion: PROFILE_PROMPT_VERSION });
     expect(profile.rebuiltAt).not.toBeNull();
     expect(profile.nextFocus).toContain("Multiplied only the first term");
-    expect(profile.items).toHaveLength(first.observations.length);
-    for (const item of profile.items) {
-      expect(item.source).toBe("ai");
-      expect(item.evidence.map(({ sessionId, date }) => ({ sessionId, date }))).toEqual([
-        { sessionId: first.id, date: "2026-09-26" },
-        { sessionId: second.id, date: "2026-10-03" },
-      ]);
-    }
+    expect(first.observations).toHaveLength(2);
+    expect(second.observations).toHaveLength(2);
+    const evidenceFor = (text: string) => profile.items.find((item) => item.text === text)?.evidence.map(({ sessionId, date }) => ({ sessionId, date }));
+    expect(evidenceFor("Multiplied only the first term inside brackets.")).toEqual([
+      { sessionId: first.id, date: "2026-09-26" },
+      { sessionId: second.id, date: "2026-10-03" },
+    ]);
+    expect(evidenceFor("Solved one-step equations quickly and correctly.")).toEqual([{ sessionId: first.id, date: "2026-09-26" }]);
+    expect(evidenceFor("Kept the sign when moving a term across the equals sign.")).toEqual([{ sessionId: second.id, date: "2026-10-03" }]);
+    expect(profile.items.every((item) => item.source === "ai" && item.evidence.length <= 2)).toBe(true);
     expect(JSON.parse(await readFile(path.join(dataDir, "learner-profile.json"), "utf8"))).toEqual(profile);
   });
 

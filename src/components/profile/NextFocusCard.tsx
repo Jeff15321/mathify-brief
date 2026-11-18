@@ -30,7 +30,7 @@ export function NextFocusCard({ profile, onSave }: { profile: Pick<LearnerProfil
     {draft === null
       ? <>
         <p className={profile.nextFocus ? 'text-lg font-medium leading-7 text-slate-900' : 'text-sm text-slate-600'}>
-          {profile.nextFocus || 'No focus yet. Rebuild from sessions for an AI suggestion, or write your own.'}
+          {profile.nextFocus || 'No focus yet. Write your own, or add a session for an AI suggestion.'}
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy} onClick={() => setDraft(profile.nextFocus)} className={secondary}>{profile.nextFocus ? 'Edit' : 'Write focus'}</button>

@@ -18,7 +18,7 @@ for (const pattern of patterns) test(`tutor overview exposes four facts: ${patte
   }
   expect((await request.post('/api/brief', { headers, multipart: { submissionId: crypto.randomUUID() } })).status()).toBe(200);
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/brief');
+  await page.goto('/workspace');
   for (const label of ['Original problem', 'Suggested start', 'Confidence on the report']) {
     const section = page.getByRole('region', { name: label });
     await expect(section).toBeVisible();

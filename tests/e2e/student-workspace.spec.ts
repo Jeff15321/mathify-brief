@@ -8,19 +8,20 @@ test('batch upload stays in one workspace, persists selection and sends it witho
   await expect(page.getByAltText('Preview of page-1.png')).toBeVisible();
   await expect(page.getByAltText('Preview of page-2.png')).toBeVisible();
   await expect(page.getByText(/same file appears more than once/)).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Saved on this device' })).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length)).toBeGreaterThan(0);
   await page.reload();
   await expect(page.getByAltText('Preview of page-2.png')).toBeVisible();
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await page.locator('input[name="s1-main"][value="B"]').check();
-  await expect(page.getByRole('status').filter({ hasText: 'Saved on this device' })).toBeVisible();
+  const savedBeforeReload = await page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length);
+  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length)).toBeGreaterThan(savedBeforeReload);
   await page.reload();
   await expect(page.locator('input[name="s1-main"][value="B"]')).toBeChecked();
   await page.screenshot({ path: 'artifacts/pilot/student-desktop.png' });
   await expect(page.getByText('Loading uploaded images…')).toHaveCount(0);
   await page.getByRole('button', { name: 'Send to tutor' }).click();
-  await page.waitForURL('**/brief');
+  await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   const { workspace } = await (await request.get('/api/workspace')).json();
   expect(workspace.attachments).toHaveLength(2);
   expect(workspace.brief.core.attempted).toBe(1);
@@ -35,7 +36,7 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await page.locator('input[name="s1-main"][value="IDK"]').check();
   await page.getByRole('button', { name: 'Show a hint' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Saved on this device' })).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.reload();
   await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Whiteboard', exact: true }).click();
@@ -44,7 +45,7 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeChecked();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Send to tutor' }).click();
-  await page.waitForURL('**/brief');
+  await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   expect((await (await request.get('/api/workspace')).json()).workspace.brief.results[0].hintOpened).toBe(true);
 });
 test('a sixth file is rejected explicitly while existing files remain', async ({ page }) => {

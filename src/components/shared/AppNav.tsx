@@ -2,11 +2,10 @@
 import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileText, History, Menu, PanelLeftClose, PanelLeftOpen, PenLine, UserRound, X } from 'lucide-react';
+import { History, Menu, PanelLeftClose, PanelLeftOpen, PenLine, UserRound, X } from 'lucide-react';
 
 const LINKS = [
   { href: '/workspace', label: 'Workspace', Icon: PenLine },
-  { href: '/brief', label: 'Tutor Brief', Icon: FileText },
   { href: '/sessions', label: 'Sessions', Icon: History },
   { href: '/profile', label: 'Learner profile', Icon: UserRound },
 ];

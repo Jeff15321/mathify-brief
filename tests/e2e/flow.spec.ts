@@ -38,7 +38,7 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.mouse.move(box.x + 200, box.y + 150);
   await page.mouse.up();
 
-  await expect(page.getByRole("status").filter({ hasText: "Saved on this device" })).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.reload();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
   await page.getByLabel("Expand Whiteboard").click();
@@ -50,8 +50,8 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(page.getByText("Question 3 of 3")).toBeVisible();
   await page.getByRole("button", { name: "Send to tutor" }).click();
 
-  await page.waitForURL("**/brief");
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
+  await expect(page).toHaveURL(/\/workspace/);
 
   await page.screenshot({ path: "artifacts/pilot/tutor-desktop.png", fullPage: true });
   await page.getByText("Counts and additional concepts", { exact: true }).click();
@@ -130,7 +130,7 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   const saved = await (await request.get(`/api/feedback?reportId=${reportId}`)).json();
   expect(saved.feedback.reportId).toBe(reportId);
   await page.getByRole("button", { name: "Send to tutor", exact: true }).click();
-  await page.waitForURL("**/brief");
+  await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save feedback", exact: true })).toBeVisible();
   await page.getByRole("radio", { name: "4 — Accurate", exact: true }).check();
   await page.getByRole("radio", { name: "5 — Very easy", exact: true }).check();

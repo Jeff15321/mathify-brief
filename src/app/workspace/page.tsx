@@ -1,6 +1,5 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { analyzeQuestion, answerProbe, fetchWorkspace, generateNextProbes, startWorkspace, submitBrief } from '@/lib/api-client';
 import { recordPilotEvent, type PilotCounts, type PilotEventName } from '@/lib/measurement';
 import { viewFor } from '@/lib/workspace-flow';
@@ -12,6 +11,7 @@ import { ProbingPanel } from '@/components/workspace/ProbingPanel';
 import { BreakdownPanel } from '@/components/workspace/BreakdownPanel';
 import { PreparationPanel, PURPOSE } from '@/components/workspace/PreparationPanel';
 import { QuestionIntakeForm } from '@/components/intake/QuestionIntakeForm';
+import { TutorBriefView } from '@/components/brief/TutorBriefView';
 import { QuestionDisplay } from '@/components/workspace/QuestionDisplay';
 import type { SimpleWhiteboardHandle } from '@/components/whiteboard/SimpleWhiteboard';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
@@ -19,7 +19,6 @@ import { LoadingState } from '@/components/shared/LoadingState';
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
 export default function WorkspacePage() {
-  const router = useRouter();
   const board = useRef<SimpleWhiteboardHandle>(null);
   const [initialBoard, setInitialBoard] = useState<BoardSnapshot>();
   const draftRef = useRef<WorkspaceDraft | null>(null);
@@ -37,7 +36,6 @@ export default function WorkspacePage() {
   const [submitting, setSubmitting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState('');
   const [storageError, setStorageError] = useState<string | null>(null);
   const probing = workspace?.probing;
   const workspaceId = workspace?.workspaceId;
@@ -62,18 +60,16 @@ export default function WorkspacePage() {
     if (!draftRef.current || stopped.current) return saving.current;
     const source = draftRef.current;
     const snapshot = structuredClone({ ...source, updatedAt: Date.now() });
-    setSaveStatus('Saving…');
     const pending = saving.current.catch(() => {}).then(() => saveDraft(snapshot));
     saving.current = pending;
-    void pending.then(() => { if (saving.current === pending && draftRef.current === source && !stopped.current) { setSaveStatus('Saved on this device'); setStorageError(null); recordPilotEvent('draft_saved', { attemptId: source.id, workspaceId: source.workspaceId ?? undefined, mode: 'unknown' }); } }, () => {
+    void pending.then(() => { if (saving.current === pending && draftRef.current === source && !stopped.current) { setStorageError(null); recordPilotEvent('draft_saved', { attemptId: source.id, workspaceId: source.workspaceId ?? undefined, mode: 'unknown' }); } }, () => {
       recordPilotEvent('draft_save_failed', { attemptId: source.id, workspaceId: source.workspaceId ?? undefined, mode: 'unknown' });
-      setSaveStatus('Not saved'); setStorageError('This device could not save your draft. Keep this page open and retry saving before refreshing.');
+      setStorageError('This device could not save your draft. Keep this page open and retry saving before refreshing.');
     });
     return pending;
   }, []);
   const scheduleSave = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    setSaveStatus('Unsaved changes');
     saveTimer.current = setTimeout(() => { void flush().catch(() => {}); }, 500);
   }, [flush]);
   function changeDraft(patch: Partial<WorkspaceDraft>, immediate = false) {
@@ -95,8 +91,19 @@ export default function WorkspacePage() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     await saving.current.catch(() => {});
     await removeDraft(completedDraftId).catch(() => {});
-    router.replace('/brief');
-  }, [router]);
+    try {
+      const current = await fetchWorkspace();
+      if (!current?.brief) throw new Error('Your report could not be opened. Please retry.');
+      setWorkspace(current);
+      setLoaded(true);
+      setError(null);
+    } catch (err) {
+      stopped.current = false;
+      throw err;
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +159,7 @@ export default function WorkspacePage() {
     if (!next || (workspaceId && next.workspaceId !== workspaceId)) throw new Error('The workspace changed in another tab. Reload to continue.');
     if (stopped.current) return next;
     setWorkspace(previous => {
+      if (previous?.brief || stopped.current) return previous ?? next;
       if (previous?.phase === 'complete') return previous;
       if (next.phase === 'complete') return next;
       // Recovery GETs and polls can finish after a newer answer/prefetch response.
@@ -180,6 +188,21 @@ export default function WorkspacePage() {
     const timer = setTimeout(() => { void refresh().catch(err => setError(message(err))); }, 1500);
     return () => clearTimeout(timer);
   }, [workspace, probing, refresh]);
+  useEffect(() => {
+    if (!workspace?.brief) return;
+    let cancelled = false;
+    let ready = false;
+    let recorded = false;
+    const announce = () => {
+      if (cancelled || !ready || recorded || document.visibilityState !== 'visible') return;
+      recorded = true;
+      recordPilotEvent('brief_visible', { attemptId: workspace.draftId, workspaceId: workspace.workspaceId, mode: workspace.generationMode, promptVersion: workspace.promptVersion }, { coreAnswered: workspace.brief!.core.attempted, corePlanned: workspace.brief!.core.total });
+    };
+    const fontsReady = document.fonts?.ready ?? Promise.resolve();
+    void Promise.all([fontsReady, ...Array.from(document.images).map(img => img.decode())]).then(() => { ready = true; announce(); }).catch(() => {});
+    document.addEventListener('visibilitychange', announce);
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', announce); };
+  }, [workspace]);
 
   async function prepare(id: string, observed?: PublicWorkspace) {
     track('analysis_started', {}, observed);
@@ -237,14 +260,9 @@ export default function WorkspacePage() {
       await openReport(draftRef.current.id);
     } catch (err) { setError(message(err)); setSubmitting(false); }
   }
+  if (workspace?.brief) return <main className="min-h-screen bg-slate-50"><TutorBriefView workspace={workspace} brief={workspace.brief} /></main>;
   if (!loaded || !draft) return <main className="max-w-xl mx-auto p-8">{error ? <ErrorBanner message={error} onRetry={() => { setError(null); setLoadAttempt(n => n + 1); }} /> : <LoadingState label="Loading your workspace…" />}<a href="/workspace?new=1" className="text-blue-700 underline">New question</a></main>;
-  if (workspace?.brief) return <main className="max-w-xl mx-auto p-8"><LoadingState label="Opening your Tutor Brief…" /></main>;
   return <main data-phase={submitting ? 'submitting' : uploading ? 'uploading' : viewFor(workspace)} className="flex h-[calc(100dvh-3rem)] flex-col bg-slate-50 md:h-dvh">
-    <header className="flex items-center justify-between gap-3 border-b bg-white px-4 py-3 text-sm">
-      <span className="font-semibold">Mathify · Get ready for your tutor</span>
-      <span role="status" className="text-xs text-slate-600">{saveStatus}</span>
-      <a href="/workspace?new=1" className="text-blue-700 underline">New question</a>
-    </header>
     {storageError && <div className="px-3 pt-2"><ErrorBanner message={storageError} onRetry={() => void flush().catch(() => {})} /></div>}
     {error && <div className="px-3 pt-2"><ErrorBanner message={error} onRetry={() => void refresh().then(() => setError(null)).catch(err => setError(message(err)))} /></div>}
     {exportFailed && <div className="flex gap-3 px-3 py-2 text-sm"><span>Your drawing could not be attached.</span><button disabled={submitting} onClick={() => void finish()} className="text-blue-700 underline">Retry drawing export</button><button disabled={submitting} onClick={() => void finish(true)} className="text-blue-700 underline">Send without drawing</button></div>}

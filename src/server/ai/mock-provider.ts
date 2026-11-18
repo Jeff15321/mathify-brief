@@ -14,14 +14,40 @@ import type {
   SummarizeSessionInput,
 } from './provider';
 
-/** Matches the storyline of the sample sessions in samples/sessions/. */
-const MOCK_OBSERVATIONS: ModelSessionSummary['observations'] = [
-  { category: 'struggle', text: 'Multiplied only the first term inside brackets.', quote: 'So it\'s 2x plus 3?' },
-  { category: 'struggle', text: 'Kept the sign when moving a term across the equals sign.' },
-  { category: 'strength', text: 'Solved one-step equations quickly and correctly.' },
-  { category: 'what_works', text: 'Asking "What would you try first?" led to a good first move.' },
-  { category: 'habit', text: 'Skips substitution checks unless asked.', quote: 'I\'m sure that\'s right.' },
-];
+/**
+ * One or two observations per sample session. A given text appears in at most two sessions,
+ * so the rebuilt profile cites one or two dates instead of every upload.
+ */
+const SAMPLE_SESSION_NOTES: Record<string, { summary: string; observations: ModelSessionSummary['observations'] }> = {
+  'Multi-step linear equations': {
+    summary: 'First session on linear equations. One-step equations were quick and correct, but expanding 2(x + 3) kept only the first term.',
+    observations: [
+      { category: 'struggle', text: 'Multiplied only the first term inside brackets.', quote: "That's 2x + 3 = 14." },
+      { category: 'strength', text: 'Solved one-step equations quickly and correctly.', quote: 'I took away 5 from both sides.' },
+    ],
+  },
+  'Linear equations review': {
+    summary: 'The bracket slip showed up again, and a check caught a sign that did not flip when a term moved across the equals sign.',
+    observations: [
+      { category: 'struggle', text: 'Multiplied only the first term inside brackets.', quote: "So it's 2x plus 3?" },
+      { category: 'struggle', text: 'Kept the sign when moving a term across the equals sign.', quote: "It's always the moving part that gets me." },
+    ],
+  },
+  'Area models for expanding brackets': {
+    summary: 'An area-model drawing fixed expansions after one early slip. Substitution checks still needed a prompt.',
+    observations: [
+      { category: 'what_works', text: 'Drawing an area model led to a correct expansion.', quote: 'Oh, so the 4 has to touch both pieces.' },
+      { category: 'habit', text: 'Skips substitution checks unless asked.', quote: 'Do we have to?' },
+    ],
+  },
+  'Equations with fractions and word problems': {
+    summary: 'Brackets and moving terms were correct, including a negative multiplier. The student still asked to skip checks.',
+    observations: [
+      { category: 'what_works', text: 'Drawing an area model led to a correct expansion.', quote: 'I do the rectangle in my head now.' },
+      { category: 'habit', text: 'Skips substitution checks unless asked.', quote: "Do I need to? It's simple." },
+    ],
+  },
+};
 
 const MOCK_PLAN: ModelAnalysis['probePlan'] = [
   { concept: 'Distributive property', intent: 'Check that the student multiplies every term inside the brackets.' },
@@ -199,10 +225,14 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
 
   async summarizeSession(input: SummarizeSessionInput): Promise<ModelSessionSummary> {
     const header = input.transcriptText.match(/^Session:\s*(.+)$/m)?.[1].trim();
+    const notes = (header && SAMPLE_SESSION_NOTES[header]) || {
+      summary: `Mock summary of the ${input.sessionDate} session with ${input.whiteboards.length} whiteboard image(s).`,
+      observations: [{ category: 'habit' as const, text: 'Needs a prompt before checking an answer.' }],
+    };
     return {
       title: (header || `Session on ${input.sessionDate}`).slice(0, 80),
-      summary: `Mock summary of the ${input.sessionDate} session with ${input.whiteboards.length} whiteboard image(s). Practiced solving linear equations.`,
-      observations: structuredClone(MOCK_OBSERVATIONS),
+      summary: notes.summary,
+      observations: structuredClone(notes.observations),
     };
   }
 

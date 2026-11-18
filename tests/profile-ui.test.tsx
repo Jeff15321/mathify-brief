@@ -98,46 +98,6 @@ describe('ProfilePage', () => {
     expect(within(row('Skips checks.')).getByText('Tutor')).toBeInTheDocument();
   });
 
-  it('saves tutor notes with Save and on blur', async () => {
-    await renderPage();
-    vi.mocked(api.updateProfile).mockImplementation(async changes => ({ ...PROFILE, tutorNotes: changes.tutorNotes! }));
-    const notes = screen.getByLabelText('Tutor notes');
-    expect(screen.getByText('Never changed by the AI')).toBeInTheDocument();
-    fireEvent.change(notes, { target: { value: 'Responds to praise' } });
-    fireEvent.click(within(notes.closest('form')!).getByRole('button', { name: 'Save' }));
-    expect(await screen.findByText('Saved')).toBeInTheDocument();
-    expect(api.updateProfile).toHaveBeenLastCalledWith({ tutorNotes: 'Responds to praise' });
-    fireEvent.change(notes, { target: { value: 'Prefers diagrams' } });
-    fireEvent.blur(notes);
-    await waitFor(() => expect(api.updateProfile).toHaveBeenLastCalledWith({ tutorNotes: 'Prefers diagrams' }));
-    expect(notes).toHaveValue('Prefers diagrams');
-    fireEvent.blur(notes);
-    expect(api.updateProfile).toHaveBeenCalledTimes(2);
-  });
-
-  it('rebuilds from sessions and shows the status', async () => {
-    await renderPage();
-    let finish!: (profile: LearnerProfile) => void;
-    vi.mocked(api.rebuildProfile).mockReturnValue(new Promise(resolve => { finish = resolve; }));
-    fireEvent.click(screen.getByRole('button', { name: 'Rebuild from sessions' }));
-    expect(screen.getByRole('button', { name: 'Rebuilding…' })).toBeDisabled();
-    finish({ ...PROFILE, rebuiltAt: '2026-11-18T17:00:00.000Z' });
-    expect(await screen.findByRole('button', { name: 'Rebuild from sessions' })).toBeEnabled();
-    expect(screen.getByText('Last rebuilt').nextSibling).toHaveTextContent('Nov 18');
-    expect(api.rebuildProfile).toHaveBeenCalledTimes(1);
-  });
-
-  it('shows a failed rebuild with a retry', async () => {
-    await renderPage();
-    vi.mocked(api.rebuildProfile).mockRejectedValueOnce(new Error('The learner profile could not be rebuilt. Please retry.')).mockResolvedValueOnce(PROFILE);
-    vi.mocked(api.fetchProfile).mockResolvedValue({ ...PROFILE, rebuildStatus: 'failed' });
-    fireEvent.click(screen.getByRole('button', { name: 'Rebuild from sessions' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('The learner profile could not be rebuilt. Please retry. The previous profile is shown.');
-    fireEvent.click(screen.getByRole('button', { name: 'Retry rebuild' }));
-    expect(await screen.findByRole('button', { name: 'Rebuild from sessions' })).toBeInTheDocument();
-    expect(api.rebuildProfile).toHaveBeenCalledTimes(2);
-  });
-
   it('edits the next focus and hands it back to the AI', async () => {
     await renderPage();
     vi.mocked(api.updateProfile).mockResolvedValueOnce({ ...PROFILE, nextFocus: 'Checks by substitution', nextFocusSource: 'tutor' })

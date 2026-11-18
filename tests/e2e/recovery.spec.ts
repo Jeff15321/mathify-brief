@@ -18,7 +18,7 @@ test('failed drawing export can be omitted explicitly without losing the selecte
   await page.getByRole('button', { name: 'Send to tutor' }).click();
   await expect(page.getByRole('button', { name: 'Send without drawing' })).toBeVisible();
   await page.getByRole('button', { name: 'Send without drawing' }).click();
-  await page.waitForURL('**/brief');
+  await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect(page.getByText(/drawing export was omitted/)).toBeVisible();
   const { workspace } = await (await request.get('/api/workspace')).json();
   expect(workspace.brief.results[0].selectedOptionId).toBe('B');
@@ -27,7 +27,7 @@ test('failed drawing export can be omitted explicitly without losing the selecte
 test('fetch retry preserves a saved intake draft', async ({ page }) => {
   await page.goto('/workspace?new=1');
   await page.getByLabel('Question (optional if files provided)').fill('A saved question');
-  await expect(page.getByRole('status').filter({ hasText: 'Saved on this device' })).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.route('**/api/workspace', route => route.fulfill({ status: 503, json: { error: { message: 'Temporary connection failure' } } }), { times: 1 });
   await page.reload();
   await expect(page.getByText('Temporary connection failure')).toBeVisible();
@@ -41,7 +41,7 @@ test('PDF-only intake keeps its original source available to the tutor', async (
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Fit to work' })).toBeEnabled();
   await page.getByRole('button', { name: 'Send to tutor' }).click();
-  await page.waitForURL('**/brief');
+  await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'normal-03-1.pdf (PDF)' })).toBeVisible();
 });
 test('quota failure is visible and never claims the draft was saved', async ({ page }) => {
@@ -49,7 +49,6 @@ test('quota failure is visible and never claims the draft was saved', async ({ p
   await page.goto('/workspace?new=1');
   await page.getByLabel('Question (optional if files provided)').fill('Keep this question open');
   await expect(page.getByText(/This device could not save your draft/)).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Not saved' })).toBeVisible();
   await expect(page.getByText('Saved on this device', { exact: true })).toHaveCount(0);
 });
 test('lost Next response cannot carry an old answer into the next hinted question', async ({ page }) => {
@@ -65,7 +64,7 @@ test('pilot events distinguish ready, visible and acknowledged answers without c
   await start(page);
   await page.locator('input[name="s1-main"][value="IDK"]').check();
   await page.getByRole('button', { name: 'Send to tutor' }).click();
-  await page.waitForURL('**/brief');
+  await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').map((e: { eventName: string }) => e.eventName))).toContain('brief_visible');
   const events = await page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]'));
   for (const name of ['begin_clicked', 'upload_succeeded', 'analysis_ready', 'probe_ready', 'probe_visible', 'answer_saved', 'brief_saved']) expect(events.some((e: { eventName: string }) => e.eventName === name)).toBe(true);
