@@ -96,9 +96,28 @@ describe("learner profile (mock AI, isolated temp directory)", () => {
 
     const profile = await updateProfile({ upsertItems: [{ ...aiItem, text: "Edited.", status: "improving" }], deleteItemIds: [toDelete.id] }, stores);
 
-    expect(profile.items.find((item) => item.id === aiItem.id)).toEqual({ ...aiItem, text: "Edited.", status: "improving", source: "tutor" });
+    const edited = { ...aiItem, text: "Edited.", status: "improving", source: "tutor", originText: aiItem.text };
+    expect(profile.items.find((item) => item.id === aiItem.id)).toEqual(edited);
     expect(profile.items.some((item) => item.id === toDelete.id)).toBe(false);
-    expect((await rebuildProfile(stores)).items).toContainEqual({ ...aiItem, text: "Edited.", status: "improving", source: "tutor" });
+    expect((await updateProfile({ upsertItems: [{ ...edited, text: "Edited twice." }] }, stores)).items).toContainEqual({ ...edited, text: "Edited twice." });
+
+    const rebuilt = await rebuildProfile(stores);
+    expect(rebuilt.items).toContainEqual({ ...edited, text: "Edited twice." });
+    expect(rebuilt.items.filter((item) => item.text === aiItem.text)).toEqual([]);
+  });
+
+  it("drops rebuilt AI items matching a tutor item's normalized text in the same category only", async () => {
+    await uploadTwo();
+    const [struggle] = (await getProfile(stores)).items;
+    await updateProfile({ upsertItems: [
+      { category: "struggle", text: `  ${struggle.text.toUpperCase().replace(/ /g, "   ")} `, status: "active" },
+      { category: "habit", text: "Solved one-step equations quickly and correctly.", status: "active" },
+    ] }, stores);
+
+    const { items } = await rebuildProfile(stores);
+
+    expect(items.filter((item) => item.source === "ai" && item.text === struggle.text)).toEqual([]);
+    expect(items.some((item) => item.source === "ai" && item.text === "Solved one-step equations quickly and correctly.")).toBe(true);
   });
 
   it("drops evidence for a deleted session and AI items left without evidence", async () => {

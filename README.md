@@ -152,7 +152,9 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   deleted sessions is dropped (dates follow session date edits), and AI items left without
   evidence are dropped. A failure keeps the previous profile with `rebuildStatus: 'failed'`. A
   tutor-written `nextFocus` (`nextFocusSource: 'tutor'`) survives rebuilds; PATCHing it to `""`
-  hands it back to the AI. Mock mode groups identical observation texts.
+  hands it back to the AI. An edited AI item keeps its AI wording as `originText`, and rebuilt AI
+  items whose normalized text matches a tutor item's `text` or `originText` in the same category
+  are dropped. Mock mode groups identical observation texts.
 
   | Method | Path | Behaviour |
   | --- | --- | --- |

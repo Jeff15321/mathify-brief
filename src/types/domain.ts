@@ -238,6 +238,8 @@ export interface ProfileEvidence { sessionId: string; date: string; quote?: stri
 export interface LearnerProfileItem {
   id: string; category: ObservationCategory; text: string;
   status: ProfileItemStatus; source: 'ai' | 'tutor'; evidence: ProfileEvidence[];
+  /** The AI text of a tutor item that was converted from an AI item; used to dedupe rebuilds. */
+  originText?: string;
 }
 
 /** The single demo student's profile, rebuilt by AI from every ready session; tutor items are kept. */

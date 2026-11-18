@@ -11,6 +11,8 @@ type Stores = ReturnType<typeof createStores>;
 
 const rebuilds = new WeakMap<object, Promise<unknown>>();
 
+const normalize = (text: string) => text.trim().toLowerCase().replace(/\s+/g, ' ');
+
 export async function getProfile(stores: Stores = getStores()): Promise<LearnerProfile> {
   return stores.profileStore.read();
 }
@@ -25,7 +27,8 @@ export async function updateProfile(input: unknown, stores: Stores = getStores()
     let items = current.items.filter((item) => !deleteItemIds.includes(item.id));
     for (const { id = randomUUID(), ...edit } of upsertItems) {
       const existing = items.find((item) => item.id === id);
-      const next: LearnerProfileItem = { evidence: existing?.evidence ?? [], ...edit, id, source: 'tutor' };
+      const originText = existing?.source === 'ai' ? existing.text : existing?.originText;
+      const next: LearnerProfileItem = { evidence: existing?.evidence ?? [], ...edit, id, source: 'tutor', ...(originText ? { originText } : {}) };
       items = existing ? items.map((item) => (item === existing ? next : item)) : [...items, next];
     }
     const focus = fields.nextFocus === undefined ? {} : { nextFocusSource: fields.nextFocus ? 'tutor' as const : 'ai' as const };
@@ -79,8 +82,10 @@ async function runRebuild({ profileStore, sessionStore }: Stores): Promise<Learn
       const tutorItems = current.items
         .filter((item) => item.source === 'tutor')
         .map((item) => ({ ...item, evidence: withSessionDates(item.evidence) }));
+      const tutorTexts = new Set(tutorItems.flatMap((item) => [item.text, item.originText ?? ''].map((text) => `${item.category}:${normalize(text)}`)));
+      const newAiItems = aiItems.filter((item) => !tutorTexts.has(`${item.category}:${normalize(item.text)}`));
       return {
-        ...current, nextFocus: current.nextFocusSource === 'tutor' ? current.nextFocus : output.nextFocus, items: [...tutorItems, ...aiItems], updatedAt: now, rebuiltAt: now,
+        ...current, nextFocus: current.nextFocusSource === 'tutor' ? current.nextFocus : output.nextFocus, items: [...tutorItems, ...newAiItems], updatedAt: now, rebuiltAt: now,
         rebuildStatus: 'idle', model: resolveSummaryModelLabel(), promptVersion: PROFILE_PROMPT_VERSION,
       };
     });
