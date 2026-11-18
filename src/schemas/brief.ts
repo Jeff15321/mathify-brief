@@ -11,3 +11,9 @@ export const modelBriefSchema = z.object({
 });
 
 export type ModelBrief = z.infer<typeof modelBriefSchema>;
+
+export const modelHistorySchema = z.object({
+  bullets: z.array(z.string().min(1)).max(4),
+});
+
+export type ModelHistory = z.infer<typeof modelHistorySchema>;
