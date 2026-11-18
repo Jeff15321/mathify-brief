@@ -1,0 +1,87 @@
+Session: Linear equations review
+Date: 2026-10-03
+Tutor: Ms. Patel
+Student: Demo Student
+
+[00:00:06] Tutor: Hi again! How was your week?
+[00:00:25] Student: Good. We had a quiz on equations.
+[00:00:36] Tutor: How did it go?
+[00:01:02] Student: Okay I think. Some of the bracket ones I wasn't sure about.
+[00:01:16] Tutor: Then let's start with 2(x + 3) = 14.
+[00:01:31] Student: So it's 2x plus 3?
+[00:01:44] Tutor: Remember what we said last week about the number outside the brackets?
+[00:02:20] Student: It multiplies everything. Right. 2x + 6.
+[00:02:32] Tutor: Good. And then?
+[00:02:52] Student: 2x = 8, x = 4.
+[00:03:08] Tutor: Quick warm-up round before we go further. I'll say them fast. x - 7 = 3.
+[00:03:31] Student: 10.
+[00:03:36] Tutor: 5x = -35.
+[00:03:57] Student: -7.
+[00:04:10] Tutor: x/3 = 9.
+[00:04:34] Student: 27.
+[00:04:46] Tutor: -4 + x = -10.
+[00:04:58] Student: -6.
+[00:05:07] Tutor: Four for four, and fast. One-step equations are clearly a strength. Now: 3(x + 5) = 2x + 20. What would you try first?
+[00:05:26] Student: Expand the brackets. 3x + 15.
+[00:05:33] Tutor: Good, both terms. Keep going.
+[00:05:55] Student: 3x + 15 = 2x + 20. 3x + 2x = 20 - 15. 5x = 5, x = 1.
+[00:06:10] Tutor: Let's check x = 1 in the original.
+[00:06:44] Student: 3 times 6 is 18. 2 plus 20 is 22. That's not equal.
+[00:07:02] Tutor: So something went wrong. Where do you think?
+[00:07:33] Student: Maybe the 2x?
+[00:07:45] Tutor: What did you do to remove 2x from the right side?
+[00:08:01] Student: I moved it to the left... so subtract 2x. So it should be 3x - 2x.
+[00:08:18] Tutor: Exactly. Redo it.
+[00:08:34] Student: x + 15 = 20, x = 5.
+[00:08:46] Tutor: Check?
+[00:08:54] Student: 3 times 10 is 30. 10 plus 20 is 30. Okay.
+[00:09:08] Tutor: See how the check caught it? That's why it's worth the ten seconds.
+[00:09:25] Student: Yeah, but usually I'm right.
+[00:09:36] Tutor: Usually. Next: 4(x - 3) = 2(x + 1).
+[00:10:09] Student: 4x - 3 = 2x + 1.
+[00:10:19] Tutor: Look at both brackets.
+[00:10:47] Student: Oh. 4x - 12 = 2x + 2.
+[00:10:59] Tutor: What would you try first now?
+[00:11:22] Student: Get x on one side. Subtract 2x. 2x - 12 = 2. Then add 12. 2x = 14, x = 7.
+[00:11:39] Tutor: Nice, every sign right that time. What helped?
+[00:12:12] Student: I said what I'm doing to both sides in my head.
+[00:12:30] Tutor: Keep doing that. Check?
+[00:12:38] Student: 4 times 4 is 16, 2 times 8 is 16. Yep.
+[00:12:48] Tutor: Next: 8 - 3x = 2x - 7.
+[00:13:06] Student: Hmm. The x's are on both sides and one is negative.
+[00:13:22] Tutor: What would you try first?
+[00:13:32] Student: Maybe add 3x to both sides so it's positive?
+[00:13:48] Tutor: Good idea. Try it.
+[00:13:59] Student: 8 = 5x - 7. Then add 7, 15 = 5x, x = 3.
+[00:14:15] Tutor: Excellent. That was a smart first move.
+[00:14:36] Student: That was easier than I thought.
+[00:14:52] Tutor: Let's try one on your own. 6(x + 2) - 4 = 20.
+[00:15:23] Student: 6x + 2 - 4 = 20.
+[00:15:38] Tutor: Look again at the 6(x + 2).
+[00:16:12] Student: 6x + 12. Why do I keep doing that?
+[00:16:29] Tutor: Your eyes go to the x first. Try drawing an arrow from the 6 to each term inside before you write anything.
+[00:17:05] Student: Okay. 6x + 12 - 4 = 20, 6x + 8 = 20, 6x = 12, x = 2.
+[00:17:18] Tutor: Correct. Check?
+[00:17:30] Student: I'm sure that's right.
+[00:17:41] Tutor: Okay, I'll let you skip this one. Next: 5x - 9 = 2x + 6.
+[00:18:17] Student: 5x - 2x = 6 - 9, 3x = -3, x = -1.
+[00:18:33] Tutor: Check that one.
+[00:18:45] Student: 5 times -1 minus 9 is -14. 2 times -1 plus 6 is 4. Not the same.
+[00:18:54] Tutor: So?
+[00:19:26] Student: The -9. I have to add 9 to both sides, so 6 + 9. 3x = 15, x = 5.
+[00:19:42] Tutor: Right. Same pattern as before: the constant changed sides but its sign didn't change.
+[00:19:58] Student: It's always the moving part that gets me.
+[00:20:15] Tutor: Let's do two more just on that. 2x + 7 = 19 - x.
+[00:20:29] Student: Add x, 3x + 7 = 19. Subtract 7, 3x = 12, x = 4.
+[00:20:37] Tutor: Perfect. 10 - 2x = 4x - 14.
+[00:20:47] Student: Add 2x... 10 = 6x - 14. Add 14, 24 = 6x, x = 4.
+[00:20:55] Tutor: Both right. You were careful to say the operation. Last one, everything together: 3(2x - 1) = 4(x + 2) + 1.
+[00:21:22] Student: What would I try first... brackets. 6x - 3 = 4x + 8 + 1. So 6x - 3 = 4x + 9.
+[00:21:37] Tutor: Good, both brackets done fully.
+[00:21:54] Student: Subtract 4x, 2x - 3 = 9. Add 3, 2x = 12, x = 6.
+[00:22:12] Tutor: And check?
+[00:22:24] Student: 3 times 11 is 33. 4 times 8 is 32, plus 1 is 33. Done.
+[00:22:36] Tutor: Great finish. To sum up: brackets are still the first thing to watch, and moving terms gets better when you say the operation out loud. Checks caught two mistakes today.
+[00:23:18] Student: Okay, I'll try to check more.
+[00:23:31] Tutor: See you in two weeks.
+[00:23:47] Student: Bye.
