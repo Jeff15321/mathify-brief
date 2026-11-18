@@ -1,4 +1,5 @@
-import type { ProbeAnswer, PublicProbing, PublicSessionSummary, PublicWorkspace, TutorBrief, TutorSession } from '@/types/domain';
+import type { ProfileUpdate } from '@/schemas/profile';
+import type { LearnerProfile, ProbeAnswer, PublicProbing, PublicSessionSummary, PublicWorkspace, TutorBrief, TutorSession } from '@/types/domain';
 
 export class ApiClientError extends Error {
   constructor(
@@ -122,4 +123,27 @@ export async function retrySessionSummary(id: string): Promise<TutorSession> {
   const res = await fetch(`/api/sessions/${encodeURIComponent(id)}/summarize`, { method: 'POST' });
   if (!res.ok) await parseErrorResponse(res);
   return (await res.json()).session;
+}
+
+export async function fetchProfile(): Promise<LearnerProfile> {
+  const res = await fetch('/api/profile', { cache: 'no-store' });
+  if (!res.ok) await parseErrorResponse(res);
+  return (await res.json()).profile;
+}
+
+/** Upserted items (including edited AI items) are saved as `source: 'tutor'`. */
+export async function updateProfile(changes: ProfileUpdate): Promise<LearnerProfile> {
+  const res = await fetch('/api/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(changes),
+  });
+  if (!res.ok) await parseErrorResponse(res);
+  return (await res.json()).profile;
+}
+
+export async function rebuildProfile(): Promise<LearnerProfile> {
+  const res = await fetch('/api/profile/rebuild', { method: 'POST' });
+  if (!res.ok) await parseErrorResponse(res);
+  return (await res.json()).profile;
 }
