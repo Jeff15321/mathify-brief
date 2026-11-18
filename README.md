@@ -141,6 +141,23 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   new tab, editable tutor notes and session date, and the transcript, collapsed to a 15-line
   preview with speaker labels in bold. Delete session asks for confirmation, then returns to
   `/sessions`. Unknown ids show "Session not found".
+- **Learner profile** (`src/server/learner-profile-service.ts`): one profile for the demo student
+  in `LOCAL_DATA_DIR/learner-profile.json` (`profileStore`; empty until the first rebuild, atomic,
+  serialized writes). `rebuildProfile` sends every `ready` session's observations, plus the tutor's
+  items and notes as read-only context, to `ANTHROPIC_SUMMARY_MODEL` (`profile-v1`), which returns
+  `nextFocus` and up to 20 merged items (struggle, strength, what works, habit) with a status
+  (`active`, `improving`, `resolved`) and evidence per session. It runs after a summary becomes
+  `ready`, after a session edit and after a delete; rebuilds are serialized, and a failed rebuild
+  is only logged there. Merge rules: tutor items are kept, AI items are replaced, evidence for
+  deleted sessions is dropped (dates follow session date edits), and AI items left without
+  evidence are dropped. A failure keeps the previous profile with `rebuildStatus: 'failed'`. Mock
+  mode groups identical observation texts.
+
+  | Method | Path | Behaviour |
+  | --- | --- | --- |
+  | GET | `/api/profile` | `{ profile }` |
+  | PATCH | `/api/profile` | JSON `{ nextFocus? (≤ 300), tutorNotes? (≤ 2000), upsertItems? (≤ 20, text ≤ 300), deleteItemIds? }`; upserted items, including edited AI items, become `source: 'tutor'` and keep their evidence |
+  | POST | `/api/profile/rebuild` | rebuilds now; 502 on failure (previous profile kept) |
 
 ## Known future work (intentionally not implemented)
 
