@@ -2,13 +2,13 @@ import Link from 'next/link';
 import type { PublicSessionSummary, SessionStatus } from '@/types/domain';
 import { BriefBadge } from '@/components/brief/BriefCard';
 
-const STATUS: Record<SessionStatus, { title: string; badge: string; className: string }> = {
+export const STATUS: Record<SessionStatus, { title: string; badge: string; className: string }> = {
   ready: { title: 'Untitled session', badge: 'Ready', className: 'bg-emerald-100 text-emerald-700' },
   pending: { title: 'Summarizing…', badge: 'Pending', className: 'bg-amber-100 text-amber-800' },
   failed: { title: 'Summary failed', badge: 'Failed', className: 'bg-red-100 text-red-700' },
 };
 
-function formatDate(date: string) {
+export function formatDate(date: string) {
   return new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
