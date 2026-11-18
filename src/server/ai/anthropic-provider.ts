@@ -61,7 +61,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       system: REVIEW_SYSTEM_PROMPT, maxTokens: 4096, schema: analysisReviewSchema,
       operation: 'an analysis review',
       content: [
-        { type: 'text', text: JSON.stringify({ grade: input.grade, originalQuestion: input.questionText, candidate }) },
+        { type: 'text', text: JSON.stringify({ grade: input.grade, originalQuestion: input.questionText, learnerContext: input.learnerContext, candidate }) },
         ...filesToContentBlocks(input.files),
       ],
     });

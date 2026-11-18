@@ -74,6 +74,9 @@ Check clear, single-skill wording with one small calculation or conceptual decis
 For an analysis, compare the parsed question to the original text/attachments; check every
 breakdown statement for mathematical correctness and pedagogical usefulness as a short,
 student-safe roadmap, not a worked solution. Check the plan's relevance and distinctness.
+If learnerContext is given (tutor-only notes from past sessions), a separate, simpler step for a
+technique listed there as a recurring struggle is relevant, not redundant; student-facing text must
+never mention that context or past sessions.
 Mark each applicable boolean true ONLY after verification. Ambiguity, missing context,
 uncertainty, an invalid question, or any failure means false for the affected check.
 Return only the requested verdict schema; do not rewrite the content.`;
