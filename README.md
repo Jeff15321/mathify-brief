@@ -187,6 +187,13 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   call; a report replaced during the call returns 409 and is not updated. `history` is left out of
   the feedback report id. The card renders nothing for empty bullets or a failure, and links to
   `/profile`. Mock mode cites the first three profile items with their dates.
+- **Profile-aware probing** (`src/server/helpers/learner-context-helper.ts`): analysis and each
+  probe pair read the learner profile and send a tutor-only `learnerContext` (active/improving
+  struggles, then what works, one line each with the latest evidence date, at most 1500 chars)
+  to generation and review; an empty profile sends nothing. The prompts (`analysis-v4`,
+  `probe-pair-v4`) give a known struggle its own simpler step within 3-5 steps and never mention
+  the context to the student. The stored analysis records the profile's `updatedAt` as
+  `profileUpdatedAt`; neither field is in the public workspace. Mock mode ignores the context.
 
 ## Known future work (intentionally not implemented)
 
