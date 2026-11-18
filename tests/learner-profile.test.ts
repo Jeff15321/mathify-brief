@@ -138,6 +138,18 @@ describe("learner profile (mock AI, isolated temp directory)", () => {
     expect(spy.mock.calls[0][0].dismissedItems).toEqual(dismissed);
   });
 
+  it("keeps the original AI wording out after an edited AI item is deleted", async () => {
+    await uploadTwo();
+    const [aiItem] = (await getProfile(stores)).items;
+    await updateProfile({ upsertItems: [{ id: aiItem.id, category: aiItem.category, text: "Edited wording.", status: "active" }] }, stores);
+
+    const { dismissed } = await updateProfile({ deleteItemIds: [aiItem.id] }, stores);
+    const rebuilt = await rebuildProfile(stores);
+
+    expect(dismissed).toEqual([{ category: aiItem.category, text: aiItem.text }]);
+    expect(rebuilt.items.some((item) => item.text === aiItem.text)).toBe(false);
+  });
+
   it("tolerates a saved profile without dismissed and keeps the latest 100 dismissed items", async () => {
     await uploadTwo();
     const file = path.join(dataDir, "learner-profile.json");

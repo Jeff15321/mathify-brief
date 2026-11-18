@@ -26,8 +26,8 @@ export async function updateProfile(input: unknown, stores: Stores = getStores()
   const { upsertItems = [], deleteItemIds = [], ...fields } = parsed.data;
 
   return stores.profileStore.update((current) => {
-    const deleted = current.items.filter((item) => deleteItemIds.includes(item.id) && item.source === 'ai')
-      .flatMap(({ category, text, originText }) => [text, ...(originText ? [originText] : [])].map((dismissedText) => ({ category, text: dismissedText })));
+    const deleted = current.items.filter((item) => deleteItemIds.includes(item.id))
+      .flatMap(({ category, text, originText, source }) => [...(source === 'ai' ? [text] : []), ...(originText ? [originText] : [])].map((dismissedText) => ({ category, text: dismissedText })));
     const dismissed = [...current.dismissed, ...deleted].slice(-MAX_DISMISSED);
     let items = current.items.filter((item) => !deleteItemIds.includes(item.id));
     for (const { id = randomUUID(), ...edit } of upsertItems) {
