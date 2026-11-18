@@ -3,8 +3,10 @@ import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
 import type { ModelSessionSummary } from '@/schemas/session';
+import type { ModelLearnerProfile } from '@/schemas/profile';
 import type {
   AnalyzeQuestionInput,
+  BuildLearnerProfileInput,
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
@@ -201,5 +203,20 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
       summary: `Mock summary of the ${input.sessionDate} session with ${input.whiteboards.length} whiteboard image(s). Practiced solving linear equations.`,
       observations: structuredClone(MOCK_OBSERVATIONS),
     };
+  }
+
+  /** Groups observations with the same text into one active item citing every session. */
+  async buildLearnerProfile(input: BuildLearnerProfileInput): Promise<ModelLearnerProfile> {
+    const items = new Map<string, ModelLearnerProfile['items'][number]>();
+    for (const session of input.sessions) {
+      for (const observation of session.observations) {
+        const item = items.get(observation.text) ?? { category: observation.category, text: observation.text, status: 'active', evidence: [] };
+        item.evidence.push({ sessionId: session.sessionId, ...(observation.quote ? { quote: observation.quote } : {}) });
+        items.set(observation.text, item);
+      }
+    }
+    const grouped = [...items.values()].slice(0, 20);
+    const struggle = grouped.find((item) => item.category === 'struggle');
+    return { nextFocus: struggle ? `Revisit: ${struggle.text}` : '', items: grouped };
   }
 }

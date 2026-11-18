@@ -11,11 +11,13 @@ import {
 import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import { modelSessionSummarySchema, type ModelSessionSummary } from '@/schemas/session';
-import { REVIEW_SYSTEM_PROMPT, SESSION_SUMMARY_SYSTEM_PROMPT } from './prompts';
+import { modelLearnerProfileSchema, type ModelLearnerProfile } from '@/schemas/profile';
+import { PROFILE_SYSTEM_PROMPT, REVIEW_SYSTEM_PROMPT, SESSION_SUMMARY_SYSTEM_PROMPT } from './prompts';
 import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
 import type {
   AnalyzeQuestionInput,
+  BuildLearnerProfileInput,
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
@@ -23,6 +25,7 @@ import type {
 } from './provider';
 
 const ANALYSIS_MAX_TOKENS = 8192;
+const PROFILE_MAX_TOKENS = 4096;
 const PROBE_PAIR_MAX_TOKENS = 4096;
 const BRIEF_MAX_TOKENS = 4096;
 const SESSION_SUMMARY_MAX_TOKENS = 2048;
@@ -194,6 +197,17 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
         },
         ...filesToContentBlocks(input.whiteboards),
       ],
+    });
+  }
+
+  async buildLearnerProfile(input: BuildLearnerProfileInput): Promise<ModelLearnerProfile> {
+    return this.createStructured({
+      system: PROFILE_SYSTEM_PROMPT,
+      maxTokens: PROFILE_MAX_TOKENS,
+      schema: modelLearnerProfileSchema,
+      operation: 'a learner profile',
+      model: this.summaryModel,
+      content: [{ type: 'text', text: JSON.stringify(input) }],
     });
   }
 
