@@ -1,5 +1,6 @@
 import { StartingPointCard } from "./StartingPointCard";
 import { EvidenceSummary } from "./EvidenceSummary";
+import { PastSessionsCard } from "./PastSessionsCard";
 import Link from "next/link";
 import { TutorFeedbackSurvey } from "./TutorFeedbackSurvey";
 import type { PublicWorkspace, TutorBrief } from "@/types/domain";
@@ -34,6 +35,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
         <div className="space-y-3">
           <StartingPointCard brief={brief} />
           <EvidenceSummary brief={brief} drawingOmitted={workspace.whiteboardState === 'omitted'} />
+          <PastSessionsCard workspaceId={workspace.workspaceId} />
         </div>
       </div>
       <details className="rounded-xl border border-slate-200 bg-white p-4">
