@@ -134,7 +134,13 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
 - **`/sessions`:** upload a transcript with up to 5 whiteboard images, a session date and optional
   tutor notes, then see every session newest first with its AI title, summary, counts and status.
   The list refreshes every 3 s while a summary is pending, and failed summaries have a Retry
-  button. Cards link to `/sessions/[id]` (not built yet).
+  button. Cards link to `/sessions/[id]`.
+- **`/sessions/[id]`:** the AI title with session date, upload date and status badges, then the
+  summary (a loader while pending, refreshed every 3 s; Retry when failed), observations grouped
+  into Struggles, Strengths, What works and Habits, whiteboard thumbnails that open full size in a
+  new tab, editable tutor notes and session date, and the transcript, collapsed to a 15-line
+  preview with speaker labels in bold. Delete session asks for confirmation, then returns to
+  `/sessions`. Unknown ids show "Session not found".
 
 ## Known future work (intentionally not implemented)
 
