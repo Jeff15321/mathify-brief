@@ -233,6 +233,20 @@ export interface PublicSessionSummary {
   observationCount: number;
 }
 
+export type ProfileItemStatus = 'active' | 'improving' | 'resolved';
+export interface ProfileEvidence { sessionId: string; date: string; quote?: string }
+export interface LearnerProfileItem {
+  id: string; category: ObservationCategory; text: string;
+  status: ProfileItemStatus; source: 'ai' | 'tutor'; evidence: ProfileEvidence[];
+}
+
+/** The single demo student's profile, rebuilt by AI from every ready session; tutor items are kept. */
+export interface LearnerProfile {
+  schemaVersion: 1; nextFocus: string; items: LearnerProfileItem[]; tutorNotes: string;
+  updatedAt: string; rebuiltAt: string | null; rebuildStatus: 'idle' | 'rebuilding' | 'failed';
+  model: string | null; promptVersion: string | null;
+}
+
 export function toPublicProbe(probe: PrivateProbe): PublicProbe {
   return {
     hint: probe.hint,
