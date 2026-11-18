@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Images, Lightbulb, Sparkles } from 'lucide-react';
-import { ApiClientError, fetchSession, retrySessionSummary, updateSession } from '@/lib/api-client';
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, Images, Lightbulb, Sparkles, Trash2 } from 'lucide-react';
+import { ApiClientError, deleteSession, fetchSession, retrySessionSummary, updateSession } from '@/lib/api-client';
 import type { TutorSession } from '@/types/domain';
 import { BriefBadge, BriefCard } from '@/components/brief/BriefCard';
 import { STATUS, formatDate } from '@/components/sessions/SessionCard';
@@ -20,6 +20,7 @@ const icon = 'h-4 w-4 text-slate-500';
 
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [session, setSession] = useState<TutorSession | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +42,12 @@ export default function SessionDetailPage() {
     try { setSession(await retrySessionSummary(id)); }
     catch (err) { setError(message(err)); }
     finally { setBusy(false); }
+  }
+  async function remove() {
+    if (!window.confirm('Delete this session? Its transcript, notes and whiteboards will be removed.')) return;
+    setBusy(true);
+    try { await deleteSession(id); router.push('/sessions'); }
+    catch (err) { setError(message(err)); setBusy(false); }
   }
   async function save(changes: { sessionDate?: string; tutorNotes?: string }) { setSession(await updateSession(id, changes)); }
 
@@ -91,6 +98,10 @@ export default function SessionDetailPage() {
         <EditableNotes notes={session.tutorNotes} onSave={tutorNotes => save({ tutorNotes })} />
         <EditableSessionDate key={session.sessionDate} date={session.sessionDate} onSave={sessionDate => save({ sessionDate })} />
         <TranscriptViewer text={session.transcriptText} fileName={session.transcriptFileName} />
+        <button type="button" disabled={busy} onClick={() => void remove()}
+          className="inline-flex items-center gap-2 self-start rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">
+          <Trash2 className="h-4 w-4" aria-hidden /> Delete session
+        </button>
       </>}
     </div>
   </main>;
