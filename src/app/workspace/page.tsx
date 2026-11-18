@@ -239,7 +239,7 @@ export default function WorkspacePage() {
   }
   if (!loaded || !draft) return <main className="max-w-xl mx-auto p-8">{error ? <ErrorBanner message={error} onRetry={() => { setError(null); setLoadAttempt(n => n + 1); }} /> : <LoadingState label="Loading your workspace…" />}<a href="/workspace?new=1" className="text-blue-700 underline">New question</a></main>;
   if (workspace?.brief) return <main className="max-w-xl mx-auto p-8"><LoadingState label="Opening your Tutor Brief…" /></main>;
-  return <main data-phase={submitting ? 'submitting' : uploading ? 'uploading' : viewFor(workspace)} className="flex h-dvh flex-col bg-slate-50">
+  return <main data-phase={submitting ? 'submitting' : uploading ? 'uploading' : viewFor(workspace)} className="flex h-[calc(100dvh-3rem)] flex-col bg-slate-50 md:h-dvh">
     <header className="flex items-center justify-between gap-3 border-b bg-white px-4 py-3 text-sm">
       <span className="font-semibold">Mathify · Get ready for your tutor</span>
       <span role="status" className="text-xs text-slate-600">{saveStatus}</span>

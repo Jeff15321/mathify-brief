@@ -127,7 +127,14 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   | POST | `/api/sessions/[id]/summarize` | retries a failed summary; 409 if already `ready` |
   | GET | `/api/sessions/[id]/assets/[assetId]` | whiteboard image; 404 if not in that session |
 
-There is no session UI yet.
+- **Navigation:** `AppNav` (`src/components/shared/AppNav.tsx`, rendered from the root layout)
+  links Workspace, Tutor Brief, Sessions and Learner profile (`/profile` is not built yet). On
+  desktop it is a left sidebar that collapses to an icon rail; it starts collapsed on `/workspace`
+  and remembers the last toggle in `localStorage`. Narrow screens get a top bar with a menu.
+- **`/sessions`:** upload a transcript with up to 5 whiteboard images, a session date and optional
+  tutor notes, then see every session newest first with its AI title, summary, counts and status.
+  The list refreshes every 3 s while a summary is pending, and failed summaries have a Retry
+  button. Cards link to `/sessions/[id]` (not built yet).
 
 ## Known future work (intentionally not implemented)
 
