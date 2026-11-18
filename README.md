@@ -115,8 +115,19 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   a 2-4 sentence summary and up to 8 observations (struggle, strength, what works, habit). The
   session is `pending` while it runs, then `ready` or `failed`; a claim older than 2 minutes can
   be retried. Transcripts over 120,000 characters are truncated. Mock mode returns a fixed summary.
+- **API** (`src/server/session-service.ts`, client functions in `src/lib/api-client.ts`):
 
-There is no UI, route or AI summary yet.
+  | Method | Path | Behaviour |
+  | --- | --- | --- |
+  | POST | `/api/sessions` | multipart `transcript` (one `.txt/.md/.vtt/.srt` UTF-8 file, ≤ 1 MiB), `whiteboards` (0-5 PNG/JPEG/WebP), `sessionDate` (`YYYY-MM-DD`, default today, not in the future), `tutorNotes` (≤ 2000 chars). Saves as `pending`, then summarizes; `201 { session }` even if the summary failed |
+  | GET | `/api/sessions` | `{ sessions }` without transcripts |
+  | GET | `/api/sessions/[id]` | `{ session }` with transcript |
+  | PATCH | `/api/sessions/[id]` | JSON `{ sessionDate?, tutorNotes? }` |
+  | DELETE | `/api/sessions/[id]` | 204, removes the JSON and whiteboards |
+  | POST | `/api/sessions/[id]/summarize` | retries a failed summary; 409 if already `ready` |
+  | GET | `/api/sessions/[id]/assets/[assetId]` | whiteboard image; 404 if not in that session |
+
+There is no session UI yet.
 
 ## Known future work (intentionally not implemented)
 
