@@ -86,7 +86,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       content: [
         {
           type: 'text',
-          text: `Grade: ${input.grade}.${textSummary ? ` Typed question: ${textSummary}` : ' No typed question was provided; use the attached files.'}`,
+          text: `Grade: ${input.grade}.${textSummary ? ` Typed question: ${textSummary}` : ' No typed question was provided; use the attached files.'}${learnerContextLine(input.learnerContext)}`,
         },
         ...filesToContentBlocks(input.files),
       ],
@@ -118,7 +118,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
             `Parsed problem: ${input.parsedQuestionMarkdown}`,
             `Probe plan:\n${planText}`,
             `Write the main and easier probes for step ${input.stepIndex + 1} ("${step.concept}").`,
-          ].join('\n'),
+          ].join('\n') + learnerContextLine(input.learnerContext),
         },
       ],
     });
@@ -280,6 +280,10 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
 
     return schema.parse(parsedJson);
   }
+}
+
+function learnerContextLine(learnerContext: string | undefined): string {
+  return learnerContext ? `\nLearner context (tutor-only, from past sessions):\n${learnerContext}` : '';
 }
 
 function formatResults(results: ProbeResult[]): string {
