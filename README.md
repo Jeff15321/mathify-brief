@@ -26,6 +26,7 @@ Open http://localhost:3000.
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Server-only Claude Console key. Never exposed to the browser. |
 | `ANTHROPIC_MODEL` | Model id for generation and independent review calls (default `claude-sonnet-5-5`). |
+| `ANTHROPIC_SUMMARY_MODEL` | Cheaper model id used only for session summaries (default `claude-haiku-5-5`). |
 | `LOCAL_DATA_DIR` | Directory for the local workspace JSON + uploaded files (default `./data`). |
 | `AI_MOCK_MODE` | `true` (default) runs fully offline with a deterministic fake provider. Set `false` to call the real Anthropic API. |
 | `RUN_LIVE_AI_SMOKE` | Set to `1` (with a real key) to run one explicit, low-cost live Anthropic connectivity check. Never enabled in automated tests. |
@@ -109,6 +110,11 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   turns. Unlabelled text is also accepted. See [`docs/TRANSCRIPT_FORMAT.md`](docs/TRANSCRIPT_FORMAT.md).
 - **Samples:** four Grade 9 algebra sessions and three whiteboard images that tell one story,
   in [`samples/sessions/`](samples/sessions/README.md).
+- **Summaries:** `summarizeStoredSession` (`src/server/session-summary-service.ts`) sends one
+  session (transcript, tutor notes, whiteboards) to `ANTHROPIC_SUMMARY_MODEL` and stores a title,
+  a 2-4 sentence summary and up to 8 observations (struggle, strength, what works, habit). The
+  session is `pending` while it runs, then `ready` or `failed`; a claim older than 2 minutes can
+  be retried. Transcripts over 120,000 characters are truncated. Mock mode returns a fixed summary.
 
 There is no UI, route or AI summary yet.
 
