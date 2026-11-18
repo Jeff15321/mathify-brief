@@ -1,5 +1,6 @@
 import { LocalFeedbackStore } from './local-feedback-store';
 import { LocalAssetStore } from './local-asset-store';
+import { LocalSessionStore } from './local-session-store';
 import { LocalWorkspaceStore } from './local-workspace-store';
 import type { AssetStore, CurrentWorkspaceStore } from './contracts';
 
@@ -7,10 +8,11 @@ export function createStores(dataDir: string): {
   workspaceStore: CurrentWorkspaceStore;
   assetStore: AssetStore;
   feedbackStore: LocalFeedbackStore;
+  sessionStore: LocalSessionStore;
 } {
   const workspaceStore = new LocalWorkspaceStore(dataDir);
   const assetStore = new LocalAssetStore(dataDir, workspaceStore);
-  return { workspaceStore, assetStore, feedbackStore: new LocalFeedbackStore(dataDir) };
+  return { workspaceStore, assetStore, feedbackStore: new LocalFeedbackStore(dataDir), sessionStore: new LocalSessionStore(dataDir) };
 }
 
 let cached: ReturnType<typeof createStores> | null = null;
