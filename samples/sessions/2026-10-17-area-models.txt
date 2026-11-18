@@ -1,0 +1,83 @@
+Session: Area models for expanding brackets
+Date: 2026-10-17
+Tutor: Ms. Patel
+Student: Demo Student
+
+[00:00:08] Tutor: Hi! Ready to go?
+[00:00:31] Student: Yeah.
+[00:00:40] Tutor: Warm-up first. x + 12 = 30.
+[00:01:12] Student: 18.
+[00:01:24] Tutor: 7x = 56.
+[00:01:32] Student: 8.
+[00:01:47] Tutor: x/5 = -3.
+[00:02:02] Student: -15.
+[00:02:10] Tutor: Quick as always. Now expand and solve: 4(x + 5) = 36.
+[00:02:37] Student: 4x + 5 = 36.
+[00:02:43] Tutor: That's the bracket slip again. Let's try something different today. I'm going to draw on the whiteboard.
+[00:03:18] Student: Okay.
+[00:03:28] Tutor: Here's a rectangle. The height is 4. The width is split into two parts: x and 5. What's the area of the left part?
+[00:03:57] Student: 4 times x, so 4x.
+[00:04:08] Tutor: And the right part?
+[00:04:33] Student: 4 times 5, 20.
+[00:04:42] Tutor: So the whole rectangle is?
+[00:05:00] Student: 4x + 20. Oh, so the 4 has to touch both pieces.
+[00:05:14] Tutor: Exactly. The brackets are the whole width. Now solve 4x + 20 = 36.
+[00:05:46] Student: Subtract 20, 4x = 16, x = 4.
+[00:05:54] Tutor: Great. Can you draw the next one yourself? 3(x + 7) = 2x + 25.
+[00:06:15] Student: Okay, height 3, width x and 7. So 3x and 21. 3x + 21 = 2x + 25.
+[00:06:32] Tutor: What would you try first?
+[00:06:52] Student: Subtract 2x from both sides. x + 21 = 25. Subtract 21, x = 4.
+[00:07:07] Tutor: Signs all correct. You didn't hesitate at all on the moving step.
+[00:07:32] Student: I just say "subtract from both sides" now.
+[00:07:42] Tutor: It shows. Let's check it.
+[00:08:11] Student: Do we have to?
+[00:08:20] Tutor: Yes, quickly.
+[00:08:43] Student: 3 times 11 is 33. 8 plus 25 is 33. Fine.
+[00:08:50] Tutor: Next: 5(2x + 1) = 45. Draw it.
+[00:09:15] Student: Height 5. Width 2x and 1. So 10x and 5. 10x + 5 = 45, 10x = 40, x = 4.
+[00:09:28] Tutor: Good.
+[00:09:53] Student: Why is x = 4 every time?
+[00:10:02] Tutor: Coincidence, I promise. The next one is different. 2(x - 3) = 3x - 11. How would the drawing work with a minus?
+[00:10:23] Student: Um, take away a piece?
+[00:10:38] Tutor: You can think of it as a rectangle of width x with a strip of width 3 removed. The area is 2x minus 2 times 3.
+[00:11:07] Student: So 2x - 6. 2x - 6 = 3x - 11.
+[00:11:23] Tutor: What would you try first?
+[00:11:42] Student: Subtract 2x so the x stays positive on the right. -6 = x - 11. Add 11, x = 5.
+[00:11:56] Tutor: Excellent, that's a really smart choice of first move.
+[00:12:10] Student: I learned that last time.
+[00:12:23] Tutor: Check?
+[00:12:49] Student: 2 times 2 is 4. 15 minus 11 is 4. Yes.
+[00:13:05] Tutor: Let's try without drawing now. 6(x + 4) = 4(x + 9).
+[00:13:16] Student: I'll draw a little one anyway. 6x + 24 = 4x + 36.
+[00:13:24] Tutor: Good, both sides fully expanded.
+[00:13:43] Student: Subtract 4x, 2x + 24 = 36. Subtract 24, 2x = 12, x = 6.
+[00:13:51] Tutor: Check?
+[00:14:22] Student: 6 times 10, 60. 4 times 15, 60. Okay, that one was satisfying.
+[00:14:31] Tutor: Now some where moving terms matters. 9x - 4 = 5x + 16.
+[00:14:55] Student: Subtract 5x, 4x - 4 = 16. Add 4, 4x = 20, x = 5.
+[00:15:09] Tutor: Perfect. 3 - 2x = 18 + x.
+[00:15:27] Student: Add 2x, 3 = 18 + 3x. Subtract 18, -15 = 3x, x = -5.
+[00:15:39] Tutor: Correct. Two weeks ago those would have tripped you up.
+[00:16:00] Student: Yeah, they feel easier.
+[00:16:06] Tutor: What changed?
+[00:16:29] Student: I say the operation instead of just flipping signs.
+[00:16:43] Tutor: Let's do a mixed one. 7(x - 2) + 3 = 2(x + 7).
+[00:17:03] Student: 7x - 2 + 3... no wait. Let me draw it. 7x - 14 + 3 = 2x + 14.
+[00:17:18] Tutor: Good catch with the drawing.
+[00:17:50] Student: 7x - 11 = 2x + 14. Subtract 2x, 5x - 11 = 14. Add 11, 5x = 25, x = 5.
+[00:18:05] Tutor: Check?
+[00:18:23] Student: I think it's right.
+[00:18:38] Tutor: Check anyway.
+[00:18:51] Student: 7 times 3 is 21, plus 3 is 24. 2 times 12 is 24. Yes.
+[00:19:04] Tutor: Last one, a word problem. A phone plan costs $20 plus $5 per gigabyte. Another costs $3 per gigabyte plus $32. When do they cost the same?
+[00:19:45] Student: What would I try first... write an equation. 20 + 5g = 3g + 32.
+[00:20:02] Tutor: Good.
+[00:20:17] Student: Subtract 3g, 20 + 2g = 32. Subtract 20, 2g = 12, g = 6.
+[00:20:30] Tutor: And what does that mean?
+[00:20:53] Student: At 6 gigabytes they cost the same.
+[00:21:03] Tutor: How much?
+[00:21:33] Student: 20 plus 30 is 50. And 18 plus 32 is 50. Oh, that was a check.
+[00:21:43] Tutor: It was! Today the bracket slip showed up at the start, but the area-model drawing fixed it every time after that. Moving terms was solid all session. Keep drawing the rectangle until expanding feels automatic.
+[00:22:16] Student: Okay. Can I keep the drawing?
+[00:22:24] Tutor: I'll save the whiteboard for you. See you in three weeks.
+[00:22:47] Student: Bye!
