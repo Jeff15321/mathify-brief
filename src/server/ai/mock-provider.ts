@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
-import type { ModelBrief } from '@/schemas/brief';
+import type { ModelBrief, ModelHistory } from '@/schemas/brief';
 import type { ModelSessionSummary } from '@/schemas/session';
 import type { ModelLearnerProfile } from '@/schemas/profile';
 import type {
@@ -10,6 +10,7 @@ import type {
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
+  RelevantHistoryInput,
   SummarizeSessionInput,
 } from './provider';
 
@@ -218,5 +219,13 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
     const grouped = [...items.values()].slice(0, 20);
     const struggle = grouped.find((item) => item.category === 'struggle');
     return { nextFocus: struggle ? `Revisit: ${struggle.text}` : '', items: grouped };
+  }
+
+  /** Cites the first three profile items with their evidence dates; `[]` for an empty profile. */
+  async relevantHistory(input: RelevantHistoryInput): Promise<ModelHistory> {
+    return {
+      bullets: input.profile.items.slice(0, 3).map((item) =>
+        item.evidence.length > 0 ? `${item.text} Seen ${item.evidence.map((entry) => entry.date).join(', ')}.` : item.text),
+    };
   }
 }
