@@ -37,6 +37,14 @@ export interface GenerateTutorBriefInput {
   whiteboardPng: Buffer | null;
 }
 
+export interface SummarizeSessionInput {
+  grade: number;
+  sessionDate: string;
+  transcriptText: string;
+  tutorNotes: string;
+  whiteboards: StoredFile[];
+}
+
 export interface MathAnalysisProvider {
   reviewAnalysis(input: AnalyzeQuestionInput, candidate: ModelAnalysis): Promise<AnalysisReview>;
   reviewProbePair(input: GenerateProbePairInput, candidate: ModelProbePair): Promise<ProbeReview>;

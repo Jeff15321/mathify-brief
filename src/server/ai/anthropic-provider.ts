@@ -10,7 +10,8 @@ import {
 } from '@/schemas/analysis';
 import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
-import { REVIEW_SYSTEM_PROMPT } from './prompts';
+import { modelSessionSummarySchema, type ModelSessionSummary } from '@/schemas/session';
+import { REVIEW_SYSTEM_PROMPT, SESSION_SUMMARY_SYSTEM_PROMPT } from './prompts';
 import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
 import type {
@@ -18,11 +19,14 @@ import type {
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
+  SummarizeSessionInput,
 } from './provider';
 
 const ANALYSIS_MAX_TOKENS = 8192;
 const PROBE_PAIR_MAX_TOKENS = 4096;
 const BRIEF_MAX_TOKENS = 4096;
+const SESSION_SUMMARY_MAX_TOKENS = 2048;
+const MAX_TRANSCRIPT_CHARS = 120_000;
 
 /**
  * The Anthropic Messages API implementation of the Mathify model operations. Only `analyzeQuestion`
@@ -38,10 +42,12 @@ export interface ProviderInstrumentation {
 export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   private client: Anthropic;
   private model: string;
+  private summaryModel: string;
 
   constructor(private readonly instrumentation: ProviderInstrumentation = {}) {
     this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: instrumentation.maxRetries, timeout: 90_000 });
     this.model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+    this.summaryModel = process.env.ANTHROPIC_SUMMARY_MODEL || 'claude-haiku-5-5';
   }
 
   async reviewAnalysis(input: AnalyzeQuestionInput, candidate: ModelAnalysis) {
@@ -165,6 +171,32 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     });
   }
 
+  async summarizeSession(input: SummarizeSessionInput): Promise<ModelSessionSummary> {
+    const transcript = input.transcriptText.length > MAX_TRANSCRIPT_CHARS
+      ? `${input.transcriptText.slice(0, MAX_TRANSCRIPT_CHARS)}\n[Transcript truncated after ${MAX_TRANSCRIPT_CHARS} characters.]`
+      : input.transcriptText;
+
+    return this.createStructured({
+      system: SESSION_SUMMARY_SYSTEM_PROMPT,
+      maxTokens: SESSION_SUMMARY_MAX_TOKENS,
+      schema: modelSessionSummarySchema,
+      operation: 'a session summary',
+      model: this.summaryModel,
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Grade: ${input.grade}.`,
+            `Session date: ${input.sessionDate}.`,
+            `Tutor notes: ${input.tutorNotes.trim() || '(none)'}`,
+            `Transcript:\n${transcript}`,
+          ].join('\n'),
+        },
+        ...filesToContentBlocks(input.whiteboards),
+      ],
+    });
+  }
+
   /**
    * Sends one structured-output Messages API request and parses the JSON result with `schema`.
    * @throws Error on refusal, truncation, missing text, or invalid JSON/shape.
@@ -175,17 +207,19 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     schema,
     content,
     operation,
+    model = this.model,
   }: {
     system: string;
     maxTokens: number;
     schema: T;
     content: Anthropic.ContentBlockParam[];
     operation: string;
+    model?: string;
   }): Promise<z.infer<T>> {
     this.instrumentation.beforeRequest?.();
     const started = performance.now();
     const message = await this.client.messages.create({
-      model: this.model,
+      model,
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content }],
