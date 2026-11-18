@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import type { ProbeAnswer, StoredAsset, TutorBrief } from '@/types/domain';
+import type { BriefHistory, ProbeAnswer, StoredAsset, TutorBrief } from '@/types/domain';
+import { modelHistorySchema } from '@/schemas/brief';
+import { getAnalysisProvider } from './ai';
+import { HISTORY_PROMPT_VERSION } from './ai/prompts';
+import { resolveSummaryModelLabel } from './session-summary-service';
 import { getStores, type createStores } from './storage';
 import { ApiError } from './errors';
 import { assertWorkspaceId } from './workspace-identity';
@@ -60,4 +64,42 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
     // A losing/rejected request owns only its staged asset, never another workspace's assets.
     if (staged && !referenced) await assetStore.remove(staged).catch(() => {});
   }
+}
+
+/**
+ * Connects the learner profile to the current brief, once: the result (or failure) is saved on the
+ * brief. An empty profile skips the AI. A report replaced during the AI call is not updated.
+ */
+export async function getBriefHistory(workspaceId: string | undefined, stores: Stores = getStores()): Promise<BriefHistory> {
+  const { workspaceStore, profileStore } = stores;
+  const initial = await workspaceStore.read();
+  assertWorkspaceId(initial, workspaceId);
+  const brief = initial?.brief;
+  if (!initial?.analysis || !brief) throw new ApiError(404, 'NOT_FOUND', 'No Tutor Brief to compare with past sessions');
+  if (brief.history) return brief.history;
+
+  const profile = await profileStore.read();
+  let history: BriefHistory = { status: 'ready', bullets: [], generatedAt: new Date().toISOString(), model: 'none', promptVersion: HISTORY_PROMPT_VERSION };
+  if (profile.items.length > 0) {
+    try {
+      const output = modelHistorySchema.parse(await getAnalysisProvider().relevantHistory({
+        grade: initial.demoProfile.grade, parsedQuestionMarkdown: initial.analysis.parsedQuestionMarkdown, topic: initial.analysis.topic,
+        results: brief.results, notReachedConcepts: brief.notReachedConcepts,
+        profile: { items: profile.items.map(({ category, text, status, evidence }) => ({ category, text, status, evidence })), nextFocus: profile.nextFocus, tutorNotes: profile.tutorNotes },
+      }));
+      history = { ...history, bullets: output.bullets, generatedAt: new Date().toISOString(), model: resolveSummaryModelLabel() };
+    } catch (error) {
+      console.error('Relevant history failed:', error);
+      history = { status: 'failed' };
+    }
+  }
+
+  const saved = await workspaceStore.update(current => {
+    const currentBrief = current?.workspaceId === initial.workspaceId ? current.brief : null;
+    if (!current || !currentBrief || currentBrief.reportId !== brief.reportId || currentBrief.generatedAt !== brief.generatedAt) {
+      throw new ApiError(409, 'INVALID_STATE', 'The report changed. Reload to see the current report.');
+    }
+    return currentBrief.history ? current : { ...current, brief: { ...currentBrief, history } };
+  });
+  return saved.brief!.history!;
 }

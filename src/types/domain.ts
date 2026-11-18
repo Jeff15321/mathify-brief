@@ -145,7 +145,13 @@ export interface TutorBrief {
   priorityStepIndex: number | null; // first step whose main answer was incorrect or "I don't know"
   generatedAt: string;
   briefVersion: 6;
+  /** "Relevant from past sessions", added after the brief by `POST /api/brief/history`. */
+  history?: BriefHistory;
 }
+
+export type BriefHistory =
+  | { status: 'ready'; bullets: string[]; generatedAt: string; model: string; promptVersion: string }
+  | { status: 'failed' };
 
 export type WorkspacePhase = 'intake' | 'ready' | 'complete';
 

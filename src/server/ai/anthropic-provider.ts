@@ -8,11 +8,12 @@ import {
   validateAnalysisStructure,
   validateProbePair,
 } from '@/schemas/analysis';
-import { modelBriefSchema, type ModelBrief } from '@/schemas/brief';
+import { modelBriefSchema, modelHistorySchema, type ModelBrief, type ModelHistory } from '@/schemas/brief';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import { modelSessionSummarySchema, type ModelSessionSummary } from '@/schemas/session';
 import { modelLearnerProfileSchema, type ModelLearnerProfile } from '@/schemas/profile';
-import { PROFILE_SYSTEM_PROMPT, REVIEW_SYSTEM_PROMPT, SESSION_SUMMARY_SYSTEM_PROMPT } from './prompts';
+import type { ProbeResult } from '@/types/domain';
+import { HISTORY_SYSTEM_PROMPT, PROFILE_SYSTEM_PROMPT, REVIEW_SYSTEM_PROMPT, SESSION_SUMMARY_SYSTEM_PROMPT } from './prompts';
 import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
 import type {
@@ -21,10 +22,12 @@ import type {
   GenerateProbePairInput,
   GenerateTutorBriefInput,
   MathAnalysisProvider,
+  RelevantHistoryInput,
   SummarizeSessionInput,
 } from './provider';
 
 const ANALYSIS_MAX_TOKENS = 8192;
+const HISTORY_MAX_TOKENS = 1024;
 const PROFILE_MAX_TOKENS = 4096;
 const PROBE_PAIR_MAX_TOKENS = 4096;
 const BRIEF_MAX_TOKENS = 4096;
@@ -136,14 +139,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       });
     }
 
-    const resultsSummary = input.results
-      .map((r) => {
-        let answer = 'unanswered';
-        if (r.outcome === 'dont_know') answer = 'selected "I don\'t know"';
-        else if (r.selectedOptionId) answer = `selected ${r.selectedOptionId} (${r.selectedOptionText})`;
-        return `- [${r.probeId}] step=${r.stepIndex + 1} kind=${r.kind} concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
-      })
-      .join('\n');
+    const resultsSummary = formatResults(input.results);
 
     const textSummary = input.questionText.trim().length > 0 ? input.questionText.trim() : null;
 
@@ -211,6 +207,31 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
     });
   }
 
+  async relevantHistory(input: RelevantHistoryInput): Promise<ModelHistory> {
+    return this.createStructured({
+      system: HISTORY_SYSTEM_PROMPT,
+      maxTokens: HISTORY_MAX_TOKENS,
+      schema: modelHistorySchema,
+      operation: 'relevant history',
+      model: this.summaryModel,
+      content: [
+        {
+          type: 'text',
+          text: [
+            `Grade: ${input.grade}.`,
+            `Parsed question: ${input.parsedQuestionMarkdown}`,
+            `Topic: ${input.topic}`,
+            `Probing question results:\n${formatResults(input.results) || '(none)'}`,
+            input.notReachedConcepts.length > 0
+              ? `Steps not reached before submitting: ${input.notReachedConcepts.join('; ')}`
+              : 'All planned steps were reached.',
+            `Learner profile: ${JSON.stringify(input.profile)}`,
+          ].join('\n'),
+        },
+      ],
+    });
+  }
+
   /**
    * Sends one structured-output Messages API request and parses the JSON result with `schema`.
    * @throws Error on refusal, truncation, missing text, or invalid JSON/shape.
@@ -259,6 +280,17 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
 
     return schema.parse(parsedJson);
   }
+}
+
+function formatResults(results: ProbeResult[]): string {
+  return results
+    .map((r) => {
+      let answer = 'unanswered';
+      if (r.outcome === 'dont_know') answer = 'selected "I don\'t know"';
+      else if (r.selectedOptionId) answer = `selected ${r.selectedOptionId} (${r.selectedOptionText})`;
+      return `- [${r.probeId}] step=${r.stepIndex + 1} kind=${r.kind} concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
+    })
+    .join('\n');
 }
 
 /**

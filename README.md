@@ -175,6 +175,18 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   confirmation, or added per section as tutor items. Tutor notes save on blur or with Save and are
   never changed by the AI. Every change shows the server's response. The page refreshes every 3 s
   while a rebuild or a session summary is running. With no sessions it links to `/sessions`.
+- **Relevant from past sessions** (`PastSessionsCard`, right column of the Tutor Brief after
+  "Confidence on the report"): the deterministic brief renders first and is unchanged; the card
+  then calls `POST /api/brief/history` (header `x-workspace-id`), showing "Checking past
+  sessions…" meanwhile. `getBriefHistory` (`src/server/brief-service.ts`) sends the question,
+  topic, probe results, steps not reached and the learner profile (items with status and evidence
+  dates, next focus, tutor notes) to `ANTHROPIC_SUMMARY_MODEL` (`history-v1`), which returns 0-4
+  one-sentence bullets citing evidence dates. The result is saved once on the brief as optional
+  `brief.history` (`{ status: 'ready', bullets, ... }` or `{ status: 'failed' }`; `briefVersion`
+  stays 6) and returned as-is afterwards. An empty profile stores empty bullets without an AI
+  call; a report replaced during the call returns 409 and is not updated. `history` is left out of
+  the feedback report id. The card renders nothing for empty bullets or a failure, and links to
+  `/profile`. Mock mode cites the first three profile items with their dates.
 
 ## Known future work (intentionally not implemented)
 
