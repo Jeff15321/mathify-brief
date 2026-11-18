@@ -110,6 +110,10 @@ export const tutorBriefSchema = z.object({
   priorityStepIndex: z.number().int().nonnegative().nullable(),
   generatedAt: z.string().min(1),
   briefVersion: z.literal(6),
+  history: z.discriminatedUnion('status', [
+    z.object({ status: z.literal('ready'), bullets: z.array(z.string()), generatedAt: z.string(), model: z.string(), promptVersion: z.string() }),
+    z.object({ status: z.literal('failed') }),
+  ]).optional(),
 });
 
 export const workspacePhaseSchema = z.enum(['intake', 'ready', 'complete']);
