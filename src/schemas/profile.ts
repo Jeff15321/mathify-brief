@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { MAX_TUTOR_NOTES_LENGTH } from '@/lib/constants';
 import { observationCategorySchema } from './session';
 
-const MAX_PROFILE_TEXT_LENGTH = 300;
+export const MAX_PROFILE_TEXT_LENGTH = 300;
 
 export const profileItemStatusSchema = z.enum(['active', 'improving', 'resolved']);
 

@@ -3,7 +3,7 @@ import type { AnalysisReview, ProbeReview } from '@/schemas/review';
 import type { ModelBrief } from '@/schemas/brief';
 import type { ModelSessionSummary } from '@/schemas/session';
 import type { ModelLearnerProfile } from '@/schemas/profile';
-import type { LearnerProfileItem, MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored, SessionObservation } from '@/types/domain';
+import type { LearnerProfile, LearnerProfileItem, MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored, SessionObservation } from '@/types/domain';
 
 export interface StoredFile {
   fileName: string;
@@ -54,6 +54,8 @@ export interface BuildLearnerProfileInput {
   tutorNotes: string;
   /** The tutor's own next focus, '' when the AI owns it. */
   tutorNextFocus: string;
+  /** AI items the tutor deleted; never return them again. */
+  dismissedItems: LearnerProfile['dismissed'];
   sessions: { sessionId: string; date: string; title: string | null; observations: SessionObservation[] }[];
 }
 

@@ -11,6 +11,8 @@ type Stores = ReturnType<typeof createStores>;
 
 const rebuilds = new WeakMap<object, Promise<unknown>>();
 
+const MAX_DISMISSED = 100;
+
 const normalize = (text: string) => text.trim().toLowerCase().replace(/\s+/g, ' ');
 
 export async function getProfile(stores: Stores = getStores()): Promise<LearnerProfile> {
@@ -24,6 +26,9 @@ export async function updateProfile(input: unknown, stores: Stores = getStores()
   const { upsertItems = [], deleteItemIds = [], ...fields } = parsed.data;
 
   return stores.profileStore.update((current) => {
+    const deleted = current.items.filter((item) => deleteItemIds.includes(item.id))
+      .flatMap(({ category, text, originText, source }) => [...(source === 'ai' ? [text] : []), ...(originText ? [originText] : [])].map((dismissedText) => ({ category, text: dismissedText })));
+    const dismissed = [...current.dismissed, ...deleted].slice(-MAX_DISMISSED);
     let items = current.items.filter((item) => !deleteItemIds.includes(item.id));
     for (const { id = randomUUID(), ...edit } of upsertItems) {
       const existing = items.find((item) => item.id === id);
@@ -32,7 +37,7 @@ export async function updateProfile(input: unknown, stores: Stores = getStores()
       items = existing ? items.map((item) => (item === existing ? next : item)) : [...items, next];
     }
     const focus = fields.nextFocus === undefined ? {} : { nextFocusSource: fields.nextFocus ? 'tutor' as const : 'ai' as const };
-    return { ...current, ...fields, ...focus, items, updatedAt: new Date().toISOString() };
+    return { ...current, ...fields, ...focus, items, dismissed, updatedAt: new Date().toISOString() };
   });
 }
 
@@ -64,6 +69,7 @@ async function runRebuild({ profileStore, sessionStore }: Stores): Promise<Learn
           currentItems: profile.items.map(({ source, category, text, status }) => ({ source, category, text, status })),
           tutorNotes: profile.tutorNotes,
           tutorNextFocus: profile.nextFocusSource === 'tutor' ? profile.nextFocus : '',
+          dismissedItems: profile.dismissed,
           sessions: sessions.map((session) => ({ sessionId: session.id, date: session.sessionDate, title: session.title, observations: session.observations })),
         });
       } catch {
@@ -82,8 +88,11 @@ async function runRebuild({ profileStore, sessionStore }: Stores): Promise<Learn
       const tutorItems = current.items
         .filter((item) => item.source === 'tutor')
         .map((item) => ({ ...item, evidence: withSessionDates(item.evidence) }));
-      const tutorTexts = new Set(tutorItems.flatMap((item) => [item.text, item.originText ?? ''].map((text) => `${item.category}:${normalize(text)}`)));
-      const newAiItems = aiItems.filter((item) => !tutorTexts.has(`${item.category}:${normalize(item.text)}`));
+      const blockedTexts = new Set([
+        ...tutorItems.flatMap((item) => [item.text, item.originText ?? ''].map((text) => `${item.category}:${normalize(text)}`)),
+        ...current.dismissed.map((item) => `${item.category}:${normalize(item.text)}`),
+      ]);
+      const newAiItems = aiItems.filter((item) => !blockedTexts.has(`${item.category}:${normalize(item.text)}`));
       return {
         ...current, nextFocus: current.nextFocusSource === 'tutor' ? current.nextFocus : output.nextFocus, items: [...tutorItems, ...newAiItems], updatedAt: now, rebuiltAt: now,
         rebuildStatus: 'idle', model: resolveSummaryModelLabel(), promptVersion: PROFILE_PROMPT_VERSION,

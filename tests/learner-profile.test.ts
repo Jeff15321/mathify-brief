@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
@@ -120,6 +120,53 @@ describe("learner profile (mock AI, isolated temp directory)", () => {
     expect(items.some((item) => item.source === "ai" && item.text === "Solved one-step equations quickly and correctly.")).toBe(true);
   });
 
+  it("keeps a deleted AI item out of later rebuilds and sends it as context, but deleting a tutor item dismisses nothing", async () => {
+    await uploadTwo();
+    const [aiItem] = (await getProfile(stores)).items;
+    const tutorItem = (await updateProfile({ upsertItems: [{ category: "habit", text: "Rushes.", status: "active" }] }, stores)).items.find((item) => item.source === "tutor")!;
+    expect((await updateProfile({ deleteItemIds: [tutorItem.id] }, stores)).dismissed).toEqual([]);
+    const dismissed = [{ category: aiItem.category, text: aiItem.text }];
+    expect((await updateProfile({ deleteItemIds: [aiItem.id] }, stores)).dismissed).toEqual(dismissed);
+    const spy = vi.spyOn(MockAnalysisProvider.prototype, "buildLearnerProfile");
+
+    const rebuilt = await rebuildProfile(stores);
+    await upload("2026-10-17-area-models.txt", "2026-10-17");
+
+    expect(rebuilt.items.length).toBeGreaterThan(0);
+    expect(rebuilt.items.some((item) => item.text === aiItem.text)).toBe(false);
+    expect((await getProfile(stores)).items.some((item) => item.text === aiItem.text)).toBe(false);
+    expect(spy.mock.calls[0][0].dismissedItems).toEqual(dismissed);
+  });
+
+  it("keeps the original AI wording out after an edited AI item is deleted", async () => {
+    await uploadTwo();
+    const [aiItem] = (await getProfile(stores)).items;
+    await updateProfile({ upsertItems: [{ id: aiItem.id, category: aiItem.category, text: "Edited wording.", status: "active" }] }, stores);
+
+    const { dismissed } = await updateProfile({ deleteItemIds: [aiItem.id] }, stores);
+    const rebuilt = await rebuildProfile(stores);
+
+    expect(dismissed).toEqual([{ category: aiItem.category, text: aiItem.text }]);
+    expect(rebuilt.items.some((item) => item.text === aiItem.text)).toBe(false);
+  });
+
+  it("tolerates a saved profile without dismissed and keeps the latest 100 dismissed items", async () => {
+    await uploadTwo();
+    const file = path.join(dataDir, "learner-profile.json");
+    const saved = JSON.parse(await readFile(file, "utf8"));
+    delete saved.dismissed;
+    await writeFile(file, JSON.stringify(saved));
+    const profile = await getProfile(stores);
+    expect(profile.dismissed).toEqual([]);
+    await writeFile(file, JSON.stringify({ ...saved, dismissed: Array.from({ length: 100 }, (_, i) => ({ category: "habit", text: `Old ${i}` })) }));
+
+    const { dismissed } = await updateProfile({ deleteItemIds: [profile.items[0].id] }, stores);
+
+    expect(dismissed).toHaveLength(100);
+    expect(dismissed[0].text).toBe("Old 1");
+    expect(dismissed[99]).toEqual({ category: profile.items[0].category, text: profile.items[0].text });
+  });
+
   it("drops evidence for a deleted session and AI items left without evidence", async () => {
     const first = await upload("2026-09-26-multi-step-equations.txt", "2026-09-26");
     vi.spyOn(MockAnalysisProvider.prototype, "summarizeSession").mockResolvedValueOnce({
@@ -214,7 +261,7 @@ describe("AnthropicAnalysisProvider.buildLearnerProfile (SDK mocked, no network)
   it("uses the cheap summary model and sends the sessions", async () => {
     create.mockResolvedValue({ model: "x", usage: { input_tokens: 1, output_tokens: 1 }, stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(output) }] });
     vi.stubEnv("ANTHROPIC_SUMMARY_MODEL", "");
-    const input = { grade: 9, currentItems: [], tutorNotes: "", tutorNextFocus: "", sessions: [{ sessionId: "s1", date: "2026-10-03", title: "T", observations: [] }] };
+    const input = { grade: 9, currentItems: [], tutorNotes: "", tutorNextFocus: "", dismissedItems: [], sessions: [{ sessionId: "s1", date: "2026-10-03", title: "T", observations: [] }] };
 
     expect(await new AnthropicAnalysisProvider().buildLearnerProfile(input)).toEqual(output);
     expect(create.mock.calls[0][0].model).toBe("claude-haiku-5-5");
