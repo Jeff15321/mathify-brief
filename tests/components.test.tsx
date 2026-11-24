@@ -74,16 +74,22 @@ function probingState(overrides: Partial<PublicProbing> = {}): PublicProbing {
 }
 
 function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" | "IDK") {
-  const handlers = { onSelect: vi.fn(), onNext: vi.fn(), onRetry: vi.fn(), onSubmit: vi.fn() };
+  const handlers = { onSelect: vi.fn(), onNext: vi.fn(), onRetry: vi.fn(), onSubmit: vi.fn(), onOpenWhiteboard: vi.fn() };
   render(
-    <ProbingPanel probing={probing} selection={selection} answering={false} submitting={false} {...handlers} />,
+    <ProbingPanel
+      probing={probing} selection={selection} answering={false} submitting={false}
+      submitLabel="DEMO: connect to tutor" submittingLabel="Connecting…"
+      heading={<h1>Answer a few probing questions while you wait</h1>}
+      {...handlers}
+    />,
   );
   return handlers;
 }
 
 describe("ProbingPanel", () => {
-  it("shows one question with progress, and Next is disabled until a choice is selected", () => {
+  it("shows the headline, one question with progress, and Next disabled until a choice is selected", () => {
     renderPanel(probingState());
+    expect(screen.getByRole("heading", { name: "Answer a few probing questions while you wait" })).toBeInTheDocument();
     expect(screen.getByText("Question 1 of 3")).toBeInTheDocument();
     expect(screen.getAllByRole("radio")).toHaveLength(5);
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
@@ -100,6 +106,18 @@ describe("ProbingPanel", () => {
     expect(screen.getByText("Easier question")).toBeInTheDocument();
   });
 
+  it("offers the DEMO connect button and reports the submit click", () => {
+    const { onSubmit } = renderPanel(probingState());
+    fireEvent.click(screen.getByRole("button", { name: "DEMO: connect to tutor" }));
+    expect(onSubmit).toHaveBeenCalled();
+  });
+
+  it("reports opening the whiteboard", () => {
+    const { onOpenWhiteboard } = renderPanel(probingState());
+    fireEvent.click(screen.getByRole("button", { name: "Open whiteboard" }));
+    expect(onOpenWhiteboard).toHaveBeenCalled();
+  });
+
   it("shows a waiting state while the next question is being generated", () => {
     renderPanel(probingState({ current: null, waitingStatus: "generating" }));
     expect(screen.getByText("Preparing your next question…")).toBeInTheDocument();
@@ -109,6 +127,43 @@ describe("ProbingPanel", () => {
     const { onRetry } = renderPanel(probingState({ current: null, waitingStatus: "failed" }));
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(onRetry).toHaveBeenCalled();
+  });
+
+  it("shows a sending note when all questions are answered", () => {
+    renderPanel(probingState({ current: null, progress: null, finished: true }));
+    expect(screen.getByText("You've answered every question. Sending them to your tutor…")).toBeInTheDocument();
+  });
+
+});
+
+describe("ThreePanelLayout probing mode", () => {
+  it("probing mode shows the probing content full-width without panel headers or tabs", () => {
+    render(
+      <ThreePanelLayout mode="probing" probing={<div>questions here</div>} whiteboard={<div data-testid="wb">board</div>} />,
+    );
+    expect(screen.getByText("questions here")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Whiteboard" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Relevant Concepts" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Whiteboard" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the whiteboard mounted but hidden while the overlay is closed", () => {
+    render(
+      <ThreePanelLayout mode="probing" probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
+    );
+    expect(screen.getByTestId("wb-input")).toBeInTheDocument();
+    expect(screen.getByTestId("wb-input")).not.toBeVisible();
+  });
+
+  it("shows the whiteboard overlay with a close control when open", () => {
+    const onCloseWhiteboard = vi.fn();
+    render(
+      <ThreePanelLayout mode="probing" whiteboardOpen onCloseWhiteboard={onCloseWhiteboard}
+        probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
+    );
+    expect(screen.getByTestId("wb-input")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Close whiteboard" }));
+    expect(onCloseWhiteboard).toHaveBeenCalled();
   });
 
 });

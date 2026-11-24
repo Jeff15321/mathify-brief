@@ -20,7 +20,7 @@ test('batch upload stays in one workspace, persists selection and sends it witho
   await expect(page.locator('input[name="s1-main"][value="B"]')).toBeChecked();
   await page.screenshot({ path: 'artifacts/pilot/student-desktop.png' });
   await expect(page.getByText('Loading uploaded images…')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   const { workspace } = await (await request.get('/api/workspace')).json();
   expect(workspace.attachments).toHaveLength(2);
@@ -39,12 +39,13 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.reload();
   await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Whiteboard', exact: true }).click();
-  await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeHidden();
-  await page.getByRole('button', { name: 'Relevant Concepts', exact: true }).click();
+  // Once probing starts there are no split-panel tabs; the whiteboard is a full-screen overlay.
+  await page.getByRole('button', { name: 'Open whiteboard' }).click();
+  await expect(page.getByRole('button', { name: 'Close whiteboard' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeChecked();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   expect((await (await request.get('/api/workspace')).json()).workspace.brief.results[0].hintOpened).toBe(true);
 });

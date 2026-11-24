@@ -9,13 +9,14 @@ async function start(page: Page) {
 test('failed drawing export can be omitted explicitly without losing the selected answer', async ({ page, request }) => {
   await page.addInitScript(() => { HTMLCanvasElement.prototype.toBlob = function(callback) { callback(null); }; });
   await start(page);
-  await page.getByRole('radio', { name: 'Draw', exact: true }).locator('..').click();
+  await page.getByRole('button', { name: 'Open whiteboard' }).click();
   const bounds = await page.locator('canvas.excalidraw__canvas.interactive').boundingBox();
   if (!bounds) throw new Error('Board not visible');
   await page.mouse.move(bounds.x + 80, bounds.y + 180); await page.mouse.down();
   await page.mouse.move(bounds.x + 200, bounds.y + 240); await page.mouse.up();
+  await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await page.locator('input[name="s1-main"][value="B"]').check();
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('button', { name: 'Send without drawing' })).toBeVisible();
   await page.getByRole('button', { name: 'Send without drawing' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
@@ -40,7 +41,7 @@ test('PDF-only intake keeps its original source available to the tutor', async (
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Fit to work' })).toBeEnabled();
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'normal-03-1.pdf (PDF)' })).toBeVisible();
 });
@@ -63,7 +64,7 @@ test('lost Next response cannot carry an old answer into the next hinted questio
 test('pilot events distinguish ready, visible and acknowledged answers without content', async ({ page }) => {
   await start(page);
   await page.locator('input[name="s1-main"][value="IDK"]').check();
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').map((e: { eventName: string }) => e.eventName))).toContain('brief_visible');
   const events = await page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]'));

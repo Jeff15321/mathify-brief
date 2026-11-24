@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, X } from "lucide-react";
 
 type PanelKey = "whiteboard" | "probing";
 
@@ -52,15 +52,24 @@ function PanelHeader({
 }
 
 /**
- * Workspace layout: Whiteboard (left) and Relevant Concepts (right), 50/50 by default. Expanding
- * one panel gives it 70% without unmounting either; narrow screens switch to tabs.
+ * Workspace layout. Split mode: Whiteboard (left) and Relevant Concepts (right), 50/50 by
+ * default; expanding one panel gives it 70% without unmounting either; narrow screens use tabs.
+ * Probing mode: the probing content takes the full screen and the whiteboard section becomes a
+ * full-screen overlay (or stays hidden-but-mounted when closed) so the drawing ref survives for
+ * the brief export — the whiteboard section keeps its DOM identity across the mode switch.
  */
 export function ThreePanelLayout({
   whiteboard,
   probing,
+  mode = "split",
+  whiteboardOpen = false,
+  onCloseWhiteboard,
 }: {
   whiteboard: ReactNode;
   probing: ReactNode;
+  mode?: "split" | "probing";
+  whiteboardOpen?: boolean;
+  onCloseWhiteboard?: () => void;
 }) {
   const [expanded, setExpanded] = useState<PanelKey | "none">("none");
   const narrow = useIsNarrow(900);
@@ -74,8 +83,49 @@ export function ThreePanelLayout({
 
   const gridTemplateColumns = PANEL_ORDER.map((panel) => {
     if (expanded === "none") return `${BASE_FR[panel]}fr`;
-    return `${panel === expanded ? EXPANDED_FR : SHRUNK_FR}fr`;
+    return `${panel === expanded ? EXPANDED_FR : SHRUNK_FR}fr}`;
   }).join(" ");
+
+  if (mode === "probing") {
+    return (
+      <div className="flex h-full flex-col bg-slate-50">
+        <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: "1fr" }}>
+          {/* Full-width probing content; inert while the whiteboard overlay is open so focus and
+              screen readers can't reach it, without triggering re-visibility events. */}
+          <section inert={whiteboardOpen} className="flex min-w-0 min-h-0 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-hidden p-3">{probing}</div>
+          </section>
+
+          {/* Same <section> identity as split mode: WhiteboardPanel never unmounts. The HTML
+              hidden attribute keeps it mounted and the board ref alive while the overlay is
+              closed; exportPng builds the PNG offscreen from scene elements either way. */}
+          <section
+            hidden={!whiteboardOpen}
+            className={
+              whiteboardOpen
+                ? "fixed inset-0 z-50 flex min-w-0 min-h-0 flex-col overflow-hidden bg-slate-50 shadow-xl"
+                : "flex min-w-0 min-h-0 flex-col overflow-hidden"
+            }
+          >
+            {whiteboardOpen && (
+              <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
+                <h2 className="text-sm font-semibold text-slate-900">Whiteboard</h2>
+                <button
+                  type="button"
+                  onClick={onCloseWhiteboard}
+                  aria-label="Close whiteboard"
+                  className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+            <div className="min-h-0 flex-1 overflow-hidden p-3">{whiteboard}</div>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col bg-slate-50">

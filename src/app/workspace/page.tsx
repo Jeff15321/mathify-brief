@@ -8,7 +8,6 @@ import { restoreDraft, saveDraft, removeDraft, type BoardSnapshot, type Workspac
 import { ThreePanelLayout } from '@/components/workspace/ThreePanelLayout';
 import { WhiteboardPanel } from '@/components/workspace/WhiteboardPanel';
 import { ProbingPanel } from '@/components/workspace/ProbingPanel';
-import { BreakdownPanel } from '@/components/workspace/BreakdownPanel';
 import { PreparationPanel, PURPOSE } from '@/components/workspace/PreparationPanel';
 import { QuestionIntakeForm } from '@/components/intake/QuestionIntakeForm';
 import { TutorBriefView } from '@/components/brief/TutorBriefView';
@@ -30,6 +29,7 @@ export default function WorkspacePage() {
   const [workspace, setWorkspace] = useState<PublicWorkspace | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [answering, setAnswering] = useState(false);
@@ -54,6 +54,18 @@ export default function WorkspacePage() {
   useEffect(() => { if (analysisReady) track('analysis_ready', { serverDurationMs }); }, [analysisReady, workspaceId, track, serverDurationMs]);
   const hintOpened = draft?.selectedProbeId === probing?.current?.id && draft?.hintOpened === true;
   const selection = draft?.selectedProbeId === probing?.current?.id ? draft?.selection : undefined;
+  const probingPhase = analysisReady && Boolean(probing);
+  // Auto-submit once the last planned question is answered (and on a draft-restored finished
+  // flow). Runs as an effect so it reads fresh state — by then `answering` is false and the
+  // selection is cleared, so finish() sends no stale pending answer.
+  const probingFinished = probingPhase && probing?.finished === true;
+  const autoSubmittedRef = useRef(false);
+  useEffect(() => {
+    if (!probingFinished || autoSubmittedRef.current || submitting || answering || stopped.current) return;
+    autoSubmittedRef.current = true;
+    void finish();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- finish reads the latest selection/probing state
+  }, [probingFinished, submitting, answering]);
 
   const flush = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -266,18 +278,30 @@ export default function WorkspacePage() {
     {storageError && <div className="px-3 pt-2"><ErrorBanner message={storageError} onRetry={() => void flush().catch(() => {})} /></div>}
     {error && <div className="px-3 pt-2"><ErrorBanner message={error} onRetry={() => void refresh().then(() => setError(null)).catch(err => setError(message(err)))} /></div>}
     {exportFailed && <div className="flex gap-3 px-3 py-2 text-sm"><span>Your drawing could not be attached.</span><button disabled={submitting} onClick={() => void finish()} className="text-blue-700 underline">Retry drawing export</button><button disabled={submitting} onClick={() => void finish(true)} className="text-blue-700 underline">Send without drawing</button></div>}
-    <span role="status" className="sr-only">{probing?.current ? 'Your checks are ready in Relevant Concepts.' : ''}</span>
+    <span role="status" className="sr-only">{probing?.current ? 'Your probing questions are ready.' : ''}</span>
     <div className="min-h-0 flex-1"><ThreePanelLayout
+      mode={probingPhase ? 'probing' : 'split'}
+      whiteboardOpen={whiteboardOpen}
+      onCloseWhiteboard={() => setWhiteboardOpen(false)}
       whiteboard={<WhiteboardPanel ref={board} disabled={submitting} attachments={workspace?.attachments} initialBoard={initialBoard} onBoardChange={boardChanged} onFlush={() => void flush().catch(() => {})} />}
       probing={<div className="flex h-full min-h-0 flex-col gap-3">
         {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
         {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
-        {workspace?.analysis && probing && <>
-          <div className="space-y-2 text-sm"><p className="text-slate-700">{PURPOSE}</p><BreakdownPanel analysis={workspace.analysis} />
-            <details><summary className="cursor-pointer text-blue-700">Your original problem</summary><div className="max-h-48 overflow-y-auto"><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.analysis.parsedQuestionMarkdown} attachments={workspace.attachments} /></div></details>
-          </div>
-          <div className="min-h-0 flex-1"><ProbingPanel probing={probing} selection={selection} hintOpened={hintOpened} onVisible={probeVisible} onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }} onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)} onNext={() => void next()} onRetry={prefetch} answering={answering} onSubmit={() => void finish()} submitting={submitting} /></div>
-        </>}
+        {probingPhase && probing && <ProbingPanel
+          heading={<><h1 className="text-2xl font-semibold text-slate-900">Answer a few probing questions while you wait</h1><p className="text-sm text-slate-600">{PURPOSE}</p></>}
+          probing={probing} selection={selection} hintOpened={hintOpened}
+          onVisible={probeVisible}
+          onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }}
+          onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)}
+          onNext={() => void next()}
+          onRetry={prefetch}
+          answering={answering}
+          submitting={submitting}
+          onSubmit={() => void finish()}
+          submitLabel="DEMO: connect to tutor"
+          submittingLabel="Connecting…"
+          onOpenWhiteboard={() => setWhiteboardOpen(true)}
+        />}
       </div>} />
     </div>
   </main>;

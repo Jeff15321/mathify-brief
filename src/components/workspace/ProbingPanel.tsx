@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 import { ProbeCard } from "./ProbeCard";
 import { LoadingState } from "@/components/shared/LoadingState";
 import type { ProbeAnswer, PublicProbing } from "@/types/domain";
 
 /**
- * Middle panel: the current probe card (or a waiting/failed/finished message) and a Submit
- * button that works at any point.
+ * The probing column: an optional heading, the current probe card (or a waiting/failed/
+ * connecting message) and a submit button that works at any point.
  */
 export function ProbingPanel({
   probing,
@@ -15,6 +16,7 @@ export function ProbingPanel({
   answering,
   onSubmit,
   submitting, hintOpened, onHintOpened, onVisible,
+  heading, submitLabel = "Send to tutor", submittingLabel = "Sending…", onOpenWhiteboard,
 }: {
   probing: PublicProbing;
   selection: ProbeAnswer | undefined;
@@ -27,6 +29,10 @@ export function ProbingPanel({
   onVisible?: () => void;
   hintOpened?: boolean;
   onHintOpened?: () => void;
+  heading?: ReactNode;
+  submitLabel?: string;
+  submittingLabel?: string;
+  onOpenWhiteboard?: () => void;
 }) {
   const { current, progress, finished, waitingStatus } = probing;
 
@@ -35,6 +41,7 @@ export function ProbingPanel({
       {/* m-auto centers the question block both ways but still lets tall content scroll from the top. */}
       <div className="flex flex-1 overflow-y-auto pb-4">
         <div className="m-auto flex w-full max-w-xl flex-col gap-3">
+          {heading}
           <div className="flex items-center gap-2">
             <p className="text-xs text-slate-500">
               {progress ? `Question ${progress.stepNumber} of ${progress.totalSteps}` : "All questions answered"}
@@ -81,26 +88,37 @@ export function ProbingPanel({
 
           {finished && (
             <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              You&apos;ve answered every question. Send them to your tutor when you&apos;re ready.
+              You&apos;ve answered every question. Sending them to your tutor…
             </p>
           )}
         </div>
       </div>
 
       <div className="sticky bottom-0 border-t border-slate-200 bg-slate-50 pt-3">
-        <p className="mb-2 text-xs text-slate-600">You can send this now, even if you haven’t answered every check.</p>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={submitting || answering}
-          className={`w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm disabled:opacity-50 ${
-            finished
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "border border-blue-600 bg-white text-blue-700 hover:bg-blue-50"
-          }`}
-        >
-          {submitting ? "Sending…" : "Send to tutor"}
-        </button>
+        <p className="mb-2 text-xs text-slate-600">You can connect now, even if you haven’t answered every check.</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {onOpenWhiteboard && (
+            <button
+              type="button"
+              onClick={onOpenWhiteboard}
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Open whiteboard
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting || answering}
+            className={`w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm disabled:opacity-50 sm:w-auto ${
+              finished
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "border border-blue-600 bg-white text-blue-700 hover:bg-blue-50"
+            }`}
+          >
+            {submitting ? submittingLabel : submitLabel}
+          </button>
+        </div>
       </div>
     </div>
   );
