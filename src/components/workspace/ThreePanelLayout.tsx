@@ -112,7 +112,9 @@ export function ThreePanelLayout({
               aria-hidden={!whiteboardOpen}
               inert={!whiteboardOpen}
               className={`fixed bottom-0 top-0 z-50 flex w-[min(32rem,calc(100vw-3.5rem))] min-w-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 shadow-xl transition-transform duration-200 ease-out left-0 md:left-14 ${
-                whiteboardOpen ? "translate-x-0" : "-translate-x-full"
+                // Translate by the drawer's width PLUS the 3.5rem anchor offset: the md+ left
+                // anchor alone would leave a 56px strip on-screen after a plain -100% slide.
+                whiteboardOpen ? "translate-x-0" : "-translate-x-[calc(100%+3.5rem)]"
               }`}
             >
               {/* The header stays mounted so the section's child structure is constant — no

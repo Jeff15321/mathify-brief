@@ -39,11 +39,18 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.reload();
   await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
-  // Once probing starts there are no split-panel tabs; the whiteboard is a full-screen overlay.
+  // Once probing starts the whiteboard is a slide-in drawer on the left.
   await page.getByRole('button', { name: 'Open whiteboard' }).click();
   await expect(page.getByRole('button', { name: 'Close whiteboard' })).toBeVisible();
   await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeChecked();
+  // The closed drawer must sit entirely off-screen: no strip may peek past the viewport edge.
+  const closedBoard = await page.evaluate(() => {
+    const el = document.querySelector('section[aria-hidden="true"]');
+    return el ? el.getBoundingClientRect().right : null;
+  });
+  expect(closedBoard).not.toBeNull();
+  expect(closedBoard as number).toBeLessThanOrEqual(0.5);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
