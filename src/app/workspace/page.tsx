@@ -18,6 +18,12 @@ import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { LoadingState } from '@/components/shared/LoadingState';
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
+function ProblemRestartLink() {
+  return <div className="space-y-1">
+    <a href="/workspace?new=1" className="text-sm font-medium text-blue-700 underline">Problem needs a correction? Start a new one</a>
+    <p className="text-xs text-slate-500">Your current work stays here until you start the replacement.</p>
+  </div>;
+}
 export default function WorkspacePage() {
   const board = useRef<SimpleWhiteboardHandle>(null);
   const [initialBoard, setInitialBoard] = useState<BoardSnapshot>();
@@ -271,9 +277,9 @@ export default function WorkspacePage() {
       whiteboard={<WhiteboardPanel ref={board} disabled={submitting} attachments={workspace?.attachments} initialBoard={initialBoard} onBoardChange={boardChanged} onFlush={() => void flush().catch(() => {})} />}
       probing={<div className="flex h-full min-h-0 flex-col gap-3">
         {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
-        {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
+        {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /><ProblemRestartLink /></div>}
         {workspace?.analysis && probing && <>
-          <div className="space-y-2 text-sm"><p className="text-slate-700">{PURPOSE}</p><BreakdownPanel analysis={workspace.analysis} />
+          <div className="space-y-2 text-sm"><p className="text-slate-700">{PURPOSE}</p><ProblemRestartLink /><BreakdownPanel analysis={workspace.analysis} />
             <details><summary className="cursor-pointer text-blue-700">Your original problem</summary><div className="max-h-48 overflow-y-auto"><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.analysis.parsedQuestionMarkdown} attachments={workspace.attachments} /></div></details>
           </div>
           <div className="min-h-0 flex-1"><ProbingPanel probing={probing} selection={selection} hintOpened={hintOpened} onVisible={probeVisible} onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }} onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)} onNext={() => void next()} onRetry={prefetch} answering={answering} onSubmit={() => void finish()} submitting={submitting} /></div>
