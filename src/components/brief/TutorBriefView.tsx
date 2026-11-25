@@ -46,7 +46,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
       </div>
       <PastSessionsCard workspaceId={workspace.workspaceId} />
       <details className="group rounded-xl border border-slate-200 bg-white shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
           <span className="flex flex-col gap-0.5">
             <span className="text-sm font-semibold text-slate-900">Counts and additional concepts</span>
             <span className="text-xs text-slate-500">Core checks, retries, strengths, and gaps</span>
