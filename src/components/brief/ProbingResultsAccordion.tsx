@@ -19,7 +19,7 @@ export function ProbingResultsAccordion({
 
   return (
     <details className="group rounded-xl border border-slate-200 bg-white shadow-sm">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
         <span className="flex flex-col gap-0.5">
           <span className="text-sm font-semibold text-slate-900">Probing results</span>
           <span className="text-xs text-slate-500">
