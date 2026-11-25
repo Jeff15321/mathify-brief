@@ -283,6 +283,7 @@ export default function WorkspacePage() {
       mode={probingPhase ? 'probing' : 'split'}
       whiteboardOpen={whiteboardOpen}
       onCloseWhiteboard={() => setWhiteboardOpen(false)}
+      onOpenWhiteboard={() => setWhiteboardOpen(true)}
       whiteboard={<WhiteboardPanel ref={board} disabled={submitting} attachments={workspace?.attachments} initialBoard={initialBoard} onBoardChange={boardChanged} onFlush={() => void flush().catch(() => {})} />}
       probing={<div className="flex h-full min-h-0 flex-col gap-3">
         {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
@@ -300,7 +301,6 @@ export default function WorkspacePage() {
           onSubmit={() => void finish()}
           submitLabel="DEMO: connect to tutor"
           submittingLabel="Connecting…"
-          onOpenWhiteboard={() => setWhiteboardOpen(true)}
         />}
       </div>} />
     </div>

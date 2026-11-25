@@ -74,7 +74,7 @@ function probingState(overrides: Partial<PublicProbing> = {}): PublicProbing {
 }
 
 function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" | "IDK") {
-  const handlers = { onSelect: vi.fn(), onNext: vi.fn(), onRetry: vi.fn(), onSubmit: vi.fn(), onOpenWhiteboard: vi.fn() };
+  const handlers = { onSelect: vi.fn(), onNext: vi.fn(), onRetry: vi.fn(), onSubmit: vi.fn() };
   render(
     <ProbingPanel
       probing={probing} selection={selection} answering={false} submitting={false}
@@ -112,12 +112,6 @@ describe("ProbingPanel", () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 
-  it("reports opening the whiteboard", () => {
-    const { onOpenWhiteboard } = renderPanel(probingState());
-    fireEvent.click(screen.getByRole("button", { name: "Open whiteboard" }));
-    expect(onOpenWhiteboard).toHaveBeenCalled();
-  });
-
   it("shows a waiting state while the next question is being generated", () => {
     renderPanel(probingState({ current: null, waitingStatus: "generating" }));
     expect(screen.getByText("Preparing your next question…")).toBeInTheDocument();
@@ -147,21 +141,28 @@ describe("ThreePanelLayout probing mode", () => {
     expect(screen.queryByRole("button", { name: "Whiteboard" })).not.toBeInTheDocument();
   });
 
-  it("keeps the whiteboard mounted but hidden while the overlay is closed", () => {
+  it("keeps the whiteboard mounted but off-screen while the drawer is closed", () => {
+    const onOpenWhiteboard = vi.fn();
     render(
-      <ThreePanelLayout mode="probing" probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
+      <ThreePanelLayout mode="probing" onOpenWhiteboard={onOpenWhiteboard}
+        probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
     );
+    // The drawer is translated off-screen, not unmounted: the board stays in the document but
+    // is removed from the accessibility tree, and the left-edge handle opens it.
     expect(screen.getByTestId("wb-input")).toBeInTheDocument();
-    expect(screen.getByTestId("wb-input")).not.toBeVisible();
+    expect(screen.getByRole("button", { name: "Open whiteboard" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open whiteboard" }));
+    expect(onOpenWhiteboard).toHaveBeenCalled();
   });
 
-  it("shows the whiteboard overlay with a close control when open", () => {
+  it("shows the whiteboard drawer with a close control when open", () => {
     const onCloseWhiteboard = vi.fn();
     render(
       <ThreePanelLayout mode="probing" whiteboardOpen onCloseWhiteboard={onCloseWhiteboard}
         probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
     );
     expect(screen.getByTestId("wb-input")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Open whiteboard" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close whiteboard" }));
     expect(onCloseWhiteboard).toHaveBeenCalled();
   });

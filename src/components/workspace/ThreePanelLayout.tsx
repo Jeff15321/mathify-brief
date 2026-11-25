@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Maximize2, Minimize2, X } from "lucide-react";
+import { ChevronRight, Maximize2, Minimize2, X } from "lucide-react";
 
 type PanelKey = "whiteboard" | "probing";
 
@@ -64,12 +64,14 @@ export function ThreePanelLayout({
   mode = "split",
   whiteboardOpen = false,
   onCloseWhiteboard,
+  onOpenWhiteboard,
 }: {
   whiteboard: ReactNode;
   probing: ReactNode;
   mode?: "split" | "probing";
   whiteboardOpen?: boolean;
   onCloseWhiteboard?: () => void;
+  onOpenWhiteboard?: () => void;
 }) {
   const [expanded, setExpanded] = useState<PanelKey | "none">("none");
   const narrow = useIsNarrow(900);
@@ -100,27 +102,22 @@ export function ThreePanelLayout({
       <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: probingMode || narrow ? '1fr' : gridTemplateColumns }}>
         {probingMode ? (
           <>
-            {/* Same section keys as split mode: React reconciles by key, so WhiteboardPanel
-                keeps its instance — and the drawn scene — across the mode switch. The hidden
-                CLASS (not just the attribute, which Tailwind's flex utility would override)
-                keeps it mounted and the board ref alive while the overlay is closed; exportPng
-                builds the PNG offscreen from scene elements either way. A display:none section
-                generates no grid row, so probing content gets the full width. */}
+            {/* Slide-in drawer, always mounted: React keeps WhiteboardPanel's instance — and the
+                drawn scene — across the mode switch, and unlike display:none the translated
+                drawer keeps real canvas dimensions. It slides via transform only; the closed
+                drawer is moved off-screen, marked aria-hidden and inert so nothing can reach it.
+                exportPng builds the PNG offscreen from scene elements either way. */}
             <section
               key="whiteboard"
-              hidden={!whiteboardOpen}
-              className={
-                whiteboardOpen
-                  ? "fixed inset-0 z-50 flex min-w-0 min-h-0 flex-col overflow-hidden bg-slate-50 shadow-xl"
-                  : "hidden min-w-0 min-h-0 flex-col overflow-hidden"
-              }
+              aria-hidden={!whiteboardOpen}
+              inert={!whiteboardOpen}
+              className={`fixed bottom-0 left-0 top-0 z-50 flex w-[min(32rem,calc(100vw-3.5rem))] min-w-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 shadow-xl transition-transform duration-200 ease-out ${
+                whiteboardOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
             >
-              {/* The header stays mounted (hidden with the section when closed) so the section's
-                  child structure is constant — no child-index shift can ever remount the board. */}
-              <div
-                hidden={!whiteboardOpen}
-                className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2"
-              >
+              {/* The header stays mounted so the section's child structure is constant — no
+                  child-index shift can ever remount the board. */}
+              <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
                 <h2 className="text-sm font-semibold text-slate-900">Whiteboard</h2>
                 <button
                   type="button"
@@ -134,11 +131,24 @@ export function ThreePanelLayout({
               <div className="min-h-0 flex-1 overflow-hidden p-3">{whiteboard}</div>
             </section>
 
-            {/* Full-width probing content; inert while the whiteboard overlay is open so focus
-                and screen readers can't reach it, without triggering re-visibility events. */}
+            {/* Left-edge handle for the drawer; rendered only while closed so it never
+                competes with the drawer's own close control. */}
+            {!whiteboardOpen && (
+              <button
+                key="whiteboard-handle"
+                type="button"
+                onClick={onOpenWhiteboard}
+                aria-label="Open whiteboard"
+                className="fixed left-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-r-lg border border-l-0 border-slate-300 bg-white py-3 pl-1 pr-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-100"
+              >
+                <ChevronRight size={14} />
+                Whiteboard
+              </button>
+            )}
+
+            {/* Full-width probing content; the drawer overlays its left edge while open. */}
             <section
               key="probing"
-              inert={whiteboardOpen}
               className="flex min-w-0 min-h-0 flex-col overflow-hidden"
             >
               <div className="min-h-0 flex-1 overflow-hidden p-3">{probing}</div>

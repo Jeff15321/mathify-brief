@@ -16,7 +16,7 @@ export function ProbingPanel({
   answering,
   onSubmit,
   submitting, hintOpened, onHintOpened, onVisible,
-  heading, submitLabel = "Send to tutor", submittingLabel = "Sending…", onOpenWhiteboard,
+  heading, submitLabel = "Send to tutor", submittingLabel = "Sending…",
 }: {
   probing: PublicProbing;
   selection: ProbeAnswer | undefined;
@@ -32,7 +32,6 @@ export function ProbingPanel({
   heading?: ReactNode;
   submitLabel?: string;
   submittingLabel?: string;
-  onOpenWhiteboard?: () => void;
 }) {
   const { current, progress, finished, waitingStatus } = probing;
 
@@ -96,16 +95,7 @@ export function ProbingPanel({
 
       <div className="sticky bottom-0 border-t border-slate-200 bg-slate-50 pt-3">
         <p className="mb-2 text-xs text-slate-600">You can connect now, even if you haven’t answered every check.</p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {onOpenWhiteboard && (
-            <button
-              type="button"
-              onClick={onOpenWhiteboard}
-              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              Open whiteboard
-            </button>
-          )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
             onClick={onSubmit}
