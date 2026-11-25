@@ -49,13 +49,12 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("button", { name: "Close whiteboard" }).click();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
   // Desktop drawer check: closed must sit entirely off-screen past the md left anchor —
-  // a broken translate leaves the drawer visible but inert, so assert its right edge.
-  const closedBoard = await page.evaluate(() => {
+  // a broken translate leaves the drawer visible but inert. Poll so the 200ms slide
+  // transition can finish first.
+  await expect.poll(async () => page.evaluate(() => {
     const el = document.querySelector('section[aria-hidden="true"]');
-    return el ? el.getBoundingClientRect().right : null;
-  });
-  expect(closedBoard).not.toBeNull();
-  expect(closedBoard as number).toBeLessThanOrEqual(0.5);
+    return el ? el.getBoundingClientRect().right : -1;
+  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
   await next.click();
 
   // Step 3 shows; submit early without answering it (skip-ahead via the DEMO button).

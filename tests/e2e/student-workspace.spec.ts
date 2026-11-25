@@ -45,12 +45,11 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeChecked();
   // The closed drawer must sit entirely off-screen: no strip may peek past the viewport edge.
-  const closedBoard = await page.evaluate(() => {
+  // Poll so the 200ms slide transition can finish first.
+  await expect.poll(async () => page.evaluate(() => {
     const el = document.querySelector('section[aria-hidden="true"]');
-    return el ? el.getBoundingClientRect().right : null;
-  });
-  expect(closedBoard).not.toBeNull();
-  expect(closedBoard as number).toBeLessThanOrEqual(0.5);
+    return el ? el.getBoundingClientRect().right : -1;
+  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
