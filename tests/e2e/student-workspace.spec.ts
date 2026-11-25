@@ -13,8 +13,8 @@ test('batch upload stays in one workspace, persists selection and sends it witho
   await expect(page.getByAltText('Preview of page-2.png')).toBeVisible();
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
-  await page.locator('input[name="s1-main"][value="B"]').check();
   const savedBeforeReload = await page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length);
+  await page.locator('input[name="s1-main"][value="B"]').check();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length)).toBeGreaterThan(savedBeforeReload);
   await page.reload();
   await expect(page.locator('input[name="s1-main"][value="B"]')).toBeChecked();

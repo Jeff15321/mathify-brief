@@ -4,16 +4,22 @@ async function start(page: Page) {
   await page.getByLabel('Question (optional if files provided)').fill('Solve 2(x + 3) = 14.');
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
+  // Once probing starts the whiteboard lives behind a full-screen overlay; verify the board is
+  // ready inside it, then close it so the probing screen is showing again.
+  await page.getByRole('button', { name: 'Open whiteboard' }).click();
   await expect(page.getByRole('button', { name: 'Fit to work' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Close whiteboard' }).click();
 }
 test('failed drawing export can be omitted explicitly without losing the selected answer', async ({ page, request }) => {
   await page.addInitScript(() => { HTMLCanvasElement.prototype.toBlob = function(callback) { callback(null); }; });
   await start(page);
   await page.getByRole('button', { name: 'Open whiteboard' }).click();
+  await page.getByRole('radio', { name: 'Draw', exact: true }).locator('..').click();
   const bounds = await page.locator('canvas.excalidraw__canvas.interactive').boundingBox();
   if (!bounds) throw new Error('Board not visible');
-  await page.mouse.move(bounds.x + 80, bounds.y + 180); await page.mouse.down();
-  await page.mouse.move(bounds.x + 200, bounds.y + 240); await page.mouse.up();
+  // Start mid-canvas: Excalidraw floats its menu and color picker over the edges.
+  await page.mouse.move(bounds.x + bounds.width / 2 - 60, bounds.y + bounds.height / 2); await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width / 2 + 60, bounds.y + bounds.height / 2 + 80); await page.mouse.up();
   await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await page.locator('input[name="s1-main"][value="B"]').check();
   await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
@@ -40,7 +46,9 @@ test('PDF-only intake keeps its original source available to the tutor', async (
   await page.getByLabel('Problem photos or PDFs').setInputFiles('tests/fixtures/probe-evaluation/sources/normal-03-1.pdf');
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
+  await page.getByRole('button', { name: 'Open whiteboard' }).click();
   await expect(page.getByRole('button', { name: 'Fit to work' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'normal-03-1.pdf (PDF)' })).toBeVisible();
