@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   // Disabled: conflicts with explicit `export const runtime = 'nodejs'` route segment config,
   // which this app's filesystem/Anthropic SDK routes require (IMPLEMENTATION_PLAN.md Section 4).
   cacheComponents: false,
+  experimental: {
+    // Show security upgrade reminders during next dev/build (agent-upgrade policy).
+    agentUpgrade: "security",
+  },
   turbopack: {
     // Pin the workspace root so a stray lockfile in a parent directory is not picked up.
     root: path.resolve(__dirname),

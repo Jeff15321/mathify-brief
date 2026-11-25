@@ -16,7 +16,9 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 vi.mock('@/lib/api-client', () => ({
   fetchWorkspace: vi.fn(), generateNextProbes: vi.fn(), answerProbe: vi.fn(),
   submitBrief: vi.fn(), startWorkspace: vi.fn(), analyzeQuestion: vi.fn(),
-  fetchBriefHistory: vi.fn().mockResolvedValue({ status: 'ready', bullets: [] }),
+  fetchBriefHistory: vi.fn().mockResolvedValue({
+    status: 'ready', bullets: [], generatedAt: '2026-01-01T00:00:00.000Z', model: 'test-model', promptVersion: 'test-v1',
+  }),
 }));
 // Canvas rendering needs a browser; keep draft storage, page state and server transitions real.
 vi.mock('@/components/workspace/WhiteboardPanel', async () => {
@@ -36,7 +38,9 @@ beforeEach(async () => {
   ({ stores, cleanup: cleanStore } = await setupWorkspace('workspace-recovery'));
   draftId = (await stores.workspaceStore.read())!.draftId;
   vi.mocked(api.fetchWorkspace).mockImplementation(() => getPublicWorkspace(stores));
-  vi.mocked(api.fetchBriefHistory).mockResolvedValue({ status: 'ready', bullets: [] });
+  vi.mocked(api.fetchBriefHistory).mockResolvedValue({
+    status: 'ready', bullets: [], generatedAt: '2026-01-01T00:00:00.000Z', model: 'test-model', promptVersion: 'test-v1',
+  });
   vi.mocked(api.generateNextProbes).mockImplementation(() => generateNextProbePair(stores));
   vi.mocked(api.answerProbe).mockImplementation((probeId, answer, workspaceId, hintOpened) =>
     answerCurrentProbe({ probeId, answer, workspaceId, hintOpened }, stores));
