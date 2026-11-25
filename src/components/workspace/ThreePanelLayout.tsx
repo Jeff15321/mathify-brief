@@ -111,7 +111,7 @@ export function ThreePanelLayout({
               key="whiteboard"
               aria-hidden={!whiteboardOpen}
               inert={!whiteboardOpen}
-              className={`fixed bottom-0 left-0 top-0 z-50 flex w-[min(32rem,calc(100vw-3.5rem))] min-w-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 shadow-xl transition-transform duration-200 ease-out ${
+              className={`fixed bottom-0 top-0 z-50 flex w-[min(32rem,calc(100vw-3.5rem))] min-w-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 shadow-xl transition-transform duration-200 ease-out left-0 md:left-14 ${
                 whiteboardOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
@@ -139,7 +139,7 @@ export function ThreePanelLayout({
                 type="button"
                 onClick={onOpenWhiteboard}
                 aria-label="Open whiteboard"
-                className="fixed left-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-r-lg border border-l-0 border-slate-300 bg-white py-3 pl-1 pr-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-100"
+                className="fixed top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-r-lg border border-l-0 border-slate-300 bg-white py-3 pl-1 pr-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-100 left-0 md:left-14"
               >
                 <ChevronRight size={14} />
                 Whiteboard
