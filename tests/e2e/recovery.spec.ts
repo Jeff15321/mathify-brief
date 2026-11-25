@@ -7,6 +7,8 @@ async function start(page: Page) {
   // Once probing starts the whiteboard lives behind a full-screen overlay; verify the board is
   // ready inside it, then close it so the probing screen is showing again.
   await page.getByRole('button', { name: 'Open whiteboard' }).click();
+  // Let the slide-in drawer finish its transform before reading the toolbar.
+  await page.waitForTimeout(250);
   await expect(page.getByRole('button', { name: 'Fit to work' })).toBeEnabled();
   await page.getByRole('button', { name: 'Close whiteboard' }).click();
 }
@@ -14,6 +16,8 @@ test('failed drawing export can be omitted explicitly without losing the selecte
   await page.addInitScript(() => { HTMLCanvasElement.prototype.toBlob = function(callback) { callback(null); }; });
   await start(page);
   await page.getByRole('button', { name: 'Open whiteboard' }).click();
+  // Let the slide-in drawer finish its transform before reading canvas coordinates.
+  await page.waitForTimeout(250);
   await page.getByRole('radio', { name: 'Draw', exact: true }).locator('..').click();
   const bounds = await page.locator('canvas.excalidraw__canvas.interactive').boundingBox();
   if (!bounds) throw new Error('Board not visible');
@@ -47,6 +51,7 @@ test('PDF-only intake keeps its original source available to the tutor', async (
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await page.getByRole('button', { name: 'Open whiteboard' }).click();
+  await page.waitForTimeout(250);
   await expect(page.getByRole('button', { name: 'Fit to work' })).toBeEnabled();
   await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
