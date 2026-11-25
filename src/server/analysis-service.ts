@@ -98,10 +98,19 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
     throw new ApiError(502, 'AI_PROVIDER_ERROR', 'AI analysis could not be validated. Please retry analysis.');
   }
 
-  try {
-    const verdict = analysisReviewSchema.parse(await provider.reviewAnalysis(input, parsed.data));
-    if (!reviewApproved(verdict)) throw new Error('Review rejected');
-  } catch {
+  // Image reviews are the flakiest leg (a strict or malformed verdict rejects otherwise-fine
+  // content), so retry the review — never regenerate silently — before surfacing the failure.
+  // Parse failures count as failed attempts too; only a consistently rejected candidate fails.
+  let reviewApprovedOnce = false;
+  for (let attempt = 0; attempt < 3 && !reviewApprovedOnce; attempt += 1) {
+    try {
+      const verdict = analysisReviewSchema.parse(await provider.reviewAnalysis(input, parsed.data));
+      reviewApprovedOnce = reviewApproved(verdict);
+    } catch {
+      // Swallow: a malformed or thrown verdict is one flaky attempt, not a verdict.
+    }
+  }
+  if (!reviewApprovedOnce) {
     throw new ApiError(502, 'AI_PROVIDER_ERROR', 'The generated content could not pass quality review. Please retry analysis.');
   }
 

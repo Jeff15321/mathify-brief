@@ -80,9 +80,16 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
       const errors = validateProbePair(parsed.data);
       if (errors.length > 0) failure = `AI probe output failed validation: ${errors.join('; ')}`;
       else {
-        const verdict = probeReviewSchema.parse(await provider.reviewProbePair(input, parsed.data));
-        if (reviewApproved(verdict)) pair = parsed.data;
-        else failure = 'Review rejected';
+        // Retry the review like the analysis path: image-era flash models intermittently return
+        // harsh or malformed verdicts, and regenerating the pair over a flaky review loses good
+        // questions. Parse failures count as failed attempts; only consistent rejection fails.
+        for (let attempt = 0; attempt < 3 && !pair; attempt += 1) {
+          try {
+            const verdict = probeReviewSchema.parse(await provider.reviewProbePair(input, parsed.data));
+            if (reviewApproved(verdict)) pair = parsed.data;
+          } catch { /* malformed verdict: one flaky attempt, not a verdict */ }
+        }
+        if (!pair) failure = 'Review rejected after 3 attempts';
       }
     }
   } catch (err) {

@@ -19,15 +19,22 @@ describe('Independent quality review gate', () => {
   });
   afterEach(async () => { vi.restoreAllMocks(); await cleanup(); });
 
-  it.each(Object.keys(analysisReviewSchema.shape))('rejects initial content when %s fails, then permits retry', async (facet) => {
+  it.each(Object.keys(analysisReviewSchema.shape))('absorbs one flaky %s rejection and accepts the retried review', async (facet) => {
     const review = vi.spyOn(MockAnalysisProvider.prototype, 'reviewAnalysis')
-      .mockResolvedValueOnce({ ...approved, [facet]: false });
+      .mockResolvedValueOnce({ ...approved, [facet]: false })
+      .mockResolvedValue(approved);
+    await analyzeCurrentWorkspace(stores);
+    expect(review).toHaveBeenCalledTimes(2);
+    expect((await stores.workspaceStore.read())?.phase).toBe('ready');
+  });
+
+  it.each(Object.keys(analysisReviewSchema.shape))('still rejects when %s fails all 3 review attempts', async (facet) => {
+    const review = vi.spyOn(MockAnalysisProvider.prototype, 'reviewAnalysis')
+      .mockResolvedValue({ ...approved, [facet]: false });
     await expect(analyzeCurrentWorkspace(stores)).rejects.toThrow('Please retry analysis');
-    expect(review).toHaveBeenCalledTimes(1);
+    expect(review).toHaveBeenCalledTimes(3);
     expect(await stores.workspaceStore.read()).toMatchObject({ phase: 'intake', analysis: null, probeSteps: [] });
     await expect(answerCurrentProbe({ probeId: 's1-main', answer: 'A' }, stores)).rejects.toThrow();
-    await analyzeCurrentWorkspace(stores);
-    expect((await stores.workspaceStore.read())?.phase).toBe('ready');
   });
 
   it('rejects mathematically corrupted but structurally valid generated content', async () => {
@@ -39,29 +46,48 @@ describe('Independent quality review gate', () => {
     expect((await stores.workspaceStore.read())?.analysis).toBeNull();
   });
 
-  it.each(Object.keys(probeReviewSchema.shape))('rejects deferred content when %s fails without scoring it', async (facet) => {
+  it.each(Object.keys(probeReviewSchema.shape))('absorbs one flaky %s rejection on a deferred pair and accepts the retry', async (facet) => {
     await analyzeCurrentWorkspace(stores);
     await answerCurrentProbe({ probeId: 's1-main', answer: 'B' }, stores);
-    vi.spyOn(MockAnalysisProvider.prototype, 'reviewProbePair').mockResolvedValueOnce({ ...approved, [facet]: false });
+    const review = vi.spyOn(MockAnalysisProvider.prototype, 'reviewProbePair')
+      .mockResolvedValueOnce({ ...approved, [facet]: false })
+      .mockResolvedValue(approved);
+    await generateNextProbePair(stores);
+    expect(review).toHaveBeenCalledTimes(2);
+    expect((await stores.workspaceStore.read())?.probeSteps[1]).toMatchObject({ status: 'ready' });
+  });
+
+  it.each(Object.keys(probeReviewSchema.shape))('still rejects deferred content when %s fails all 3 attempts without scoring it', async (facet) => {
+    await analyzeCurrentWorkspace(stores);
+    await answerCurrentProbe({ probeId: 's1-main', answer: 'B' }, stores);
+    vi.spyOn(MockAnalysisProvider.prototype, 'reviewProbePair').mockResolvedValue({ ...approved, [facet]: false });
     await expect(generateNextProbePair(stores)).rejects.toThrow('Please retry generation');
     const workspace = (await stores.workspaceStore.read())!;
     expect(workspace.probeSteps[1]).toMatchObject({ status: 'failed', main: null, easier: null, mainAnswer: null });
     expect((await getPublicWorkspace(stores))?.probing?.current).toBeNull();
     await expect(answerCurrentProbe({ probeId: 's2-main', answer: 'C' }, stores)).rejects.toThrow();
-    await generateNextProbePair(stores);
-    expect((await stores.workspaceStore.read())?.probeSteps[1].status).toBe('ready');
   });
 
   it('fails closed on malformed verdicts and hides reviewer errors', async () => {
+    // Three consecutive unusable verdicts (malformed, thrown, malformed) fail closed even
+    // though the content itself is the approved mock: the gate never guesses.
     vi.spyOn(MockAnalysisProvider.prototype, 'reviewAnalysis')
       .mockResolvedValueOnce({} as typeof approved)
-      .mockRejectedValueOnce(new Error('private reviewer: correctOptionId B; hidden explanation'));
-    for (let attempt = 0; attempt < 2; attempt++) {
-      await expect(analyzeCurrentWorkspace(stores)).rejects.toThrow(
-        'The generated content could not pass quality review. Please retry analysis.',
-      );
-    }
+      .mockRejectedValueOnce(new Error('private reviewer: correctOptionId B; hidden explanation'))
+      .mockResolvedValue({} as typeof approved);
+    await expect(analyzeCurrentWorkspace(stores)).rejects.toThrow(
+      'The generated content could not pass quality review. Please retry analysis.',
+    );
     expect((await stores.workspaceStore.read())?.analysis).toBeNull();
+  });
+
+  it('treats malformed and thrown verdicts as flaky attempts and accepts a later approval', async () => {
+    vi.spyOn(MockAnalysisProvider.prototype, 'reviewAnalysis')
+      .mockResolvedValueOnce({} as typeof approved)
+      .mockRejectedValueOnce(new Error('private reviewer: correctOptionId B; hidden explanation'))
+      .mockResolvedValue(approved);
+    await analyzeCurrentWorkspace(stores);
+    expect((await stores.workspaceStore.read())?.phase).toBe('ready');
   });
 
   it('keeps a pair unavailable while review is pending and omits verdicts from the public response', async () => {
@@ -90,9 +116,11 @@ describe('Independent quality review gate', () => {
     let release!: (value: typeof approved) => void;
     let entered!: () => void;
     const reviewing = new Promise<void>((resolve) => { entered = resolve; });
+    // The older claim's review rejects consistently (3 attempts); the newer claim races ahead
+    // and fails on its own review before the older one even finishes.
     vi.spyOn(MockAnalysisProvider.prototype, 'reviewProbePair')
       .mockImplementationOnce(() => { entered(); return new Promise((resolve) => { release = resolve; }); })
-      .mockResolvedValueOnce({ ...approved, answerKeysCorrect: false });
+      .mockResolvedValue({ ...approved, answerKeysCorrect: false });
     const older = generateNextProbePair(stores);
     await reviewing;
     // Simulate expiration of the first request without real-time sleeps.
