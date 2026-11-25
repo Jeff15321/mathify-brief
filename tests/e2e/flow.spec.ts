@@ -30,6 +30,8 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   // Draw on the whiteboard via the full-screen overlay; the current selection must survive.
   await page.locator('input[name="s2-easier"][value="B"]').check();
   await page.getByRole("button", { name: "Open whiteboard" }).click();
+  // Let the slide-in drawer finish its transform before reading canvas coordinates.
+  await page.waitForTimeout(250);
   await page.getByRole("radio", { name: "Draw", exact: true }).locator("..").click();
   const canvas = page.locator("canvas.excalidraw__canvas.interactive");
   const box = await canvas.boundingBox();
@@ -46,6 +48,14 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("button", { name: "Open whiteboard" }).click();
   await page.getByRole("button", { name: "Close whiteboard" }).click();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
+  // Desktop drawer check: closed must sit entirely off-screen past the md left anchor —
+  // a broken translate leaves the drawer visible but inert, so assert its right edge.
+  const closedBoard = await page.evaluate(() => {
+    const el = document.querySelector('section[aria-hidden="true"]');
+    return el ? el.getBoundingClientRect().right : null;
+  });
+  expect(closedBoard).not.toBeNull();
+  expect(closedBoard as number).toBeLessThanOrEqual(0.5);
   await next.click();
 
   // Step 3 shows; submit early without answering it (skip-ahead via the DEMO button).
