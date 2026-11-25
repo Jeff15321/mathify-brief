@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronRight, Maximize2, Minimize2, X } from "lucide-react";
+import { Maximize2, Minimize2, PencilLine, X } from "lucide-react";
 
 type PanelKey = "whiteboard" | "probing";
 
@@ -139,10 +139,10 @@ export function ThreePanelLayout({
                 type="button"
                 onClick={onOpenWhiteboard}
                 aria-label="Open whiteboard"
-                className="fixed top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-r-lg border border-l-0 border-slate-300 bg-white py-3 pl-1 pr-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-100 left-0 md:left-14"
+                title="Open whiteboard"
+                className="fixed top-1/2 z-40 flex size-9 -translate-y-1/2 items-center justify-center rounded-r-full border border-l-0 border-slate-300 bg-white text-slate-500 shadow-md hover:bg-slate-100 hover:text-slate-700 left-0 md:left-14"
               >
-                <ChevronRight size={14} />
-                Whiteboard
+                <PencilLine size={15} />
               </button>
             )}
 
