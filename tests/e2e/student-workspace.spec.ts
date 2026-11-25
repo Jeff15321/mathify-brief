@@ -13,14 +13,14 @@ test('batch upload stays in one workspace, persists selection and sends it witho
   await expect(page.getByAltText('Preview of page-2.png')).toBeVisible();
   await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
-  await page.locator('input[name="s1-main"][value="B"]').check();
   const savedBeforeReload = await page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length);
+  await page.locator('input[name="s1-main"][value="B"]').check();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').filter((event: { eventName: string }) => event.eventName === 'draft_saved').length)).toBeGreaterThan(savedBeforeReload);
   await page.reload();
   await expect(page.locator('input[name="s1-main"][value="B"]')).toBeChecked();
   await page.screenshot({ path: 'artifacts/pilot/student-desktop.png' });
   await expect(page.getByText('Loading uploaded images…')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   const { workspace } = await (await request.get('/api/workspace')).json();
   expect(workspace.attachments).toHaveLength(2);
@@ -39,12 +39,19 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.reload();
   await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Whiteboard', exact: true }).click();
-  await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeHidden();
-  await page.getByRole('button', { name: 'Relevant Concepts', exact: true }).click();
+  // Once probing starts the whiteboard is a slide-in drawer on the left.
+  await page.getByRole('button', { name: 'Open whiteboard' }).click();
+  await expect(page.getByRole('button', { name: 'Close whiteboard' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close whiteboard' }).click();
   await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeChecked();
+  // The closed drawer must sit entirely off-screen: no strip may peek past the viewport edge.
+  // Poll so the 200ms slide transition can finish first.
+  await expect.poll(async () => page.evaluate(() => {
+    const el = document.querySelector('section[aria-hidden="true"]');
+    return el ? el.getBoundingClientRect().right : -1;
+  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   expect((await (await request.get('/api/workspace')).json()).workspace.brief.results[0].hintOpened).toBe(true);
 });

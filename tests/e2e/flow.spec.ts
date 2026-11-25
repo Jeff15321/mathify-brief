@@ -8,7 +8,7 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("button", { name: "Let’s begin" }).click();
 
   await page.waitForURL(/\/workspace\?draft=/);
-  await expect(page.getByRole("heading", { name: "Relevant Concepts" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Answer a few probing questions while you wait" })).toBeVisible();
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
 
   const next = page.getByRole("button", { name: "Next" });
@@ -27,28 +27,39 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await next.click();
   await expect(page.getByText("Easier question")).toBeVisible();
 
-  // Draw on the whiteboard, then expand/restore; the current selection must survive.
+  // Draw on the whiteboard via the full-screen overlay; the current selection must survive.
   await page.locator('input[name="s2-easier"][value="B"]').check();
+  await page.getByRole("button", { name: "Open whiteboard" }).click();
+  // Let the slide-in drawer finish its transform before reading canvas coordinates.
+  await page.waitForTimeout(250);
   await page.getByRole("radio", { name: "Draw", exact: true }).locator("..").click();
   const canvas = page.locator("canvas.excalidraw__canvas.interactive");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("whiteboard canvas not found");
-  await page.mouse.move(box.x + 50, box.y + 50);
+  // Start mid-canvas: the top-left corner hosts Excalidraw's main-menu button.
+  await page.mouse.move(box.x + box.width / 2 - 60, box.y + box.height / 2);
   await page.mouse.down();
-  await page.mouse.move(box.x + 200, box.y + 150);
+  await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 80);
   await page.mouse.up();
 
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
   await page.reload();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
-  await page.getByLabel("Expand Whiteboard").click();
-  await page.getByLabel("Restore Whiteboard").click();
+  await page.getByRole("button", { name: "Open whiteboard" }).click();
+  await page.getByRole("button", { name: "Close whiteboard" }).click();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
+  // Desktop drawer check: closed must sit entirely off-screen past the md left anchor —
+  // a broken translate leaves the drawer visible but inert. Poll so the 200ms slide
+  // transition can finish first.
+  await expect.poll(async () => page.evaluate(() => {
+    const el = document.querySelector('section[aria-hidden="true"]');
+    return el ? el.getBoundingClientRect().right : -1;
+  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
   await next.click();
 
-  // Step 3 shows; submit early without answering it.
+  // Step 3 shows; submit early without answering it (skip-ahead via the DEMO button).
   await expect(page.getByText("Question 3 of 3")).toBeVisible();
-  await page.getByRole("button", { name: "Send to tutor" }).click();
+  await page.getByRole("button", { name: "DEMO: connect to tutor" }).click();
 
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
   await expect(page).toHaveURL(/\/workspace/);
@@ -94,7 +105,24 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("button", { name: "Let’s begin" }).click();
   await page.waitForURL(/\/workspace\?draft=/);
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
-  await page.getByRole("button", { name: "Send to tutor", exact: true }).click();
+  // Answering every served question (including easier retries) auto-submits: no DEMO click.
+  await page.locator('input[name="s1-main"][value="A"]').check();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Easier question")).toBeVisible();
+  await page.locator('input[name="s1-easier"][value="A"]').check();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Question 2 of 3")).toBeVisible();
+  await page.locator('input[name="s2-main"][value="A"]').check();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Easier question")).toBeVisible();
+  await page.locator('input[name="s2-easier"][value="A"]').check();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Question 3 of 3")).toBeVisible();
+  await page.locator('input[name="s3-main"][value="A"]').check();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Easier question")).toBeVisible();
+  await page.locator('input[name="s3-easier"][value="A"]').check();
+  await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Tutor feedback" })).toHaveCount(0);
 });

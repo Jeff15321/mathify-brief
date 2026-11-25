@@ -15,7 +15,7 @@ async function completeQuestion(page: Page) {
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await page.locator('input[name="s1-main"][value="A"]').check();
   const history = page.waitForResponse('**/api/brief/history');
-  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect(page).toHaveURL(/\/workspace/);
   expect((await history).status()).toBe(200);
