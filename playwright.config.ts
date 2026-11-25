@@ -23,4 +23,9 @@ export default defineConfig({
   use: {
     baseURL: E2E_URL,
   },
+  projects: [
+    { name: 'chromium' },
+    { name: 'firefox', testMatch: '**/cross-browser.spec.ts', use: { browserName: 'firefox' } },
+    { name: 'webkit', testMatch: '**/cross-browser.spec.ts', use: { browserName: 'webkit' } },
+  ],
 });
