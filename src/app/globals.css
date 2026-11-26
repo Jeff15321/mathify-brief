@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-/* Mathify logo pink for primary actions, with darker and lighter shades on ivory. */
+/* Mathify logo pink on white, with neutral grays for controls and borders. */
 @theme {
   --color-brand: #c83aa2;
   --color-brand-deep: #86236c;
@@ -9,11 +9,11 @@
   --color-wash: #fbedf7;
   --color-ink: #372e35;
   --color-muted: #695e60;
-  --color-ground: #f9f5eb;
+  --color-ground: #ffffff;
   --color-card: #ffffff;
-  --color-fill: #f1eae5;
-  --color-line: #dfd5d4;
-  --color-connector: #918080;
+  --color-fill: #f2f2f2;
+  --color-line: #dedede;
+  --color-connector: #858585;
   --color-clay: #94492e;
   --color-clay-wash: #fae8d9;
   --color-sage: #3f644d;
@@ -69,7 +69,7 @@
   --island-bg-color: var(--color-card);
   --color-surface-lowest: var(--color-card);
   --color-surface-low: var(--color-fill);
-  --color-surface-mid: var(--color-ground);
+  --color-surface-mid: var(--color-fill);
   --color-surface-high: var(--color-wash);
   --color-primary: var(--color-brand);
   --color-primary-darker: var(--color-brand-deep);

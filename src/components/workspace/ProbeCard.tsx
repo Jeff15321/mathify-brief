@@ -62,7 +62,7 @@ export function ProbeCard({
             className={`flex cursor-pointer items-start gap-2 rounded-panel border px-4 py-2.5 text-base ${
               selected === choice.id
                 ? "border-brand bg-wash"
-                : "border-line hover:bg-ground"
+                : "border-line hover:bg-fill"
             }`}
           >
             <input

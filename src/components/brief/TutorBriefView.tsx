@@ -46,7 +46,7 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
         />
         <a
           href="/workspace?new=1"
-          className="mt-1 shrink-0 rounded-panel border border-connector bg-card px-3 py-1.5 text-sm font-bold text-ink hover:bg-ground"
+          className="mt-1 shrink-0 rounded-panel border border-connector bg-card px-3 py-1.5 text-sm font-bold text-ink hover:bg-fill"
         >
           New question
         </a>
