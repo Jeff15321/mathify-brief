@@ -7,7 +7,7 @@ export function readDraftCheckpoint(page: Page) {
     const id = new URLSearchParams(location.search).get('draft');
     if (!id) return null;
 
-    return new Promise<{ hasDrawing: boolean; hintOpened: boolean } | null>((resolve, reject) => {
+    return new Promise<{ drawingCount: number; hintOpened: boolean } | null>((resolve, reject) => {
       const open = indexedDB.open('mathify-drafts-v1');
       open.onerror = () => reject(open.error);
       open.onsuccess = () => {
@@ -18,7 +18,7 @@ export function readDraftCheckpoint(page: Page) {
           db.close();
           const draft: WorkspaceDraft | undefined = read.result;
           resolve(draft ? {
-            hasDrawing: draft.board?.elements.some(element => !element.isDeleted) ?? false,
+            drawingCount: draft.board?.elements.filter(element => !element.isDeleted && element.type === "freedraw").length ?? 0,
             hintOpened: draft.hintOpened === true,
           } : null);
         };

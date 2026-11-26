@@ -217,25 +217,25 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
       input.notReachedConcepts.length > 0 || input.results.some((r) => r.outcome === 'unanswered');
 
     return {
-      summary: `Student attempted ${attemptedCount} of ${input.results.length} prerequisite checks, getting ${correctResults.length} correct.`,
+      summary: `Student attempted ${attemptedCount} of ${input.results.length} practice questions, getting ${correctResults.length} correct.`,
       gradeAssessment: 'Responses are broadly consistent with on-grade Grade 9 expectations.',
       strengths: correctResults.map((r) => ({
-        observation: `Correctly answered the "${r.concept}" check.`,
-        evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}.`,
+        observation: `Correctly answered the "${r.concept}" practice question.`,
+        evidence: `Practice question ${r.stepIndex + 1} (${r.kind === 'easier' ? 'easier retry' : 'main'}): selected ${r.selectedOptionId}.`,
       })),
       possibleGaps: [
         ...incorrectResults.map((r) => ({
           observation: `May need review of "${r.concept}".`,
-          evidence: `Probe ${r.probeId}: selected ${r.selectedOptionId}, correct answer was ${r.correctOptionId}.`,
+          evidence: `Practice question ${r.stepIndex + 1} (${r.kind === 'easier' ? 'easier retry' : 'main'}): selected ${r.selectedOptionId}, correct answer was ${r.correctOptionId}.`,
         })),
         ...dontKnowResults.map((r) => ({
           observation: `Reported being unsure about "${r.concept}".`,
-          evidence: `Probe ${r.probeId}: selected "I don't know".`,
+          evidence: `Practice question ${r.stepIndex + 1} (${r.kind === 'easier' ? 'easier retry' : 'main'}): selected "I don't know".`,
         })),
       ],
       whiteboardObservations: input.whiteboardPng ? ['Work shown is legible and follows the expected solution steps.'] : [],
       suggestedStartingPoint: 'Review the distributive property before moving to multi-step equations.',
-      limitations: hasMissingEvidence ? ['Not enough evidence for unanswered or unreached probes.'] : [],
+      limitations: hasMissingEvidence ? ['Not enough evidence for unanswered or unreached practice questions.'] : [],
     };
   }
 

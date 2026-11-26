@@ -1,16 +1,27 @@
+import { drawOnWhiteboard } from './whiteboard';
 import { readDraftCheckpoint } from './draft-checkpoint';
 import { expect, test } from "@playwright/test";
 
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
-test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> brief", async ({ page }) => {
+test("happy path: draw at intake and during practice, answer easier retries, then send the work to the tutor", async ({ page }) => {
   await page.goto("/workspace?new=1");
 
+  const board = page.getByRole("region", { name: "Whiteboard", exact: true });
+  await drawOnWhiteboard(page);
+  const initialCanvas = await board.locator("canvas.excalidraw__canvas.interactive").elementHandle();
   await page.getByLabel("Question (optional if files provided)").fill("Solve 2(x + 3) = 14.");
   await page.getByRole("button", { name: "Let’s begin" }).click();
 
   await page.waitForURL(/\/workspace\?draft=/);
-  await expect(page.getByRole("heading", { name: "Answer a few probing questions while you wait" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Practice while you wait" })).toBeVisible();
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
+
+  expect(await initialCanvas?.evaluate(canvas => canvas.isConnected)).toBe(true);
+  const left = await board.boundingBox();
+  const right = await page.getByRole("region", { name: "Practice questions" }).boundingBox();
+  if (!left || !right) throw new Error("Both practice panels should be visible");
+  expect(Math.abs(left.width - right.width)).toBeLessThanOrEqual(1);
+  expect(left.x + left.width).toBeCloseTo(right.x, 0);
 
   const next = page.getByRole("button", { name: "Next" });
 
@@ -28,34 +39,12 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await next.click();
   await expect(page.getByText("Easier question")).toBeVisible();
 
-  // Draw on the whiteboard via the full-screen overlay; the current selection must survive.
   await page.locator('input[name="s2-easier"][value="B"]').check();
-  await page.getByRole("button", { name: "Open whiteboard" }).click();
-  // Let the slide-in drawer finish its transform before reading canvas coordinates.
-  await page.waitForTimeout(250);
-  await page.getByRole("radio", { name: "Draw", exact: true }).locator("..").click();
-  const canvas = page.locator("canvas.excalidraw__canvas.interactive");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("whiteboard canvas not found");
-  // Start mid-canvas: the top-left corner hosts Excalidraw's main-menu button.
-  await page.mouse.move(box.x + box.width / 2 - 60, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 80);
-  await page.mouse.up();
-
-  await expect.poll(async () => (await readDraftCheckpoint(page))?.hasDrawing).toBe(true);
+  await drawOnWhiteboard(page);
+  await expect.poll(async () => (await readDraftCheckpoint(page))?.drawingCount).toBe(2);
   await page.reload();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
-  await page.getByRole("button", { name: "Open whiteboard" }).click();
-  await page.getByRole("button", { name: "Close whiteboard" }).click();
-  await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
-  // Desktop drawer check: closed must sit entirely off-screen past the md left anchor —
-  // a broken translate leaves the drawer visible but inert. Poll so the 200ms slide
-  // transition can finish first.
-  await expect.poll(async () => page.evaluate(() => {
-    const el = document.querySelector('section[aria-hidden="true"]');
-    return el ? el.getBoundingClientRect().right : -1;
-  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
+  await expect(board.locator("canvas.excalidraw__canvas.interactive")).toBeVisible();
   await next.click();
 
   // Step 3 shows; submit early without answering it (skip-ahead via the DEMO button).
@@ -68,8 +57,8 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.screenshot({ path: "artifacts/pilot/tutor-desktop.png", fullPage: true });
   await page.getByText("Counts and additional concepts", { exact: true }).click();
 
-  // Core probes: s1 incorrect, s2 don't know, s3 on screen (unanswered). Retries: both correct.
-  const core = page.locator("section", { hasText: "Core probes" });
+  // Core practice questions: s1 incorrect, s2 don't know, s3 on screen (unanswered). Retries: both correct.
+  const core = page.locator("section", { hasText: "Core practice questions" });
   await expect(core.getByText("0/2")).toBeVisible();
   await expect(core.getByText("2 of 3 attempted")).toBeVisible();
   await expect(core.getByText("1 incorrect · 1 don't know")).toBeVisible();
@@ -91,10 +80,10 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
 
   await expect(page.getByAltText("Student's whiteboard")).toBeVisible();
 
-  // Probing results start collapsed and expand to show every question asked.
+  // Practice question results start collapsed and expand to show every question asked.
   const retryItems = page.getByText("Easier retry", { exact: true });
   await expect(retryItems.first()).toBeHidden();
-  await page.getByText("Probing results").click();
+  await page.getByText("Practice question results").click();
   await expect(retryItems).toHaveCount(2);
   await expect(retryItems.first()).toBeVisible();
   await expect(page.getByText("Not reached before submitting")).toHaveCount(0);

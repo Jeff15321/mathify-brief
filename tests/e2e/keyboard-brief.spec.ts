@@ -19,7 +19,7 @@ test('tutor brief disclosures open and close with the keyboard', async ({ page }
   await counts.press('Space');
   await expect(counts.locator('xpath=..')).not.toHaveAttribute('open', '');
 
-  const results = page.locator('summary').filter({ hasText: 'Probing results' });
+  const results = page.locator('summary').filter({ hasText: 'Practice question results' });
   await results.focus();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Shift+Tab');

@@ -7,7 +7,7 @@ it('partial success states coverage without asserting all planned checks were co
   const { stores, cleanup } = await setupWorkspace('partial-evidence');
   try {
     const brief = await submitBrief({ whiteboardPng: null, pending: { probeId: 's1-main', answer: 'B', hintOpened: true } }, stores);
-    expect(evidenceSummary(brief)).toMatchObject({ coverage: '1 of 3 core checks answered', complete: false, notReached: 2, hintsOpened: 1 });
+    expect(evidenceSummary(brief)).toMatchObject({ coverage: '1 of 3 core practice questions answered', complete: false, notReached: 2, hintsOpened: 1 });
     expect(suggestedStart(brief).reason).toContain('coverage is incomplete');
     expect(suggestedStart(brief).title).toContain('Check');
   } finally { await cleanup(); }
@@ -19,7 +19,7 @@ it('keeps simpler success beside the missed main and explains the selection rule
     const brief = await submitBrief({ whiteboardPng: null, pending: { probeId: 's1-easier', answer: 'B' } }, stores);
     const start = suggestedStart(brief);
     expect(start.title).toContain('Build on the simpler');
-    expect(start.reason).toContain('First core check');
+    expect(start.reason).toContain('First core question');
     expect(start.retry?.outcome).toBe('correct');
     expect(start.observation?.selectedOptionId).toBe('A');
   } finally { await cleanup(); }

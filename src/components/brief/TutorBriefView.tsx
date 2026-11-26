@@ -66,13 +66,13 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
           <span className="flex flex-col gap-0.5">
             <span className="text-sm font-bold text-ink">Counts and additional concepts</span>
-            <span className="text-sm text-muted">Core checks, retries, strengths, and gaps</span>
+            <span className="text-sm text-muted">Core questions, retries, strengths, and gaps</span>
           </span>
           <ChevronDown size={18} className="shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden="true" />
         </summary>
         <div className="space-y-3 border-t border-line p-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <ProbeTallyCard title="Core probes" tally={brief.core} emptyLabel="No core probes." />
+            <ProbeTallyCard title="Core practice questions" tally={brief.core} emptyLabel="No core practice questions." />
             <ProbeTallyCard title="Easier retries" tally={brief.retries} emptyLabel="No retries recorded." />
             <ConceptListCard tone="strength" concepts={brief.strengths} />
             <ConceptListCard tone="gap" concepts={brief.gaps} />

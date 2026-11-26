@@ -1,10 +1,10 @@
 # Mathify Tutor Brief MVP
 
-Local, single-user demo of diagnostic tutoring intake: a student submits one math question,
-Claude generates a student-safe breakdown and a plan of prerequisite multiple-choice probes, the
-student answers them one at a time in a three-panel workspace (whiteboard / relevant concepts /
-breakdown), getting one easier retry on a concept after a wrong or "I don't know" answer, and a
-Tutor Brief dashboard is computed from the stored answers (no AI) plus an optional whiteboard snapshot.
+In this local tutoring demo, a student submits a math problem and Claude generates multiple-choice
+practice questions about the skills it requires. The student can draw on an Excalidraw whiteboard
+beside each question, or switch between the two on a phone. An incorrect or “I don’t know” answer
+leads to an easier question about the same skill. The tutor brief includes the student’s responses
+and an optional snapshot of their work.
 
 See `CLAUDE_CODE_START_HERE.md`, `IMPLEMENTATION_PLAN.md`, and `MVP_DESCRIPTION.md` for the full
 specification, scope, and deferred future work (sessions, Supabase, Vercel deployment, auth).
@@ -52,9 +52,9 @@ Automated tests never call the paid Anthropic API, regardless of `.env.local`.
 1. `npm run dev`, open http://localhost:3000. The entry route opens `/workspace`.
 2. Type a question (e.g. `Solve $2(x + 3) = 14$.`) and/or add its PNG/JPEG/WebP/PDF sources
    in one batch. Read the purpose and select **Let’s begin** once.
-3. Draw in the same workspace while questions are prepared. Answer one check at a time with
+3. Draw in the same workspace while questions are prepared. Answer one practice question at a time with
    **Next**, or open its optional hint. A wrong or "I don't know" answer shows one simpler
-   check on the same concept. On phones, switch between drawing and checks without losing either.
+   question on the same concept. On phones, use **Whiteboard** and **Practice questions** to switch views.
 4. Finish at any point. The current selected answer is included even without pressing Next.
    Unreached concepts and shown-but-unanswered questions stay distinct. If drawing export fails,
    retry or explicitly send without the drawing; the report records the omission.

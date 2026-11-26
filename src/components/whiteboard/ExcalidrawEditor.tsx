@@ -135,7 +135,7 @@ export default function ExcalidrawEditor({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2" onPointerUp={() => setTimeout(() => onFlush?.(), 0)}>
       <div className="flex items-center justify-between gap-2 text-sm text-muted">
-        <p>Your work: draw, type or insert working images. Added work goes to your tutor; it does not change the checks.</p>
+        <p>Draw, type, or add an image. Your tutor will see the work you add here.</p>
         <button
           type="button"
           disabled={!api || disabled || loadingImages}

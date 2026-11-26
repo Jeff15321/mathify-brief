@@ -94,7 +94,7 @@ export function ProbingPanel({
       </div>
 
       <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3 border-t border-line bg-ground pt-3">
-        <p className="max-w-sm text-sm text-muted">You can connect now, even if you haven’t answered every check.</p>
+        <p className="max-w-sm text-sm text-muted">You can connect with your tutor at any time.</p>
         <div className="w-full sm:w-auto">
           <button
             type="button"

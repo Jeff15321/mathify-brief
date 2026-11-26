@@ -16,7 +16,7 @@ function requireProbing(workspace: CurrentWorkspace | null): CurrentWorkspace & 
     throw new ApiError(404, 'NOT_FOUND', 'No analyzed workspace');
   }
   if (workspace.phase !== 'ready') {
-    throw new ApiError(409, 'INVALID_STATE', 'Probing is not active for this workspace');
+    throw new ApiError(409, 'INVALID_STATE', 'Practice questions are closed for this workspace.');
   }
   return workspace as CurrentWorkspace & { analysis: NonNullable<CurrentWorkspace['analysis']> };
 }
@@ -138,7 +138,7 @@ export async function answerCurrentProbe(
     const workspace = requireProbing(current);
     const probe = currentProbe(workspace.probeSteps, workspace.cursor);
     if (!probe || !workspace.cursor || probe.id !== input.probeId) {
-      throw new ApiError(409, 'INVALID_STATE', `Probe ${input.probeId} is not the current question`);
+      throw new ApiError(409, 'INVALID_STATE', 'The practice question has changed. Reload to continue.');
     }
     const hintField = workspace.cursor.kind === 'main' ? 'mainHintOpened' : 'easierHintOpened';
     const annotated = workspace.probeSteps.map(step => step.index === workspace.cursor!.stepIndex
