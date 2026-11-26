@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ProbeCard } from "@/components/workspace/ProbeCard";
 import { ProbingPanel } from "@/components/workspace/ProbingPanel";
 import { QuestionDisplay } from "@/components/workspace/QuestionDisplay";
-import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
+import { WorkspaceLayout } from "@/components/workspace/WorkspaceLayout";
 import { ProbeTallyCard } from "@/components/brief/ProbeTallyCard";
 import { PriorityStepCard } from "@/components/brief/PriorityStepCard";
 import { ProbingResultsAccordion } from "@/components/brief/ProbingResultsAccordion";
@@ -80,7 +80,7 @@ function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" |
     <ProbingPanel
       probing={probing} selection={selection} answering={false} submitting={false}
       submitLabel="DEMO: connect to tutor" submittingLabel="Connecting…"
-      heading={<h1>Answer a few probing questions while you wait</h1>}
+      heading={<h1>Practice while you wait</h1>}
       {...handlers}
     />,
   );
@@ -90,7 +90,7 @@ function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" |
 describe("ProbingPanel", () => {
   it("shows the headline, one question with progress, and Next disabled until a choice is selected", () => {
     renderPanel(probingState());
-    expect(screen.getByRole("heading", { name: "Answer a few probing questions while you wait" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Practice while you wait" })).toBeInTheDocument();
     expect(screen.getByText("Question 1 of 3")).toBeInTheDocument();
     expect(screen.getAllByRole("radio")).toHaveLength(5);
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
@@ -131,45 +131,6 @@ describe("ProbingPanel", () => {
 
 });
 
-describe("ThreePanelLayout probing mode", () => {
-  it("probing mode shows the probing content full-width without panel headers or tabs", () => {
-    render(
-      <ThreePanelLayout mode="probing" probing={<div>questions here</div>} whiteboard={<div data-testid="wb">board</div>} />,
-    );
-    expect(screen.getByText("questions here")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Whiteboard" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Relevant Concepts" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Whiteboard" })).not.toBeInTheDocument();
-  });
-
-  it("keeps the whiteboard mounted but off-screen while the drawer is closed", () => {
-    const onOpenWhiteboard = vi.fn();
-    render(
-      <ThreePanelLayout mode="probing" onOpenWhiteboard={onOpenWhiteboard}
-        probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
-    );
-    // The drawer is translated off-screen, not unmounted: the board stays in the document but
-    // is removed from the accessibility tree, and the left-edge handle opens it.
-    expect(screen.getByTestId("wb-input")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open whiteboard" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open whiteboard" }));
-    expect(onOpenWhiteboard).toHaveBeenCalled();
-  });
-
-  it("shows the whiteboard drawer with a close control when open", () => {
-    const onCloseWhiteboard = vi.fn();
-    render(
-      <ThreePanelLayout mode="probing" whiteboardOpen onCloseWhiteboard={onCloseWhiteboard}
-        probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
-    );
-    expect(screen.getByTestId("wb-input")).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Open whiteboard" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Close whiteboard" }));
-    expect(onCloseWhiteboard).toHaveBeenCalled();
-  });
-
-});
-
 describe("QuestionDisplay", () => {
   it("defaults to Parsed and toggles to Original on click", () => {
     render(
@@ -190,15 +151,17 @@ describe("QuestionDisplay", () => {
   });
 });
 
-describe("ThreePanelLayout", () => {
+describe("WorkspaceLayout", () => {
   it("expanding/restoring a panel does not unmount its children (input state survives)", () => {
     render(
-      <ThreePanelLayout
+      <WorkspaceLayout
         whiteboard={<input data-testid="wb-input" />}
-        probing={<div>probing</div>}
+        questionTitle="Practice questions"
+        questions={<div>Practice content</div>}
       />,
     );
 
+    expect(screen.getByRole("region", { name: "Practice questions" })).toHaveTextContent("Practice content");
     const input = screen.getByTestId("wb-input") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "hello" } });
     expect(input.value).toBe("hello");
@@ -231,7 +194,7 @@ function briefResult(kind: "main" | "easier", outcome: ProbeOutcome): ProbeResul
 
 describe("Tutor Brief cards", () => {
   it("ProbeTallyCard shows correct/attempted, coverage and misses", () => {
-    render(<ProbeTallyCard title="Core probes" tally={{ total: 4, attempted: 4, correct: 1, incorrect: 2, dontKnow: 1 }} emptyLabel="None" />);
+    render(<ProbeTallyCard title="Core practice questions" tally={{ total: 4, attempted: 4, correct: 1, incorrect: 2, dontKnow: 1 }} emptyLabel="None" />);
     expect(screen.getByText("1/4")).toBeInTheDocument();
     expect(screen.getByText("4 of 4 attempted")).toBeInTheDocument();
     expect(screen.getByText("2 incorrect · 1 don't know")).toBeInTheDocument();
@@ -267,7 +230,7 @@ describe("Tutor Brief cards", () => {
     expect(details.open).toBe(false);
     expect(screen.getByText(/2 concepts · 2 total responses/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Probing results"));
+    fireEvent.click(screen.getByText("Practice question results"));
     expect(details.open).toBe(true);
     expect(screen.getByText("Easier retry")).toBeInTheDocument();
   });

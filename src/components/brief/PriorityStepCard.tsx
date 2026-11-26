@@ -36,9 +36,9 @@ export function PriorityStepCard({
     return (
       <Card
         title="Priority · Key incorrect step"
-        icon={<CheckCircle2 size={16} className="text-emerald-600" aria-hidden="true" />}
+        icon={<CheckCircle2 size={16} className="text-ink" aria-hidden="true" />}
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           {anyAttempted ? "No incorrect answers were recorded. Check coverage before drawing conclusions." : "Not enough evidence yet."}
         </p>
       </Card>
@@ -54,22 +54,22 @@ export function PriorityStepCard({
   return (
     <Card
       title="Priority · Key incorrect step"
-      icon={<Target size={16} className="text-red-600" aria-hidden="true" />}
-      badge={<Badge className="bg-red-100 text-red-700">Needs review</Badge>}
+      icon={<Target size={16} className="text-clay" aria-hidden="true" />}
+      badge={<Badge className="bg-clay-wash text-clay">Needs review</Badge>}
     >
-      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{main.concept}</span>
-      <MathText text={main.questionMarkdown} className="text-sm text-slate-900" />
+      <span className="text-sm font-semibold text-muted">{main.concept}</span>
+      <MathText text={main.questionMarkdown} className="text-sm text-ink" />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs text-slate-500">{selected.label}</span>
-          <MathText text={selected.text} className="text-sm font-medium text-red-700" />
+          <span className="text-sm text-muted">{selected.label}</span>
+          <MathText text={selected.text} className="text-sm font-bold text-clay" />
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs text-slate-500">Correct · {main.correctOptionId}</span>
-          <MathText text={main.correctOptionText} className="text-sm font-medium text-emerald-700" />
+          <span className="text-sm text-muted">Correct · {main.correctOptionId}</span>
+          <MathText text={main.correctOptionText} className="text-sm font-bold text-ink" />
         </div>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-sm text-muted">
         {easier ? RETRY_LINE[easier.outcome] : "No easier retry served"} · {correct}/{attempted} correct for this concept
       </p>
     </Card>

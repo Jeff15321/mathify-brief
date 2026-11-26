@@ -56,6 +56,24 @@ test('session upload -> detail -> learner profile -> brief shows relevant past s
   await expect(struggles.getByText('Multiplied only the first term inside brackets.')).toBeVisible();
   await expect(struggles.getByRole('link', { name: 'Oct 3, 2026' }).first()).toBeVisible();
 
+  const observations = page.getByRole('region', { name: 'Session observations' });
+  await expect(observations.getByRole('heading', { level: 3 })).toHaveText([
+    'Struggles', 'What works when teaching', 'Strengths', 'Habits',
+  ]);
+  await expect(observations.getByRole('button')).toHaveCount(1);
+  await observations.getByRole('button', { name: 'Edit observations' }).click();
+  const add = struggles.getByRole('button', { name: 'Add to Struggles' });
+  await add.click();
+  await expect(struggles.getByLabel('Item text')).toBeFocused();
+  await expect(observations.getByRole('button', { name: 'Done editing' })).toBeDisabled();
+  await struggles.getByRole('button', { name: 'Cancel' }).click();
+  await expect(add).toBeFocused();
+  await observations.getByRole('button', { name: 'Done editing' }).click();
+  await expect(add).toHaveCount(0);
+  await struggles.getByRole('link', { name: 'Oct 3, 2026' }).first().click();
+  await expect(page).toHaveURL(/\/sessions\/[0-9a-f-]+$/);
+  await expect(page.getByRole('heading', { name: 'Linear equations review' })).toBeVisible();
+
   await completeQuestion(page);
   const section = page.getByRole('region', { name: 'Relevant from past sessions' });
   await expect(section).toBeVisible();

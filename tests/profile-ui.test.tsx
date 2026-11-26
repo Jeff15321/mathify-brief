@@ -29,6 +29,7 @@ async function renderPage(profile = PROFILE, sessions = SESSIONS) {
   await screen.findByRole('heading', { level: 1, name: 'Demo Student' });
 }
 const row = (text: string) => screen.getByText(text).closest('li')!;
+const editObservations = () => fireEvent.click(screen.getByRole('button', { name: 'Edit observations' }));
 const itemForm = () => screen.getByLabelText('Item text').closest('form')!;
 const section = (name: RegExp) => screen.getByRole('heading', { name }).closest('section')!;
 
@@ -43,6 +44,12 @@ describe('ProfilePage', () => {
     expect(within(student).getByText('Last session').nextSibling).toHaveTextContent('Nov 7, 2026');
     expect(screen.getByText('Revisit: multiplies only the first term.')).toBeInTheDocument();
     expect(screen.getByText('Suggested by AI')).toBeInTheDocument();
+    const observations = screen.getByRole('region', { name: 'Session observations' });
+    expect(within(observations).getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual([
+      'Struggles', 'What works when teaching', 'Strengths', 'Habits',
+    ]);
+    expect(within(observations).getAllByRole('button')).toHaveLength(1);
+    expect(within(observations).getByRole('button', { name: 'Edit observations' })).toBeVisible();
     const struggle = row('Multiplies only the first term.');
     expect(within(struggle).getByText('Active')).toBeInTheDocument();
     expect(within(struggle).queryByText('Tutor')).not.toBeInTheDocument();
@@ -55,7 +62,8 @@ describe('ProfilePage', () => {
   it('edits an item through upsertItems and shows the Tutor chip from the response', async () => {
     await renderPage();
     vi.mocked(api.updateProfile).mockResolvedValue({ ...PROFILE, items: [{ ...PROFILE.items[0], text: 'Expands only the first term.', status: 'improving', source: 'tutor' }, PROFILE.items[1]] });
-    fireEvent.click(within(row('Multiplies only the first term.')).getByRole('button', { name: 'Edit item' }));
+    editObservations();
+    fireEvent.click(within(row('Multiplies only the first term.')).getByRole('button', { name: /^Edit observation:/ }));
     fireEvent.change(screen.getByLabelText('Item text'), { target: { value: 'Expands only the first term.' } });
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'improving' } });
     fireEvent.click(within(itemForm()).getByRole('button', { name: 'Save' }));
@@ -69,17 +77,24 @@ describe('ProfilePage', () => {
   it('keeps the editor open with the error when a save fails', async () => {
     await renderPage();
     vi.mocked(api.updateProfile).mockRejectedValue(new Error('Item text must be at most 300 characters'));
-    fireEvent.click(within(row('Multiplies only the first term.')).getByRole('button', { name: 'Edit item' }));
+    editObservations();
+    fireEvent.click(within(row('Multiplies only the first term.')).getByRole('button', { name: /^Edit observation:/ }));
     fireEvent.click(within(itemForm()).getByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Item text must be at most 300 characters');
     expect(screen.getByLabelText('Item text')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Done editing' })).toBeDisabled();
+    fireEvent.click(within(itemForm()).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done editing' }));
+    expect(screen.queryByRole('button', { name: /^Edit observation:/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit observations' })).toBeEnabled();
   });
 
   it('deletes an item through deleteItemIds after confirming', async () => {
     await renderPage();
     vi.mocked(api.updateProfile).mockResolvedValue({ ...PROFILE, items: [PROFILE.items[1]] });
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
-    const button = within(row('Multiplies only the first term.')).getByRole('button', { name: 'Delete item' });
+    editObservations();
+    const button = within(row('Multiplies only the first term.')).getByRole('button', { name: /^Delete observation:/ });
     fireEvent.click(button);
     expect(api.updateProfile).not.toHaveBeenCalled();
     fireEvent.click(button);
@@ -92,6 +107,7 @@ describe('ProfilePage', () => {
     await renderPage();
     const added = { id: '33333333-3333-4333-8333-333333333333', category: 'habit' as const, text: 'Skips checks.', status: 'active' as const, source: 'tutor' as const, evidence: [] };
     vi.mocked(api.updateProfile).mockResolvedValue({ ...PROFILE, items: [...PROFILE.items, added] });
+    editObservations();
     fireEvent.click(screen.getByRole('button', { name: 'Add to Habits' }));
     expect(within(itemForm()).getByRole('button', { name: 'Save' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Item text'), { target: { value: '  Skips checks. ' } });

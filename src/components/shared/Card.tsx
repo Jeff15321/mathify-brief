@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 export type CardTone = "neutral" | "strength" | "gap";
 
 const TONE_CLASSES: Record<CardTone, string> = {
-  neutral: "border-slate-200 bg-white",
-  strength: "border-emerald-200 bg-emerald-50",
-  gap: "border-amber-200 bg-amber-50",
+  neutral: "border-line bg-card",
+  strength: "border-line bg-sage-wash",
+  gap: "border-line bg-clay-wash",
 };
 
 /**
@@ -28,11 +28,11 @@ export function Card({
   children: ReactNode;
 }) {
   return (
-    <section className={`flex flex-col gap-2 rounded-xl border p-4 shadow-sm ${TONE_CLASSES[tone]} ${className}`}>
+    <section className={`flex flex-col gap-2 rounded-card border p-4 sm:p-6 ${TONE_CLASSES[tone]} ${className}`}>
       {(title || badge) && (
         <div className="flex items-center justify-between gap-2">
           {title && (
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <h2 className="flex items-center gap-2 text-lg leading-tight font-semibold text-ink">
               {icon}
               {title}
             </h2>
@@ -47,5 +47,5 @@ export function Card({
 
 /** Small rounded status label used in card headers. */
 export function Badge({ className, children }: { className: string; children: ReactNode }) {
-  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>{children}</span>;
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-sm font-bold ${className}`}>{children}</span>;
 }

@@ -4,13 +4,13 @@ import { Card } from "@/components/shared/Card";
 const TONES = {
   strength: {
     title: "Observed strengths",
-    icon: <CheckCircle2 size={16} className="text-emerald-600" aria-hidden="true" />,
-    text: "text-emerald-900",
+    icon: <CheckCircle2 size={16} className="text-ink" aria-hidden="true" />,
+    text: "text-ink",
   },
   gap: {
     title: "Possible gaps",
-    icon: <AlertTriangle size={16} className="text-amber-600" aria-hidden="true" />,
-    text: "text-amber-900",
+    icon: <AlertTriangle size={16} className="text-ink" aria-hidden="true" />,
+    text: "text-ink",
   },
 } as const;
 
@@ -20,7 +20,7 @@ export function ConceptListCard({ tone, concepts }: { tone: keyof typeof TONES; 
   return (
     <Card tone={tone} title={title} icon={icon}>
       {concepts.length === 0 ? (
-        <p className="text-sm text-slate-500">None observed.</p>
+        <p className="text-sm text-muted">None observed.</p>
       ) : (
         <ul className={`flex flex-col gap-1 text-sm ${text}`}>
           {concepts.map((concept) => (

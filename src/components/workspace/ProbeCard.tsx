@@ -45,24 +45,24 @@ export function ProbeCard({
   ];
 
   return (
-    <div ref={root} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div ref={root} className="flex flex-col gap-3 rounded-card border border-line bg-card p-4 sm:p-6">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <span className="text-sm font-semibold text-muted">
           Question {index + 1}
         </span>
-        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+        <span className="rounded-full bg-fill px-2 py-0.5 text-sm text-ink">
           {probe.concept}
         </span>
       </div>
-      <MathText text={probe.questionMarkdown} className="text-sm leading-relaxed text-slate-800" />
+      <MathText text={probe.questionMarkdown} className="text-lg leading-relaxed text-ink" />
       <div className="flex flex-col gap-2">
         {choices.map((choice) => (
           <label
             key={choice.id}
-            className={`flex cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-sm ${
+            className={`flex cursor-pointer items-start gap-2 rounded-panel border px-4 py-2.5 text-base ${
               selected === choice.id
-                ? "border-blue-400 bg-blue-50"
-                : "border-slate-200 hover:bg-slate-50"
+                ? "border-brand bg-wash"
+                : "border-line hover:bg-fill"
             }`}
           >
             <input
@@ -72,21 +72,21 @@ export function ProbeCard({
               value={choice.id}
               checked={selected === choice.id}
               onChange={() => onSelect(choice.id)}
-              className="mt-1 accent-blue-600"
+              className="mt-1 accent-brand"
             />
             <MathText text={choice.textMarkdown} />
           </label>
         ))}
       </div>
       {probe.hint && <div className="text-sm">
-        {hintOpened ? <div className="rounded bg-blue-50 p-3"><span className="font-medium">Hint: </span><MathText text={probe.hint} /></div>
-          : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-blue-700 underline">Show a hint</button>}
+        {hintOpened ? <div className="rounded bg-wash p-3"><span className="font-bold text-brand-deep">Hint: </span><MathText text={probe.hint} /></div>
+          : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-brand-deep underline">Show a hint</button>}
       </div>}
       <button
         type="button"
         onClick={onNext}
         disabled={!selected || saving || disabled}
-        className="self-end rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+        className="self-end rounded-full bg-brand px-6 py-2 text-sm font-bold text-card hover:bg-brand-deep disabled:opacity-50"
       >
         {saving ? "Saving…" : "Next"}
       </button>

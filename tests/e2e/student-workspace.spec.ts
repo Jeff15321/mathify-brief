@@ -1,10 +1,33 @@
+import { drawOnWhiteboard } from './whiteboard';
 import { readDraftCheckpoint } from './draft-checkpoint';
 import { expect, test } from '@playwright/test';
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKUlEQVR4nO3OIQEAAAACIP+f1hkWWEB6FgEBAQEBAQEBAQEBAQEBgXdgl/rw4unIZ5cAAAAASUVORK5CYII=', 'base64');
 const photo = (name: string) => ({ name, mimeType: 'image/png', buffer: PNG });
+
+test('intake gives the whiteboard the left half on desktop and its own tab on phones', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/workspace?new=1');
+  const board = page.getByRole('region', { name: 'Whiteboard', exact: true });
+  const problem = page.getByRole('region', { name: 'Your problem' });
+  await expect(board.locator('canvas.excalidraw__canvas.interactive')).toBeVisible();
+  const left = await board.boundingBox();
+  const right = await problem.boundingBox();
+  if (!left || !right) throw new Error('Both workspace panels should be visible');
+  expect(Math.abs(left.width - right.width)).toBeLessThanOrEqual(1);
+  expect(left.x + left.width).toBeCloseTo(right.x, 0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const question = page.getByLabel('Question (optional if files provided)');
+  await question.fill('Solve 2x = 8.');
+  await page.getByRole('button', { name: 'Whiteboard', exact: true }).click();
+  await expect(board.locator('canvas.excalidraw__canvas.interactive')).toBeVisible();
+  await page.getByRole('button', { name: 'Your problem', exact: true }).click();
+  await expect(question).toHaveValue('Solve 2x = 8.');
+});
+
 test('batch upload stays in one workspace, persists selection and sends it without Next', async ({ page, request }) => {
   await page.goto('/workspace?new=1');
-  await expect(page.getByText(/A few short checks help your tutor/)).toBeVisible();
+  await expect(page.getByText(/Practice questions help your tutor/)).toBeVisible();
   await page.getByLabel('Problem photos or PDFs').setInputFiles([photo('page-1.png'), photo('page-2.png')]);
   await expect(page.getByAltText('Preview of page-1.png')).toBeVisible();
   await expect(page.getByAltText('Preview of page-2.png')).toBeVisible();
@@ -29,7 +52,7 @@ test('batch upload stays in one workspace, persists selection and sends it witho
   expect(workspace.brief.results[0].selectedOptionId).toBe('B');
   expect(workspace.brief.retries.total).toBe(0);
 });
-test('phone checks start visible and a selected answer survives a drawing tab switch', async ({ page, request }) => {
+test('phone practice questions retain the hint and answer while the student draws', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/workspace?new=1');
   await page.getByLabel('Question (optional if files provided)').fill('Solve 2(x + 3) = 14.');
@@ -40,20 +63,17 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect.poll(async () => (await readDraftCheckpoint(page))?.hintOpened).toBe(true);
   await page.reload();
   await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
-  // Once probing starts the whiteboard is a slide-in drawer on the left.
-  await page.getByRole('button', { name: 'Open whiteboard' }).click();
-  await expect(page.getByRole('button', { name: 'Close whiteboard' })).toBeVisible();
-  await page.getByRole('button', { name: 'Close whiteboard' }).click();
+  await page.getByRole('button', { name: 'Whiteboard', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Practice questions' })).toBeHidden();
+  await drawOnWhiteboard(page);
+  await page.getByRole('button', { name: 'Practice questions', exact: true }).click();
   await expect(page.locator('input[name="s1-main"][value="IDK"]')).toBeChecked();
-  // The closed drawer must sit entirely off-screen: no strip may peek past the viewport edge.
-  // Poll so the 200ms slide transition can finish first.
-  await expect.poll(async () => page.evaluate(() => {
-    const el = document.querySelector('section[aria-hidden="true"]');
-    return el ? el.getBoundingClientRect().right : -1;
-  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
+  await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Whiteboard' })).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
+  await expect(page.getByAltText("Student's whiteboard")).toBeVisible();
   expect((await (await request.get('/api/workspace')).json()).workspace.brief.results[0].hintOpened).toBe(true);
 });
 test('a sixth file is rejected explicitly while existing files remain', async ({ page }) => {

@@ -134,18 +134,18 @@ export default function ExcalidrawEditor({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2" onPointerUp={() => setTimeout(() => onFlush?.(), 0)}>
-      <div className="flex items-center justify-between gap-2 text-xs text-slate-600">
-        <p>Your work: draw, type or insert working images. Added work goes to your tutor; it does not change the checks.</p>
+      <div className="flex items-center justify-between gap-2 text-sm text-muted">
+        <p>Draw, type, or add an image. Your tutor will see the work you add here.</p>
         <button
           type="button"
           disabled={!api || disabled || loadingImages}
           onClick={() => api?.scrollToContent(undefined, { fitToViewport: true })}
-          className="shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1 hover:bg-slate-50 disabled:opacity-50"
+          className="shrink-0 rounded-panel border border-connector bg-card px-2 py-1 hover:bg-fill disabled:opacity-50"
         >
           Fit to work
         </button>
       </div>
-      {loadingImages && <p role="status" className="text-xs text-slate-600">Loading uploaded images…</p>}
+      {loadingImages && <p role="status" className="text-sm text-muted">Loading uploaded images…</p>}
       {error && <ErrorBanner message={error} onRetry={() => {
         setError(null);
         setAttempt((value) => value + 1);

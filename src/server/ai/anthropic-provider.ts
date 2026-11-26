@@ -71,7 +71,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
   async reviewProbePair(input: GenerateProbePairInput, candidate: ModelProbePair) {
     return this.createStructured({
       system: REVIEW_SYSTEM_PROMPT, maxTokens: 4096, schema: probeReviewSchema,
-      operation: 'a probe review',
+      operation: 'a practice question review',
       content: [{ type: 'text', text: JSON.stringify({ ...input, candidate }) }],
     });
   }
@@ -110,7 +110,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       system: this.instrumentation.pairPrompt ?? PROBE_PAIR_SYSTEM_PROMPT,
       maxTokens: PROBE_PAIR_MAX_TOKENS,
       schema: modelProbePairSchema,
-      operation: 'probe questions',
+      operation: 'practice questions',
       content: [
         {
           type: 'text',
@@ -157,7 +157,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
             textSummary ? `Typed question: ${textSummary}` : 'No typed question was provided.',
             `Parsed question: ${input.analysis.parsedQuestionMarkdown}`,
             `Topic: ${input.analysis.topic}`,
-            `Probing question results:\n${resultsSummary || '(none)'}`,
+            `Practice question results:\n${resultsSummary || '(none)'}`,
             input.notReachedConcepts.length > 0
               ? `Steps not reached before submitting: ${input.notReachedConcepts.join('; ')}`
               : 'All planned steps were reached.',
@@ -222,7 +222,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
             `Grade: ${input.grade}.`,
             `Parsed question: ${input.parsedQuestionMarkdown}`,
             `Topic: ${input.topic}`,
-            `Probing question results:\n${formatResults(input.results) || '(none)'}`,
+            `Practice question results:\n${formatResults(input.results) || '(none)'}`,
             input.notReachedConcepts.length > 0
               ? `Steps not reached before submitting: ${input.notReachedConcepts.join('; ')}`
               : 'All planned steps were reached.',

@@ -8,8 +8,8 @@ export const GRADE_DIFFICULTY_LABEL: Record<GradeDifficulty, string> = {
 };
 
 export const GRADE_DIFFICULTY_CLASS: Record<GradeDifficulty, string> = {
-  below_grade: "bg-sky-100 text-sky-700",
-  on_grade: "bg-emerald-100 text-emerald-700",
-  stretch: "bg-amber-100 text-amber-700",
-  uncertain: "bg-slate-100 text-slate-600",
+  below_grade: "bg-fill text-ink",
+  on_grade: "bg-fill text-ink",
+  stretch: "bg-wash text-ink",
+  uncertain: "bg-fill text-muted",
 };

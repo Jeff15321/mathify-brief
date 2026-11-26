@@ -21,7 +21,7 @@ describe('PastSessionsCard', () => {
     expect(section.querySelectorAll('li')).toHaveLength(3);
     expect(section.querySelector('.katex')).not.toBeNull();
     expect(screen.getByText('Area models helped.')).toBeInTheDocument();
-    expect(screen.getByText('Sep 26 and Oct 3')).toHaveClass('text-slate-400');
+    expect(screen.getByText('Sep 26 and Oct 3')).toHaveClass('text-muted');
     expect(screen.getByRole('link', { name: 'View learner profile' })).toHaveAttribute('href', '/profile');
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });

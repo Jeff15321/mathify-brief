@@ -1,26 +1,18 @@
 'use client';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Lightbulb, Repeat, Sprout, TriangleAlert } from 'lucide-react';
 import { fetchProfile, rebuildProfile, updateProfile } from '@/client/profile';
 import { fetchSessions } from '@/client/sessions';
 import type { ProfileUpdate } from '@/schemas/profile';
 import type { LearnerProfile } from '@/contracts/profile';
-import type { ObservationCategory, PublicSessionSummary } from '@/contracts/sessions';
+import type { PublicSessionSummary } from '@/contracts/sessions';
 import { StudentCard } from './StudentCard';
 import { NextFocusCard } from './NextFocusCard';
-import { ProfileSection } from './ProfileSection';
+import { SessionObservations } from './SessionObservations';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { LoadingState } from '@/components/shared/LoadingState';
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
-const icon = 'h-4 w-4';
-const SECTIONS: { category: ObservationCategory; title: string; icon: ReactNode; accent: string }[] = [
-  { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-amber-600`} aria-hidden />, accent: 'border-amber-300' },
-  { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-emerald-600`} aria-hidden />, accent: 'border-emerald-300' },
-  { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-blue-600`} aria-hidden />, accent: 'border-blue-300' },
-  { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-slate-500`} aria-hidden />, accent: 'border-slate-300' },
-];
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
@@ -46,22 +38,20 @@ export default function ProfileScreen() {
   }
 
   const empty = sessions?.length === 0 && profile?.items.length === 0 && !profile.nextFocus;
-  return <main className="min-h-screen bg-slate-50">
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-4 sm:p-6">
+  return <main className="min-h-screen bg-ground">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4 sm:p-6 lg:p-12">
       {error && <ErrorBanner message={error} onRetry={() => void load()} />}
       {(!profile || !sessions) && !error && <LoadingState label="Loading learner profile…" />}
       {profile && sessions && <>
         <StudentCard profile={profile} sessionCount={sessions.length} lastSessionDate={sessions.map(s => s.sessionDate).sort().at(-1) ?? null} />
         {empty
-          ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
-            <h2 className="font-medium text-slate-900">No sessions yet</h2>
-            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-medium text-blue-700 hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
+          ? <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
+            <h2 className="font-bold text-ink">No sessions yet</h2>
+            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-bold text-brand-deep hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
           </div>
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />
-            <div className="grid items-start gap-4 lg:grid-cols-2">
-              {SECTIONS.map(section => <ProfileSection key={section.category} {...section} items={profile.items.filter(item => item.category === section.category)} onSave={save} />)}
-            </div>
+            <SessionObservations items={profile.items} onSave={save} />
           </>}
       </>}
     </div>

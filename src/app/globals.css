@@ -1,16 +1,84 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-/* Force light theme regardless of OS preference: switch Tailwind's `dark:` variant to a
-   class strategy and never apply the `.dark` class, so dark: utilities stay inert. */
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+/* Mathify logo pink on white, with neutral grays for controls and borders. */
+@theme {
+  --color-brand: #c83aa2;
+  --color-brand-deep: #86236c;
+  --color-pale: #f5cee9;
+  --color-wash: #fbedf7;
+  --color-ink: #372e35;
+  --color-muted: #695e60;
+  --color-ground: #ffffff;
+  --color-card: #ffffff;
+  --color-fill: #f2f2f2;
+  --color-line: #dedede;
+  --color-connector: #858585;
+  --color-clay: #94492e;
+  --color-clay-wash: #fae8d9;
+  --color-sage: #3f644d;
+  --color-sage-wash: #e8efe3;
+  --color-alert: #913d43;
+  --color-alert-wash: #fae9e7;
+  --font-weight-bold: 650;
+  --radius-panel: 8px;
+  --radius-card: 14px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
+@theme inline {
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-ground font-sans text-base text-ink;
+  }
+
+  :where(input, textarea)::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    outline: 2px solid var(--color-brand-deep);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-pale);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  .page-title {
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    line-height: 1.2;
+    letter-spacing: -.025em;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Theme the editor controls independently of the student's drawing palette. */
+[aria-label="Drawing whiteboard"] .excalidraw {
+  --island-bg-color: var(--color-card);
+  --color-surface-lowest: var(--color-card);
+  --color-surface-low: var(--color-fill);
+  --color-surface-mid: var(--color-fill);
+  --color-surface-high: var(--color-wash);
+  --color-primary: var(--color-brand);
+  --color-primary-darker: var(--color-brand-deep);
+  --color-primary-darkest: var(--color-brand-deep);
+  --color-primary-hover: var(--color-brand-deep);
+  --color-brand-hover: var(--color-brand-deep);
+  --color-brand-active: var(--color-brand-deep);
+  --color-primary-light: var(--color-wash);
+  --color-primary-light-darker: var(--color-pale);
+  --color-surface-primary-container: var(--color-wash);
+  --color-on-primary-container: var(--color-ink);
 }

@@ -15,18 +15,18 @@ export function StudentCard({ profile, sessionCount, lastSessionDate }: {
     ['Profile updated', formatTime(profile.updatedAt)],
     ['Last rebuilt', profile.rebuiltAt ? formatTime(profile.rebuiltAt) : 'Never'],
   ];
-  return <section aria-label="Student" className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+  return <section aria-label="Student" className="flex flex-col gap-4 rounded-card border border-line bg-card p-4 sm:p-5">
     <div className="flex items-center gap-4">
-      <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-semibold text-white">{initials}</span>
+      <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-bold text-card">{initials}</span>
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold text-slate-900">{DEMO_PROFILE.displayName}</h1>
-        <Badge className="self-start bg-blue-100 text-blue-700">Grade {DEMO_PROFILE.grade}</Badge>
+        <h1 className="page-title">{DEMO_PROFILE.displayName}</h1>
+        <Badge className="self-start bg-wash text-ink">Grade {DEMO_PROFILE.grade}</Badge>
       </div>
     </div>
-    <dl className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-4">
+    <dl className="grid grid-cols-2 gap-3 border-t border-line pt-4 sm:grid-cols-4">
       {stats.map(([label, value]) => <div key={label} className="flex flex-col gap-0.5">
-        <dt className="text-xs text-slate-500">{label}</dt>
-        <dd className="text-sm font-medium text-slate-900">{value}</dd>
+        <dt className="text-sm text-muted">{label}</dt>
+        <dd className="text-sm font-bold text-ink">{value}</dd>
       </div>)}
     </dl>
   </section>;
