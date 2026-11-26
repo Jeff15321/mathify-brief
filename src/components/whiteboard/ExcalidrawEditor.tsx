@@ -13,7 +13,7 @@ import {
 import type { BinaryFileData, ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import type { FileId } from "@excalidraw/excalidraw/element/types";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
-import { MAX_WHITEBOARD_SIZE_BYTES } from "@/lib/constants";
+import { MAX_WHITEBOARD_SIZE_BYTES } from "@/contracts/limits";
 import type { SimpleWhiteboardHandle, WhiteboardProps } from "./SimpleWhiteboard";
 
 declare global {

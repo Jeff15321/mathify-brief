@@ -3,10 +3,10 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createStores } from '@/server/storage';
-import { startWorkspace, getPublicWorkspace } from '@/server/workspace-service';
-import { analyzeCurrentWorkspace } from '@/server/analysis-service';
-import { submitBrief } from '@/server/brief-service';
-import { submitTutorFeedback } from '@/server/feedback-service';
+import { startWorkspace, getPublicWorkspace } from '@/server/workspace/service';
+import { analyzeCurrentWorkspace } from '@/server/workspace/analysis';
+import { submitBrief } from '@/server/brief/service';
+import { submitTutorFeedback } from '@/server/brief/feedback';
 import { GET, POST } from '@/app/api/feedback/route';
 
 let stores: ReturnType<typeof createStores>;

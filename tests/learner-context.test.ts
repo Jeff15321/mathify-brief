@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analyzeCurrentWorkspace } from "@/server/analysis-service";
-import { generateNextProbePair } from "@/server/probe-service";
-import { getPublicWorkspace } from "@/server/workspace-service";
+import { analyzeCurrentWorkspace } from "@/server/workspace/analysis";
+import { generateNextProbePair } from "@/server/workspace/probes";
+import { getPublicWorkspace } from "@/server/workspace/service";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
-import { buildLearnerContext } from "@/server/helpers/learner-context-helper";
+import { buildLearnerContext } from "@/server/profile/learner-context";
 import { emptyLearnerProfile } from "@/server/storage/local-profile-store";
-import { currentWorkspaceSchema } from "@/schemas/workspace";
-import type { LearnerProfileItem } from "@/types/domain";
+import { currentWorkspaceSchema } from "@/server/workspace/schema";
+import type { LearnerProfileItem } from "@/contracts/profile";
 import { setupWorkspace, type Stores } from "./helpers";
 
 const item = (overrides: Partial<LearnerProfileItem>): LearnerProfileItem => ({

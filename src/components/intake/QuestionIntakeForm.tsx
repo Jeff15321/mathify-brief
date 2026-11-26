@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
-import { MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_QUESTION_TEXT_LENGTH, MAX_TOTAL_SIZE_BYTES } from '@/lib/constants';
-import { FileAttachmentList } from './FileAttachmentList';
+import { MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_QUESTION_TEXT_LENGTH, MAX_TOTAL_SIZE_BYTES } from '@/contracts/limits';
+import { FileAttachmentList } from '@/components/shared/FileAttachmentList';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { PURPOSE } from '@/components/workspace/PreparationPanel';
 const TYPES = ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'];

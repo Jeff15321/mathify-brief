@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createStores } from "@/server/storage";
-import { DEMO_PROFILE } from "@/types/domain";
-import type { CurrentWorkspace } from "@/types/domain";
+import { DEMO_PROFILE } from "@/contracts/profile";
+import type { CurrentWorkspace } from "@/server/workspace/schema";
 
 function makeWorkspace(overrides: Partial<CurrentWorkspace> = {}): CurrentWorkspace {
   const now = new Date().toISOString();

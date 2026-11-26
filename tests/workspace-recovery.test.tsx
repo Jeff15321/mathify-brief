@@ -1,19 +1,19 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { PublicWorkspace } from '@/types/domain';
+import type { PublicWorkspace } from '@/contracts/workspace';
 import type { SimpleWhiteboardHandle, WhiteboardProps } from '@/components/whiteboard/SimpleWhiteboard';
 import WorkspacePage from '@/app/workspace/page';
-import * as api from '@/lib/api-client';
-import * as drafts from '@/lib/workspace-draft';
+import * as api from '@/client/workspace';
+import * as drafts from '@/components/workspace/draft';
 import { setupWorkspace, type Stores } from './helpers';
-import { getPublicWorkspace } from '@/server/workspace-service';
-import { generateNextProbePair, answerCurrentProbe } from '@/server/probe-service';
-import { submitBrief } from '@/server/brief-service';
+import { getPublicWorkspace } from '@/server/workspace/service';
+import { generateNextProbePair, answerCurrentProbe } from '@/server/workspace/probes';
+import { submitBrief } from '@/server/brief/service';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
-vi.mock('@/lib/api-client', () => ({
+vi.mock('@/client/workspace', () => ({
   fetchWorkspace: vi.fn(), generateNextProbes: vi.fn(), answerProbe: vi.fn(),
   submitBrief: vi.fn(), startWorkspace: vi.fn(), analyzeQuestion: vi.fn(),
   fetchBriefHistory: vi.fn().mockResolvedValue({

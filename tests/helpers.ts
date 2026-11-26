@@ -2,8 +2,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createStores } from "@/server/storage";
-import { startWorkspace } from "@/server/workspace-service";
-import { analyzeCurrentWorkspace } from "@/server/analysis-service";
+import { startWorkspace } from "@/server/workspace/service";
+import { analyzeCurrentWorkspace } from "@/server/workspace/analysis";
 
 export type Stores = ReturnType<typeof createStores>;
 

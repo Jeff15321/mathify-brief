@@ -1,9 +1,10 @@
 'use client';
 import { useState, type ReactNode } from 'react';
 import { Plus } from 'lucide-react';
-import type { LearnerProfileItem, ObservationCategory } from '@/types/domain';
+import type { LearnerProfileItem } from '@/contracts/profile';
+import type { ObservationCategory } from '@/contracts/sessions';
 import type { ProfileUpdate } from '@/schemas/profile';
-import { BriefCard } from '@/components/brief/BriefCard';
+import { Card } from '@/components/shared/Card';
 import { ItemForm, ProfileItemRow } from './ProfileItemRow';
 
 /** One category of the profile; "Add" creates a tutor item. */
@@ -11,7 +12,7 @@ export function ProfileSection({ category, title, icon, accent, items, onSave }:
   category: ObservationCategory; title: string; icon: ReactNode; accent: string; items: LearnerProfileItem[]; onSave: (changes: ProfileUpdate) => Promise<void>;
 }) {
   const [adding, setAdding] = useState(false);
-  return <BriefCard title={<>{title} <span className="font-normal text-slate-400">{items.length}</span></>} icon={icon}
+  return <Card title={<>{title} <span className="font-normal text-slate-400">{items.length}</span></>} icon={icon}
     badge={!adding && <button type="button" onClick={() => setAdding(true)} aria-label={`Add to ${title}`}
       className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
       <Plus className="h-3.5 w-3.5" aria-hidden /> Add
@@ -22,5 +23,5 @@ export function ProfileSection({ category, title, icon, accent, items, onSave }:
     </ul>}
     {adding && <ItemForm initial={{ text: '', status: 'active' }} onCancel={() => setAdding(false)}
       onSubmit={async ({ text, status }) => { await onSave({ upsertItems: [{ category, text, status }] }); setAdding(false); }} />}
-  </BriefCard>;
+  </Card>;
 }

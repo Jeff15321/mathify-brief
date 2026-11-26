@@ -1,6 +1,6 @@
 import { forwardRef, useMemo } from "react";
 import { SimpleWhiteboard, type WhiteboardProps, type SimpleWhiteboardHandle } from "@/components/whiteboard/SimpleWhiteboard";
-import type { StoredAsset } from "@/types/domain";
+import type { StoredAsset } from "@/contracts/assets";
 
 /** Filter attachments to image types that can be rendered as canvas backgrounds. */
 const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);

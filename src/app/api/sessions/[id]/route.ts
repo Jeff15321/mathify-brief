@@ -1,4 +1,4 @@
-import { deleteSession, getSession, updateSession } from '@/server/session-service';
+import { deleteSession, getSession, updateSession } from '@/server/sessions/service';
 import { ApiError, toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

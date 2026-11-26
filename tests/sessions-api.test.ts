@@ -3,7 +3,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
-import { createSession, deleteSession, getSession, getSessionAsset, listSessions, retrySessionSummary, updateSession } from "@/server/session-service";
+import { createSession, deleteSession, getSession, getSessionAsset, listSessions, retrySessionSummary, updateSession } from "@/server/sessions/service";
 import { createStores } from "@/server/storage";
 import { localToday } from "@/schemas/session";
 

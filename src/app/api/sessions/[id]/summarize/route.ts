@@ -1,4 +1,4 @@
-import { retrySessionSummary } from '@/server/session-service';
+import { retrySessionSummary } from '@/server/sessions/service';
 import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

@@ -1,7 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import type { AssetKind, MimeType, StoredAsset } from '@/types/domain';
+import type { AssetKind, MimeType, StoredAsset } from '@/contracts/assets';
 import type { AssetStore, CurrentWorkspaceStore } from './contracts';
 
 const EXTENSION_BY_MIME: Record<MimeType, string> = {

@@ -7,7 +7,7 @@ import { AnthropicAnalysisProvider } from '../src/server/ai/anthropic-provider';
 import { MockAnalysisProvider } from '../src/server/ai/mock-provider';
 import { validateAnalysisStructure, validateProbePair, type ModelProbePair } from '../src/schemas/analysis';
 import { reviewApproved, type ProbeReview } from '../src/schemas/review';
-import type { MimeType } from '../src/types/domain';
+import type { MimeType } from '@/contracts/assets';
 import { ANALYSIS_PROMPT_VERSION, PROBE_PROMPT_VERSION } from '../src/server/ai/prompts';
 import { ANALYSIS_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from '../tests/fixtures/probe-evaluation/baseline-prompts';
 

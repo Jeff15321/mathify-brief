@@ -1,7 +1,7 @@
-import { requestWorkspaceId } from '@/server/workspace-identity';
+import { requestWorkspaceId } from '@/server/workspace/identity';
 import { z } from 'zod';
-import { probeAnswerSchema } from '@/schemas/workspace';
-import { answerCurrentProbe } from '@/server/probe-service';
+import { probeAnswerSchema } from '@/server/workspace/schema';
+import { answerCurrentProbe } from '@/server/workspace/probes';
 import { ApiError, toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

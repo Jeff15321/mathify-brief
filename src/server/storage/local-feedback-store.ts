@@ -1,19 +1,11 @@
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { feedbackReportIdSchema, type TutorFeedbackInput } from '@/schemas/feedback';
-import type { getFeedbackReport } from '../feedback-report';
-
-export interface SavedTutorFeedback extends TutorFeedbackInput {
-  schemaVersion: 1;
-  submittedAt: string;
-  report: ReturnType<typeof getFeedbackReport>;
-  /** Keep the evaluated images/files even after a new intake removes workspace assets. */
-  assets: { id: string; base64: string }[];
-}
+import { feedbackReportIdSchema } from '@/schemas/feedback';
+import type { FeedbackStore, SavedTutorFeedback } from './contracts';
 
 /** Independent of workspace.json; writes are serialized by the workspace update lock. */
-export class LocalFeedbackStore {
+export class LocalFeedbackStore implements FeedbackStore {
   constructor(private dataDir: string) {}
 
   private filePath(reportId: string) {

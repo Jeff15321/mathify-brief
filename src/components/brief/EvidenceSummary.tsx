@@ -1,5 +1,5 @@
-import type { TutorBrief } from '@/types/domain';
-import { evidenceSummary } from '@/server/helpers/evidence-summary-helper';
+import type { TutorBrief } from '@/contracts/brief';
+import { evidenceSummary } from './evidence';
 export function EvidenceSummary({ brief, drawingOmitted }: { brief: TutorBrief; drawingOmitted: boolean }) {
   const facts = evidenceSummary(brief);
   return <section aria-labelledby="evidence-title" className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">

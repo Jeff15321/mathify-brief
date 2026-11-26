@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { PublicSessionSummary } from '@/types/domain';
-import * as api from '@/lib/api-client';
+import type { PublicSessionSummary } from '@/contracts/sessions';
+import * as api from '@/client/sessions';
 import { AppNav } from '@/components/shared/AppNav';
 import { SessionUploadForm } from '@/components/sessions/SessionUploadForm';
 import SessionsPage from '@/app/sessions/page';
 
 const nav = vi.hoisted(() => ({ pathname: '/sessions' }));
 vi.mock('next/navigation', () => ({ usePathname: () => nav.pathname }));
-vi.mock('@/lib/api-client', () => ({ fetchSessions: vi.fn(), retrySessionSummary: vi.fn(), uploadSession: vi.fn() }));
+vi.mock('@/client/sessions', () => ({ fetchSessions: vi.fn(), retrySessionSummary: vi.fn(), uploadSession: vi.fn() }));
 
 const SESSIONS: PublicSessionSummary[] = [
   { id: 'a', title: 'Area models fix bracket slips', summary: 'Expanded brackets correctly after drawing.', sessionDate: '2026-10-17', status: 'ready', whiteboardCount: 2, observationCount: 1 },

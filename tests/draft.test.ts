@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { restoreDraft, saveDraft, removeDraft, DRAFT_TTL_MS, type WorkspaceDraft } from '@/lib/workspace-draft';
+import { restoreDraft, saveDraft, removeDraft, DRAFT_TTL_MS, type WorkspaceDraft } from '@/components/workspace/draft';
 function draft(): WorkspaceDraft { return { id: randomUUID(), workspaceId: randomUUID(), expectedWorkspaceId: null, questionText: 'a draft', files: [], selectedProbeId: 's1-main', selection: 'IDK', hintOpened: true, board: { elements: [], files: {}, importedIds: ['source'] }, updatedAt: Date.now() }; }
 it('commits selection, source import identity and board together, then deletes them', async () => {
   const value = draft(); await saveDraft(value);

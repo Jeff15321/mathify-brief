@@ -1,10 +1,10 @@
 'use client';
 import { useRef, useState, useSyncExternalStore } from 'react';
-import { MAX_SESSION_WHITEBOARDS, MAX_TUTOR_NOTES_LENGTH, TRANSCRIPT_EXTENSIONS } from '@/lib/constants';
-import { uploadSession } from '@/lib/api-client';
+import { MAX_SESSION_WHITEBOARDS, MAX_TUTOR_NOTES_LENGTH, TRANSCRIPT_EXTENSIONS } from '@/contracts/limits';
+import { uploadSession } from '@/client/sessions';
 import { localToday } from '@/schemas/session';
-import type { TutorSession } from '@/types/domain';
-import { FileAttachmentList } from '@/components/intake/FileAttachmentList';
+import type { TutorSession } from '@/contracts/sessions';
+import { FileAttachmentList } from '@/components/shared/FileAttachmentList';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];

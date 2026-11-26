@@ -1,5 +1,5 @@
-import type { MimeType } from '@/types/domain';
-import { ALLOWED_MIME_TYPES, MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_TOTAL_SIZE_BYTES } from '@/lib/constants';
+import type { MimeType } from '@/contracts/assets';
+import { ALLOWED_MIME_TYPES, MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_TOTAL_SIZE_BYTES } from '@/contracts/limits';
 
 const SIGNATURE_CHECKS: Record<MimeType, (bytes: Buffer) => boolean> = {
   'image/png': (bytes) =>

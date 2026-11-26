@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ProbeCard } from "./ProbeCard";
 import { LoadingState } from "@/components/shared/LoadingState";
-import type { ProbeAnswer, PublicProbing } from "@/types/domain";
+import type { ProbeAnswer, PublicProbing } from "@/contracts/probes";
 
 /**
  * The probing column: an optional heading, the current probe card (or a waiting/failed/

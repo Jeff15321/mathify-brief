@@ -31,6 +31,8 @@ export const probePlanItemSchema = z.object({
   intent: z.string().min(1),
 });
 
+export type ProbePlanItem = z.infer<typeof probePlanItemSchema>;
+
 export const breakdownStepSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),

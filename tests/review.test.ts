@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import { MockAnalysisProvider } from '@/server/ai/mock-provider';
-import { analyzeCurrentWorkspace } from '@/server/analysis-service';
-import { answerCurrentProbe, generateNextProbePair } from '@/server/probe-service';
-import { getPublicWorkspace } from '@/server/workspace-service';
-import { STALE_GENERATION_MS } from '@/server/helpers/probe-flow-helper';
+import { analyzeCurrentWorkspace } from '@/server/workspace/analysis';
+import { answerCurrentProbe, generateNextProbePair } from '@/server/workspace/probes';
+import { getPublicWorkspace } from '@/server/workspace/service';
+import { STALE_GENERATION_MS } from '@/server/workspace/probe-flow';
 import { setupWorkspace, type Stores } from './helpers';
 
 const approved = analysisReviewSchema.parse(Object.fromEntries(

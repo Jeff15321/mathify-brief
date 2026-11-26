@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { BriefCard } from "./BriefCard";
+import { Card } from "@/components/shared/Card";
 
 const TONES = {
   strength: {
@@ -18,7 +18,7 @@ const TONES = {
 export function ConceptListCard({ tone, concepts }: { tone: keyof typeof TONES; concepts: string[] }) {
   const { title, icon, text } = TONES[tone];
   return (
-    <BriefCard tone={tone} title={title} icon={icon}>
+    <Card tone={tone} title={title} icon={icon}>
       {concepts.length === 0 ? (
         <p className="text-sm text-slate-500">None observed.</p>
       ) : (
@@ -28,6 +28,6 @@ export function ConceptListCard({ tone, concepts }: { tone: keyof typeof TONES; 
           ))}
         </ul>
       )}
-    </BriefCard>
+    </Card>
   );
 }

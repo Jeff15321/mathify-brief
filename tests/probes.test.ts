@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { answerCurrentProbe, generateNextProbePair } from "@/server/probe-service";
+import { answerCurrentProbe, generateNextProbePair } from "@/server/workspace/probes";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
 import { ApiError } from "@/server/errors";
 import { setupWorkspace, type Stores } from "./helpers";

@@ -1,5 +1,5 @@
 import { MathText } from '@/components/shared/MathText';
-import type { StoredAsset } from '@/types/domain';
+import type { StoredAsset } from '@/contracts/assets';
 /** Keep every original source accessible in the first view, even without a board export. */
 export function CurrentQuestionCard({ parsedQuestionMarkdown, questionText, attachments }: {
   parsedQuestionMarkdown: string; questionText: string; attachments: StoredAsset[];

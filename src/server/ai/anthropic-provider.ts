@@ -1,3 +1,4 @@
+import { analysisModel, summaryModel } from './models';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
@@ -12,7 +13,7 @@ import { modelBriefSchema, modelHistorySchema, type ModelBrief, type ModelHistor
 import { analysisReviewSchema, probeReviewSchema } from '@/schemas/review';
 import { modelSessionSummarySchema, type ModelSessionSummary } from '@/schemas/session';
 import { modelLearnerProfileSchema, type ModelLearnerProfile } from '@/schemas/profile';
-import type { ProbeResult } from '@/types/domain';
+import type { ProbeResult } from '@/contracts/brief';
 import { HISTORY_SYSTEM_PROMPT, PROFILE_SYSTEM_PROMPT, REVIEW_SYSTEM_PROMPT, SESSION_SUMMARY_SYSTEM_PROMPT } from './prompts';
 import { ANALYSIS_SYSTEM_PROMPT, BRIEF_SYSTEM_PROMPT, PROBE_PAIR_SYSTEM_PROMPT } from './prompts';
 import { filesToContentBlocks } from './format-inputs';
@@ -52,8 +53,8 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
 
   constructor(private readonly instrumentation: ProviderInstrumentation = {}) {
     this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: instrumentation.maxRetries, timeout: 90_000 });
-    this.model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
-    this.summaryModel = process.env.ANTHROPIC_SUMMARY_MODEL || 'claude-haiku-5-5';
+    this.model = analysisModel();
+    this.summaryModel = summaryModel();
   }
 
   async reviewAnalysis(input: AnalyzeQuestionInput, candidate: ModelAnalysis) {
@@ -307,7 +308,7 @@ export async function runLiveTextSmokeTest(): Promise<{ ok: boolean; message: st
   }
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+  const model = analysisModel();
 
   const response = await client.messages.create({
     model,

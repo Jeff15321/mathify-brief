@@ -14,6 +14,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Next provides this marker at build time. Service tests run outside its bundler.
+      'server-only': path.resolve(__dirname, './tests/server-only.ts'),
     },
   },
 });

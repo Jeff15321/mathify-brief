@@ -2,8 +2,8 @@ import { expect, it } from 'vitest';
 import { modelProbeSchema, validateProbe } from '@/schemas/analysis';
 import { MockAnalysisProvider } from '@/server/ai/mock-provider';
 import { setupWorkspace } from './helpers';
-import { submitBrief } from '@/server/brief-service';
-import { answerCurrentProbe } from '@/server/probe-service';
+import { submitBrief } from '@/server/brief/service';
+import { answerCurrentProbe } from '@/server/workspace/probes';
 it('rejects a fifth repeated option and duplicate normalized option text', async () => {
   const pair = (await new MockAnalysisProvider().analyzeQuestion({ grade: 9, questionText: '', files: [] })).firstPair;
   expect(modelProbeSchema.safeParse({ ...pair.main, options: [...pair.main.options, pair.main.options[0]] }).success).toBe(false);

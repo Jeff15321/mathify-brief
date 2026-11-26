@@ -1,3 +1,4 @@
+import { readDraftCheckpoint } from './draft-checkpoint';
 import { expect, test } from '@playwright/test';
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKUlEQVR4nO3OIQEAAAACIP+f1hkWWEB6FgEBAQEBAQEBAQEBAQEBgXdgl/rw4unIZ5cAAAAASUVORK5CYII=', 'base64');
 const photo = (name: string) => ({ name, mimeType: 'image/png', buffer: PNG });
@@ -36,7 +37,7 @@ test('phone checks start visible and a selected answer survives a drawing tab sw
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await page.locator('input[name="s1-main"][value="IDK"]').check();
   await page.getByRole('button', { name: 'Show a hint' }).click();
-  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
+  await expect.poll(async () => (await readDraftCheckpoint(page))?.hintOpened).toBe(true);
   await page.reload();
   await expect(page.getByText('Hint:', { exact: true })).toBeVisible();
   // Once probing starts the whiteboard is a slide-in drawer on the left.

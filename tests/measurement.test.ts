@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
-import { readPilotEvents, recordPilotEvent } from '@/lib/measurement';
+import { readPilotEvents, recordPilotEvent } from '@/client/measurement';
 afterEach(() => { localStorage.clear(); vi.unstubAllEnvs(); });
 it('is disabled by default', () => {
   vi.stubEnv('NEXT_PUBLIC_MEASUREMENT_ENABLED', 'false');

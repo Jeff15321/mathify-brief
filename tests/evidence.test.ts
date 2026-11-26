@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import { setupWorkspace } from './helpers';
-import { submitBrief } from '@/server/brief-service';
-import { answerCurrentProbe, generateNextProbePair } from '@/server/probe-service';
-import { evidenceSummary, suggestedStart } from '@/server/helpers/evidence-summary-helper';
+import { submitBrief } from '@/server/brief/service';
+import { answerCurrentProbe, generateNextProbePair } from '@/server/workspace/probes';
+import { evidenceSummary, suggestedStart } from '@/components/brief/evidence';
 it('partial success states coverage without asserting all planned checks were correct', async () => {
   const { stores, cleanup } = await setupWorkspace('partial-evidence');
   try {

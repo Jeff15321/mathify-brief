@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_TUTOR_NOTES_LENGTH } from '@/lib/constants';
+import { MAX_TUTOR_NOTES_LENGTH } from '@/contracts/limits';
 
 /** Today's date (`YYYY-MM-DD`) in the server's local time zone. */
 export function localToday(): string {

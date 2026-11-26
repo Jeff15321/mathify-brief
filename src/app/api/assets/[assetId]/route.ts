@@ -1,5 +1,5 @@
-import { getStores } from '@/server/storage';
-import { ApiError, toApiErrorResponse } from '@/server/errors';
+import { getWorkspaceAsset } from '@/server/workspace/service';
+import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';
 
@@ -9,12 +9,7 @@ export async function GET(
 ) {
   try {
     const { assetId } = await params;
-    const { assetStore } = getStores();
-    const result = await assetStore.get(assetId);
-
-    if (!result) {
-      throw new ApiError(404, 'NOT_FOUND', 'Asset not found');
-    }
+    const result = await getWorkspaceAsset(assetId);
 
     return new Response(new Uint8Array(result.bytes), {
       status: 200,

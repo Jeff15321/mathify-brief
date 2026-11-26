@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
 import { PROFILE_PROMPT_VERSION } from "@/server/ai/prompts";
-import { getProfile, rebuildProfile, updateProfile } from "@/server/learner-profile-service";
-import { createSession, deleteSession, updateSession } from "@/server/session-service";
+import { getProfile, rebuildProfile, updateProfile } from "@/server/profile/service";
+import { createSession, deleteSession, updateSession } from "@/server/sessions/service";
 import { createStores } from "@/server/storage";
 
 const { create } = vi.hoisted(() => ({ create: vi.fn() }));

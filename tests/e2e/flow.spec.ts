@@ -1,3 +1,4 @@
+import { readDraftCheckpoint } from './draft-checkpoint';
 import { expect, test } from "@playwright/test";
 
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.
@@ -42,7 +43,7 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 80);
   await page.mouse.up();
 
-  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('mathify-pilot-events-v1') ?? '[]').some((event: { eventName: string }) => event.eventName === 'draft_saved'))).toBe(true);
+  await expect.poll(async () => (await readDraftCheckpoint(page))?.hasDrawing).toBe(true);
   await page.reload();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
   await page.getByRole("button", { name: "Open whiteboard" }).click();

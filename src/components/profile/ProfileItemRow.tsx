@@ -1,11 +1,11 @@
 'use client';
+import { formatDate } from '@/components/shared/format-date';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Pencil, Trash2 } from 'lucide-react';
-import type { LearnerProfileItem, ProfileItemStatus } from '@/types/domain';
+import type { LearnerProfileItem, ProfileItemStatus } from '@/contracts/profile';
 import { MAX_PROFILE_TEXT_LENGTH, type ProfileUpdate } from '@/schemas/profile';
-import { BriefBadge } from '@/components/brief/BriefCard';
-import { formatDate } from '@/components/sessions/SessionCard';
+import { Badge } from '@/components/shared/Card';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const ITEM_STATUS: Record<ProfileItemStatus, { label: string; className: string }> = {
@@ -75,8 +75,8 @@ export function ProfileItemRow({ item, accent, onSave }: { item: LearnerProfileI
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-1.5">
-      <BriefBadge className={status.className}>{status.label}</BriefBadge>
-      {item.source === 'tutor' && <BriefBadge className="bg-violet-100 text-violet-700">Tutor</BriefBadge>}
+      <Badge className={status.className}>{status.label}</Badge>
+      {item.source === 'tutor' && <Badge className="bg-violet-100 text-violet-700">Tutor</Badge>}
       {item.evidence.map((evidence, i) => <Link key={`${evidence.sessionId}-${i}`} href={`/sessions/${evidence.sessionId}`} title={evidence.quote}
         className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-600 hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
         {formatDate(evidence.date)}

@@ -1,9 +1,9 @@
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import type { LearnerProfile } from '@/types/domain';
+import type { LearnerProfile } from '@/contracts/profile';
 
-export type ProfileUpdater = (current: LearnerProfile) => LearnerProfile | Promise<LearnerProfile>;
+import type { ProfileStore, ProfileUpdater } from './contracts';
 
 // Same per-file promise-chain lock as LocalSessionStore (single-process local dev only).
 const globalLocks = globalThis as typeof globalThis & { __mathifyProfileLocks?: Map<string, Promise<unknown>> };
@@ -17,7 +17,7 @@ export function emptyLearnerProfile(): LearnerProfile {
 }
 
 /** Stores the single learner profile as `learner-profile.json`. */
-export class LocalProfileStore {
+export class LocalProfileStore implements ProfileStore {
   private filePath: string;
 
   constructor(dataDir: string) {

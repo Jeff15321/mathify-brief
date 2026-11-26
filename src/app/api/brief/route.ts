@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { probeAnswerSchema } from '@/schemas/workspace';
-import { requestWorkspaceId } from '@/server/workspace-identity';
-import { submitBrief } from '@/server/brief-service';
+import { probeAnswerSchema } from '@/server/workspace/schema';
+import { requestWorkspaceId } from '@/server/workspace/identity';
+import { submitBrief } from '@/server/brief/service';
 import { ApiError, toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

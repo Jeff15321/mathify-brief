@@ -1,5 +1,5 @@
-import type { ProbeResult, TutorBrief } from '@/types/domain';
-import { suggestedStart } from '@/server/helpers/evidence-summary-helper';
+import type { ProbeResult, TutorBrief } from '@/contracts/brief';
+import { suggestedStart } from './evidence';
 import { MathText } from '@/components/shared/MathText';
 function ResponseObservation({ result }: { result: ProbeResult }) {
   const selected = result.outcome === 'dont_know' ? "I don't know" : result.selectedOptionText ?? 'No response';

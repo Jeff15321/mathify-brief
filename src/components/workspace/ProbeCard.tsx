@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MathText } from "@/components/shared/MathText";
-import type { ProbeAnswer, PublicProbe } from "@/types/domain";
+import type { ProbeAnswer, PublicProbe } from "@/contracts/probes";
 
 /**
  * One multiple-choice probe: the generated options A-D followed by an "I don't know" choice,

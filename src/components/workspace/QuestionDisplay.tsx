@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { StoredAsset } from "@/types/domain";
+import type { StoredAsset } from "@/contracts/assets";
 import { MathText } from "@/components/shared/MathText";
 
 function AttachmentPreview({ asset }: { asset: StoredAsset }) {

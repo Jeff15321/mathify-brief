@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import * as api from '@/lib/api-client';
+import * as api from '@/client/workspace';
 import { PastSessionsCard } from '@/components/brief/PastSessionsCard';
 
-vi.mock('@/lib/api-client', () => ({ fetchBriefHistory: vi.fn() }));
+vi.mock('@/client/workspace', () => ({ fetchBriefHistory: vi.fn() }));
 
 const READY = { status: 'ready' as const, generatedAt: '2026-11-08T12:00:00.000Z', model: 'mock-provider', promptVersion: 'history-v1' };
 

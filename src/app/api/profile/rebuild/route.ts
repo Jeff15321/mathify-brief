@@ -1,4 +1,4 @@
-import { rebuildProfile } from '@/server/learner-profile-service';
+import { rebuildProfile } from '@/server/profile/service';
 import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

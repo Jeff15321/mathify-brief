@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { History } from 'lucide-react';
-import { fetchBriefHistory } from '@/lib/api-client';
-import type { BriefHistory } from '@/types/domain';
+import { fetchBriefHistory } from '@/client/workspace';
+import type { BriefHistory } from '@/contracts/brief';
 import { MathText } from '@/components/shared/MathText';
 
 const MONTH_DAY = /^[A-Z][a-z]{2} \d{1,2}(?:(?:,| and|, and) [A-Z][a-z]{2} \d{1,2})*$/;

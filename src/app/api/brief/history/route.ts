@@ -1,5 +1,5 @@
-import { requestWorkspaceId } from '@/server/workspace-identity';
-import { getBriefHistory } from '@/server/brief-service';
+import { requestWorkspaceId } from '@/server/workspace/identity';
+import { getBriefHistory } from '@/server/brief/service';
 import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

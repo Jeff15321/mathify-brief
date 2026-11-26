@@ -1,7 +1,7 @@
 'use client';
 import { Fragment, useState } from 'react';
 import { ScrollText } from 'lucide-react';
-import { BriefCard } from '@/components/brief/BriefCard';
+import { Card } from '@/components/shared/Card';
 
 const PREVIEW_LINES = 15;
 const PREVIEW_CHARS = 1200;
@@ -26,7 +26,7 @@ export function TranscriptViewer({ text, fileName }: { text: string; fileName: s
   const collapsible = preview.length < lines.join('\n').length;
   const shown = expanded || !collapsible ? lines : preview.split('\n');
 
-  return <BriefCard title="Transcript" icon={<ScrollText className="h-4 w-4 text-slate-500" aria-hidden />} badge={<span className="truncate text-xs text-slate-500">{fileName}</span>}>
+  return <Card title="Transcript" icon={<ScrollText className="h-4 w-4 text-slate-500" aria-hidden />} badge={<span className="truncate text-xs text-slate-500">{fileName}</span>}>
     <div className="relative">
       <pre data-testid="transcript" className="overflow-x-auto whitespace-pre-wrap break-words font-sans text-sm leading-6 text-slate-700">
         {shown.map((line, i) => <Fragment key={i}>{i > 0 && '\n'}<TranscriptLine line={line} /></Fragment>)}
@@ -37,5 +37,5 @@ export function TranscriptViewer({ text, fileName }: { text: string; fileName: s
       className="self-start rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
       {expanded ? 'Collapse' : `Show full transcript (${lines.length} lines)`}
     </button>}
-  </BriefCard>;
+  </Card>;
 }

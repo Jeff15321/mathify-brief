@@ -1,4 +1,4 @@
-import { createSession, listSessions } from '@/server/session-service';
+import { createSession, listSessions } from '@/server/sessions/service';
 import { ApiError, toApiErrorResponse } from '@/server/errors';
 import type { UploadCandidate } from '@/server/upload-validation';
 
