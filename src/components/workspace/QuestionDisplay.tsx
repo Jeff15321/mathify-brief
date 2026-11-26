@@ -12,7 +12,7 @@ function AttachmentPreview({ asset }: { asset: StoredAsset }) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm font-bold text-pink-deep underline"
+        className="text-sm font-bold text-brand-deep underline"
       >
         Open {asset.fileName} (PDF)
       </a>
@@ -43,14 +43,14 @@ export function QuestionDisplay({
         <button
           type="button"
           onClick={() => setTab("parsed")}
-          className={`flex-1 rounded-full px-3 py-1 ${tab === "parsed" ? "bg-card text-pink-deep" : "text-muted"}`}
+          className={`flex-1 rounded-full px-3 py-1 ${tab === "parsed" ? "bg-card text-brand-deep" : "text-muted"}`}
         >
           Parsed
         </button>
         <button
           type="button"
           onClick={() => setTab("original")}
-          className={`flex-1 rounded-full px-3 py-1 ${tab === "original" ? "bg-card text-pink-deep" : "text-muted"}`}
+          className={`flex-1 rounded-full px-3 py-1 ${tab === "original" ? "bg-card text-brand-deep" : "text-muted"}`}
         >
           Original
         </button>
@@ -73,7 +73,7 @@ export function QuestionDisplay({
                       onClick={() => setActiveAssetIndex(index)}
                       className={`rounded-full border px-2 py-1 ${
                         activeAssetIndex === index
-                          ? "border-pink bg-wash text-ink"
+                          ? "border-brand bg-wash text-ink"
                           : "border-connector text-muted"
                       }`}
                     >

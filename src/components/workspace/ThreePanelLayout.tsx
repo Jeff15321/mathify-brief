@@ -96,7 +96,7 @@ export function ThreePanelLayout({
       {probingMode ? null : narrow && (
         <div className="flex border-b border-line bg-card" aria-label="Workspace panels">
           {PANEL_ORDER.map(panel => <button key={panel} type="button" aria-pressed={activeTab === panel}
-            onClick={() => setActiveTab(panel)} className={`flex-1 px-3 py-3 text-sm ${activeTab === panel ? 'border-b-2 border-pink text-pink-deep' : 'text-muted'}`}>{PANEL_TITLES[panel]}</button>)}
+            onClick={() => setActiveTab(panel)} className={`flex-1 px-3 py-3 text-sm ${activeTab === panel ? 'border-b-2 border-brand text-brand-deep' : 'text-muted'}`}>{PANEL_TITLES[panel]}</button>)}
         </div>
       )}
       <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: probingMode || narrow ? '1fr' : gridTemplateColumns }}>

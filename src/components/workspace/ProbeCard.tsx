@@ -61,7 +61,7 @@ export function ProbeCard({
             key={choice.id}
             className={`flex cursor-pointer items-start gap-2 rounded-panel border px-4 py-2.5 text-base ${
               selected === choice.id
-                ? "border-pink bg-wash"
+                ? "border-brand bg-wash"
                 : "border-line hover:bg-ground"
             }`}
           >
@@ -72,21 +72,21 @@ export function ProbeCard({
               value={choice.id}
               checked={selected === choice.id}
               onChange={() => onSelect(choice.id)}
-              className="mt-1 accent-pink"
+              className="mt-1 accent-brand"
             />
             <MathText text={choice.textMarkdown} />
           </label>
         ))}
       </div>
       {probe.hint && <div className="text-sm">
-        {hintOpened ? <div className="rounded bg-wash p-3"><span className="font-bold">Hint: </span><MathText text={probe.hint} /></div>
-          : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-pink-deep underline">Show a hint</button>}
+        {hintOpened ? <div className="rounded bg-clay-wash p-3"><span className="font-bold text-clay">Hint: </span><MathText text={probe.hint} /></div>
+          : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-brand-deep underline">Show a hint</button>}
       </div>}
       <button
         type="button"
         onClick={onNext}
         disabled={!selected || saving || disabled}
-        className="self-end rounded-full bg-pink px-6 py-2 text-sm font-bold text-card hover:bg-pink-deep disabled:opacity-50"
+        className="self-end rounded-full bg-brand px-6 py-2 text-sm font-bold text-card hover:bg-brand-deep disabled:opacity-50"
       >
         {saving ? "Saving…" : "Next"}
       </button>

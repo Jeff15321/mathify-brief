@@ -37,11 +37,11 @@ export default function SessionsScreen() {
           <h1 className="page-title">Past sessions</h1>
           <p className="mt-1 text-sm text-muted">Upload TVO session transcripts to build this student&apos;s learner profile.</p>
         </div>
-        {!adding && <button type="button" onClick={() => setAdding(true)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-card hover:bg-pink-deep">Add session</button>}
+        {!adding && <button type="button" onClick={() => setAdding(true)} className="rounded-full bg-brand px-4 py-2 text-sm font-bold text-card hover:bg-brand-deep">Add session</button>}
       </header>
       {adding
         ? <div className="flex max-w-xl flex-col gap-3">
-          <button type="button" onClick={() => setAdding(false)} className="self-start text-sm font-bold text-pink-deep hover:underline">Back to sessions</button>
+          <button type="button" onClick={() => setAdding(false)} className="self-start text-sm font-bold text-brand-deep hover:underline">Back to sessions</button>
           <SessionUploadForm onUploaded={() => { setAdding(false); void load(); }} />
         </div>
         : <section aria-label="Sessions" className="flex flex-col gap-3">

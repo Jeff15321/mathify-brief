@@ -14,7 +14,7 @@ const plural = (count: number, word: string) => `${count} ${word}${count === 1 ?
 /** One session in the list; the whole card links to the session, and failed ones offer a retry. */
 export function SessionCard({ session, onRetry, retrying = false }: { session: PublicSessionSummary; onRetry: (id: string) => void; retrying?: boolean }) {
   const status = STATUS[session.status];
-  return <li className="relative flex flex-col gap-2 rounded-card border border-line bg-card p-4 sm:p-6 hover:border-pink has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-pink">
+  return <li className="relative flex flex-col gap-2 rounded-card border border-line bg-card p-4 sm:p-6 hover:border-brand has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand">
     <div className="flex items-start justify-between gap-2">
       <h3 className="text-xl leading-tight font-bold text-ink">
         <Link href={`/sessions/${session.id}`} className="after:absolute after:inset-0 focus-visible:outline-none">{session.title ?? status.title}</Link>

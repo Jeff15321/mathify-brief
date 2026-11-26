@@ -69,7 +69,7 @@ export function SessionUploadForm({ onUploaded }: { onUploaded: (session: TutorS
         <textarea id="tutorNotes" value={tutorNotes} onChange={e => setTutorNotes(e.target.value)} rows={3} maxLength={MAX_TUTOR_NOTES_LENGTH} className="w-full rounded-panel border border-connector bg-card p-3 text-sm" />
       </div>
       {error && <ErrorBanner message={error} />}
-      <button type="submit" className="rounded-full bg-pink px-6 py-3 text-sm font-bold text-card hover:bg-pink-deep">{busy ? 'Uploading and summarizing…' : 'Upload session'}</button>
+      <button type="submit" className="rounded-full bg-brand px-6 py-3 text-sm font-bold text-card hover:bg-brand-deep">{busy ? 'Uploading and summarizing…' : 'Upload session'}</button>
     </fieldset>
   </form>;
 }

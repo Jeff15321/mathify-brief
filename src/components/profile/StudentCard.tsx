@@ -17,7 +17,7 @@ export function StudentCard({ profile, sessionCount, lastSessionDate }: {
   ];
   return <section aria-label="Student" className="flex flex-col gap-4 rounded-card border border-line bg-card p-4 sm:p-5">
     <div className="flex items-center gap-4">
-      <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-pink text-lg font-bold text-card">{initials}</span>
+      <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-bold text-card">{initials}</span>
       <div className="flex flex-col gap-1">
         <h1 className="page-title">{DEMO_PROFILE.displayName}</h1>
         <Badge className="self-start bg-wash text-ink">Grade {DEMO_PROFILE.grade}</Badge>

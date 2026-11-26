@@ -53,7 +53,7 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
         </div>
         <input ref={input} id="fileInput" type="file" multiple accept={ALLOWED_MIME_TYPES.join(',')}
           onChange={e => { const selected = Array.from(e.target.files ?? []); e.target.value = ''; void addFiles(selected); }} className="sr-only" />
-        <button type="button" onClick={() => input.current?.click()} className="self-start text-sm font-bold text-pink-deep underline">Choose files</button>
+        <button type="button" onClick={() => input.current?.click()} className="self-start text-sm font-bold text-brand-deep underline">Choose files</button>
         <FileAttachmentList files={files} onRemove={index => { setDuplicate(false); onChange(questionText, files.filter((_, i) => i !== index)); }}
           onMove={(index, direction) => { const next = [...files]; [next[index], next[index + direction]] = [next[index + direction], next[index]]; onChange(questionText, next); }} />
       </div>
@@ -61,7 +61,7 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
       <label htmlFor="questionText" className="text-sm font-bold">Question (optional if files provided)</label>
       <textarea id="questionText" value={questionText} onChange={e => onChange(e.target.value, files)} rows={3} maxLength={MAX_QUESTION_TEXT_LENGTH}
         placeholder="Type your question here, or add photos above." className="rounded-panel border border-connector bg-card p-3 text-sm" />
-      <button type="submit" className="rounded-full bg-pink px-6 py-3 text-sm font-bold text-card hover:bg-pink-deep">{busy ? 'Saving your problem…' : adding ? 'Reading files…' : "Let’s begin"}</button>
+      <button type="submit" className="rounded-full bg-brand px-6 py-3 text-sm font-bold text-card hover:bg-brand-deep">{busy ? 'Saving your problem…' : adding ? 'Reading files…' : "Let’s begin"}</button>
     </fieldset>
     {error && <ErrorBanner message={error} />}
   </form>;

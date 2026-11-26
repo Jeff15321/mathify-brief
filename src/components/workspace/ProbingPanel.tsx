@@ -46,7 +46,7 @@ export function ProbingPanel({
               {progress ? `Question ${progress.stepNumber} of ${progress.totalSteps}` : "All questions answered"}
             </p>
             {progress?.isEasier && (
-              <span className="rounded-full bg-wash px-2 py-0.5 text-sm font-bold text-ink">
+              <span className="rounded-full bg-clay-wash px-2 py-0.5 text-sm font-bold text-clay">
                 Easier question
               </span>
             )}
@@ -73,12 +73,12 @@ export function ProbingPanel({
           )}
 
           {!current && !finished && waitingStatus === "failed" && (
-            <div className="flex flex-col items-start gap-3 rounded-card border border-pink bg-wash p-4 text-sm text-ink">
+            <div className="flex flex-col items-start gap-3 rounded-card border border-alert/40 bg-alert-wash p-4 text-sm text-alert">
               <p>We couldn&apos;t load your next question.</p>
               <button
                 type="button"
                 onClick={onRetry}
-                className="rounded-full border border-pink bg-card px-4 py-1.5 text-sm font-bold text-pink-deep hover:bg-wash"
+                className="rounded-full border border-brand bg-card px-4 py-1.5 text-sm font-bold text-brand-deep hover:bg-wash"
               >
                 Retry
               </button>
@@ -102,8 +102,8 @@ export function ProbingPanel({
             disabled={submitting || answering}
             className={`w-full rounded-full px-6 py-3 text-sm font-bold disabled:opacity-50 sm:w-auto ${
               finished
-                ? "bg-pink text-card hover:bg-pink-deep"
-                : "border border-pink bg-card text-pink-deep hover:bg-wash"
+                ? "bg-brand text-card hover:bg-brand-deep"
+                : "border border-brand bg-card text-brand-deep hover:bg-wash"
             }`}
           >
             {submitting ? submittingLabel : submitLabel}

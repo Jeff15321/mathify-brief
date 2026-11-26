@@ -1,9 +1,9 @@
 import type { ObservationCategory, SessionObservation } from '@/contracts/sessions';
 
 const GROUPS: { category: ObservationCategory; label: string; className: string }[] = [
-  { category: 'struggle', label: 'Struggles', className: 'border-pink' },
-  { category: 'strength', label: 'Strengths', className: 'border-line' },
-  { category: 'what_works', label: 'What works', className: 'border-pink' },
+  { category: 'struggle', label: 'Struggles', className: 'border-clay/60' },
+  { category: 'strength', label: 'Strengths', className: 'border-sage/60' },
+  { category: 'what_works', label: 'What works', className: 'border-brand' },
   { category: 'habit', label: 'Habits', className: 'border-connector' },
 ];
 

@@ -84,7 +84,7 @@ function FeedbackForm({ reportId }: { reportId: string }) {
       ) : status === "load-error" ? (
         <div className="mt-2 text-sm">
           <p role="alert">Could not check saved feedback. Try again before submitting.</p>
-          <button type="button" className="mt-2 font-bold text-pink-deep underline" onClick={() => { setStatus("loading"); setLoadAttempt((attempt) => attempt + 1); }}>Try again</button>
+          <button type="button" className="mt-2 font-bold text-brand-deep underline" onClick={() => { setStatus("loading"); setLoadAttempt((attempt) => attempt + 1); }}>Try again</button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
@@ -98,8 +98,8 @@ function FeedbackForm({ reportId }: { reportId: string }) {
                 <div className="w-full max-w-72">
                   <div className="grid grid-cols-5 gap-2">
                     {choices.map((choice, index) => (
-                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-panel border border-connector px-1 py-2 text-sm leading-snug text-ink hover:border-pink has-checked:border-pink has-checked:bg-wash has-checked:font-bold has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-pink">
-                        <input type="radio" name={name} value={index + 1} required aria-label={`${index + 1} — ${choice}`} className="h-4 w-4 shrink-0 accent-pink" />
+                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-panel border border-connector px-1 py-2 text-sm leading-snug text-ink hover:border-brand has-checked:border-brand has-checked:bg-wash has-checked:font-bold has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand">
+                        <input type="radio" name={name} value={index + 1} required aria-label={`${index + 1} — ${choice}`} className="h-4 w-4 shrink-0 accent-brand" />
                         <span>{index + 1}</span>
                       </label>
                     ))}
@@ -113,15 +113,15 @@ function FeedbackForm({ reportId }: { reportId: string }) {
             ))}
             <label className="block text-sm font-bold text-ink">
               What was inaccurate, missing, or unnecessary? <span className="font-normal text-muted">(optional)</span>
-              <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-panel border border-connector p-2 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink" />
+              <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-panel border border-connector p-2 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" />
               <span className="text-sm font-normal text-muted">Up to 2,000 characters.</span>
             </label>
-            <button type="submit" className="min-h-11 rounded-full bg-pink px-4 py-2 text-sm font-bold text-card hover:bg-pink-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink disabled:cursor-wait">
+            <button type="submit" className="min-h-11 rounded-full bg-brand px-4 py-2 text-sm font-bold text-card hover:bg-brand-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-wait">
               {status === "saving" ? "Saving feedback…" : "Save feedback"}
             </button>
           </fieldset>
           {status === "saving" && <p role="status" className="text-sm text-muted">Saving your feedback…</p>}
-          {error && <p role="alert" className="text-sm text-pink-deep">{error}</p>}
+          {error && <p role="alert" className="text-sm text-alert">{error}</p>}
         </form>
       )}
     </section>

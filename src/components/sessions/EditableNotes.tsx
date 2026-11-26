@@ -27,7 +27,7 @@ export function EditableNotes({ notes, onSave }: { notes: string; onSave: (notes
           <textarea aria-label="Tutor notes" value={draft} onChange={e => setDraft(e.target.value)} rows={4} maxLength={MAX_TUTOR_NOTES_LENGTH} autoFocus className="w-full rounded-panel border border-connector bg-card p-3 text-sm" />
           {error && <ErrorBanner message={error} />}
           <div className="flex gap-2">
-            <button type="submit" className="rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-card hover:bg-pink-deep">{busy ? 'Saving…' : 'Save'}</button>
+            <button type="submit" className="rounded-full bg-brand px-4 py-1.5 text-sm font-bold text-card hover:bg-brand-deep">{busy ? 'Saving…' : 'Save'}</button>
             <button type="button" onClick={() => { setDraft(null); setError(null); }} className="rounded-full border border-connector px-4 py-1.5 text-sm font-bold text-ink hover:bg-fill">Cancel</button>
           </div>
         </fieldset>

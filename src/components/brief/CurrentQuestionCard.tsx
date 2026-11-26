@@ -9,7 +9,7 @@ export function CurrentQuestionCard({ parsedQuestionMarkdown, questionText, atta
     <MathText text={questionText || parsedQuestionMarkdown} className="text-sm text-ink break-words" />
     {!questionText && <p className="text-sm text-muted">Transcribed from the sources below.</p>}
     <ul className="grid grid-cols-2 gap-2">{attachments.map((asset, index) => <li key={asset.id}>
-      <a href={`/api/assets/${asset.id}`} target="_blank" rel="noopener noreferrer" className="block rounded-panel border border-line p-2 text-sm text-pink-deep underline">
+      <a href={`/api/assets/${asset.id}`} target="_blank" rel="noopener noreferrer" className="block rounded-panel border border-line p-2 text-sm text-brand-deep underline">
         {asset.mimeType !== 'application/pdf' &&
           // eslint-disable-next-line @next/next/no-img-element
           <img src={`/api/assets/${asset.id}`} alt={`Problem source ${index + 1}`} className="mb-2 h-28 w-full object-contain" />}

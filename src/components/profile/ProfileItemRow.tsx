@@ -10,12 +10,12 @@ import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const ITEM_STATUS: Record<ProfileItemStatus, { label: string; className: string }> = {
   active: { label: 'Active', className: 'bg-fill text-ink' },
-  improving: { label: 'Improving', className: 'bg-wash text-ink' },
-  resolved: { label: 'Resolved', className: 'bg-fill text-ink' },
+  improving: { label: 'Improving', className: 'bg-sage-wash text-sage' },
+  resolved: { label: 'Resolved', className: 'bg-sage-wash text-sage' },
 };
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'The change could not be saved. Please try again.'; }
-const iconButton = 'rounded-full p-1.5 text-muted hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink disabled:opacity-50';
+const iconButton = 'rounded-full p-1.5 text-muted hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50';
 
 /** Text and status editor for a new or existing item; `onSubmit` rejects to keep it open with the error. */
 export function ItemForm({ initial, onSubmit, onCancel }: {
@@ -40,7 +40,7 @@ export function ItemForm({ initial, onSubmit, onCancel }: {
         <select aria-label="Status" value={status} onChange={e => setStatus(e.target.value as ProfileItemStatus)} className="rounded-panel border border-connector bg-card px-2 py-1.5 text-sm">
           {Object.entries(ITEM_STATUS).map(([value, { label }]) => <option key={value} value={value}>{label}</option>)}
         </select>
-        <button type="submit" disabled={!text.trim()} className="rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-card hover:bg-pink-deep disabled:opacity-50">{busy ? 'Saving…' : 'Save'}</button>
+        <button type="submit" disabled={!text.trim()} className="rounded-full bg-brand px-4 py-1.5 text-sm font-bold text-card hover:bg-brand-deep disabled:opacity-50">{busy ? 'Saving…' : 'Save'}</button>
         <button type="button" onClick={onCancel} className="rounded-full border border-connector bg-card px-4 py-1.5 text-sm font-bold text-ink hover:bg-fill">Cancel</button>
       </div>
     </fieldset>
@@ -71,14 +71,14 @@ export function ProfileItemRow({ item, accent, onSave }: { item: LearnerProfileI
       <p className="pt-0.5 text-sm text-ink">{item.text}</p>
       <div className="flex shrink-0">
         <button type="button" disabled={busy} onClick={() => { setEditing(true); setError(null); }} aria-label="Edit item" title="Edit" className={`${iconButton} hover:text-ink`}><Pencil className="h-3.5 w-3.5" aria-hidden /></button>
-        <button type="button" disabled={busy} onClick={() => void remove()} aria-label="Delete item" title="Delete" className={`${iconButton} hover:text-pink-deep`}><Trash2 className="h-3.5 w-3.5" aria-hidden /></button>
+        <button type="button" disabled={busy} onClick={() => void remove()} aria-label="Delete item" title="Delete" className={`${iconButton} hover:text-brand-deep`}><Trash2 className="h-3.5 w-3.5" aria-hidden /></button>
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-1.5">
       <Badge className={status.className}>{status.label}</Badge>
       {item.source === 'tutor' && <Badge className="bg-fill text-ink">Tutor</Badge>}
       {item.evidence.map((evidence, i) => <Link key={`${evidence.sessionId}-${i}`} href={`/sessions/${evidence.sessionId}`} title={evidence.quote}
-        className="rounded-full border border-line px-2 py-0.5 text-sm text-muted hover:border-pink hover:text-pink-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink">
+        className="rounded-full border border-line px-2 py-0.5 text-sm text-muted hover:border-brand hover:text-brand-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
         {formatDate(evidence.date)}
       </Link>)}
     </div>

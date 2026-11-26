@@ -56,13 +56,13 @@ export default function SessionDetailScreen() {
   const status = session && STATUS[session.status];
   return <main className="min-h-screen bg-ground">
     <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-6 lg:p-12">
-      <Link href="/sessions" className="inline-flex items-center gap-1 self-start text-sm font-bold text-muted hover:text-pink-deep">
+      <Link href="/sessions" className="inline-flex items-center gap-1 self-start text-sm font-bold text-muted hover:text-brand-deep">
         <ArrowLeft className="h-4 w-4" aria-hidden /> All sessions
       </Link>
       {error && <ErrorBanner message={error} onRetry={() => void load()} />}
       {notFound && <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
         <h1 className="page-title">Session not found</h1>
-        <p className="mt-1">It may have been deleted. <Link href="/sessions" className="font-bold text-pink-deep hover:underline">Back to sessions</Link></p>
+        <p className="mt-1">It may have been deleted. <Link href="/sessions" className="font-bold text-brand-deep hover:underline">Back to sessions</Link></p>
       </div>}
       {!session && !error && !notFound && <LoadingState label="Loading session…" />}
       {session && status && <>
@@ -90,7 +90,7 @@ export default function SessionDetailScreen() {
             ? <p className="text-sm text-muted">No whiteboards uploaded.</p>
             : <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {session.whiteboards.map(asset => { const src = `/api/sessions/${session.id}/assets/${asset.id}`; return <li key={asset.id}>
-                <a href={src} target="_blank" rel="noopener noreferrer" title={`Open ${asset.fileName} full size`} className="block overflow-hidden rounded-panel border border-line bg-ground hover:border-pink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink">
+                <a href={src} target="_blank" rel="noopener noreferrer" title={`Open ${asset.fileName} full size`} className="block overflow-hidden rounded-panel border border-line bg-ground hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt={asset.fileName} className="aspect-4/3 w-full object-contain" />
                 </a>
@@ -101,7 +101,7 @@ export default function SessionDetailScreen() {
         <EditableSessionDate key={session.sessionDate} date={session.sessionDate} onSave={sessionDate => save({ sessionDate })} />
         <TranscriptViewer text={session.transcriptText} fileName={session.transcriptFileName} />
         <button type="button" disabled={busy} onClick={() => void remove()}
-          className="inline-flex items-center gap-2 self-start rounded-full border border-pink bg-card px-4 py-2 text-sm font-bold text-pink-deep hover:bg-wash disabled:opacity-60">
+          className="inline-flex items-center gap-2 self-start rounded-full border border-brand bg-card px-4 py-2 text-sm font-bold text-brand-deep hover:bg-wash disabled:opacity-60">
           <Trash2 className="h-4 w-4" aria-hidden /> Delete session
         </button>
       </>}

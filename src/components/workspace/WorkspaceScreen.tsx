@@ -219,11 +219,11 @@ export default function WorkspaceScreen() {
     } catch (err) { setError(message(err)); setSubmitting(false); }
   }
   if (workspace?.brief) return <main className="min-h-screen bg-ground"><TutorBriefView workspace={workspace} brief={workspace.brief} /></main>;
-  if (!loaded || !draft) return <main className="max-w-xl mx-auto p-8">{error ? <ErrorBanner message={error} onRetry={() => { setError(null); setLoadAttempt(n => n + 1); }} /> : <LoadingState label="Loading your workspace…" />}<a href="/workspace?new=1" className="text-pink-deep underline">New question</a></main>;
+  if (!loaded || !draft) return <main className="max-w-xl mx-auto p-8">{error ? <ErrorBanner message={error} onRetry={() => { setError(null); setLoadAttempt(n => n + 1); }} /> : <LoadingState label="Loading your workspace…" />}<a href="/workspace?new=1" className="text-brand-deep underline">New question</a></main>;
   return <main data-phase={submitting ? 'submitting' : uploading ? 'uploading' : viewFor(workspace)} className="flex h-[calc(100dvh-3rem)] flex-col bg-ground md:h-dvh">
     {storageError && <div className="px-3 pt-2"><ErrorBanner message={storageError} onRetry={() => void flush().catch(() => {})} /></div>}
     {error && <div className="px-3 pt-2"><ErrorBanner message={error} onRetry={() => void refresh().then(() => setError(null)).catch(err => setError(message(err)))} /></div>}
-    {exportFailed && <div className="flex gap-3 px-3 py-2 text-sm"><span>Your drawing could not be attached.</span><button disabled={submitting} onClick={() => void finish()} className="text-pink-deep underline">Retry drawing export</button><button disabled={submitting} onClick={() => void finish(true)} className="text-pink-deep underline">Send without drawing</button></div>}
+    {exportFailed && <div className="flex gap-3 px-3 py-2 text-sm"><span>Your drawing could not be attached.</span><button disabled={submitting} onClick={() => void finish()} className="text-brand-deep underline">Retry drawing export</button><button disabled={submitting} onClick={() => void finish(true)} className="text-brand-deep underline">Send without drawing</button></div>}
     <span role="status" className="sr-only">{probing?.current ? 'Your probing questions are ready.' : ''}</span>
     <div className="min-h-0 flex-1"><ThreePanelLayout
       mode={probingPhase ? 'probing' : 'split'}

@@ -16,9 +16,9 @@ import { LoadingState } from '@/components/shared/LoadingState';
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
 const icon = 'h-4 w-4';
 const SECTIONS: { category: ObservationCategory; title: string; icon: ReactNode; accent: string }[] = [
-  { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-ink`} aria-hidden />, accent: 'border-pink' },
-  { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-ink`} aria-hidden />, accent: 'border-line' },
-  { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-pink-deep`} aria-hidden />, accent: 'border-pink' },
+  { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-clay`} aria-hidden />, accent: 'border-clay/60' },
+  { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-sage`} aria-hidden />, accent: 'border-sage/60' },
+  { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-brand-deep`} aria-hidden />, accent: 'border-brand' },
   { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-muted`} aria-hidden />, accent: 'border-connector' },
 ];
 
@@ -55,7 +55,7 @@ export default function ProfileScreen() {
         {empty
           ? <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
             <h2 className="font-bold text-ink">No sessions yet</h2>
-            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-bold text-pink-deep hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
+            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-bold text-brand-deep hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
           </div>
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />

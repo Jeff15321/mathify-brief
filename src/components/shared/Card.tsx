@@ -5,7 +5,7 @@ export type CardTone = "neutral" | "strength" | "gap";
 const TONE_CLASSES: Record<CardTone, string> = {
   neutral: "border-line bg-card",
   strength: "border-line bg-sage-wash",
-  gap: "border-line bg-wash",
+  gap: "border-line bg-clay-wash",
 };
 
 /**

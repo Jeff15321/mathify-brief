@@ -2,8 +2,8 @@ import { MathText } from "@/components/shared/MathText";
 import type { ProbeOutcome, ProbeResult } from "@/contracts/brief";
 
 const OUTCOME_COLOR: Record<ProbeOutcome, string> = {
-  correct: "text-ink",
-  incorrect: "text-pink-deep",
+  correct: "text-sage",
+  incorrect: "text-clay",
   dont_know: "text-ink",
   unanswered: "text-muted",
 };
