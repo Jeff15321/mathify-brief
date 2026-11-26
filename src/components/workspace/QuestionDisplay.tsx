@@ -12,7 +12,7 @@ function AttachmentPreview({ asset }: { asset: StoredAsset }) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm font-medium text-blue-700 underline"
+        className="text-sm font-bold text-pink-deep underline"
       >
         Open {asset.fileName} (PDF)
       </a>
@@ -22,7 +22,7 @@ function AttachmentPreview({ asset }: { asset: StoredAsset }) {
   // the image's own intrinsic aspect ratio - never stretched/distorted, and it reflows
   // correctly whenever the panel itself resizes (e.g. on expand/restore).
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={url} alt={asset.fileName} className="block w-full h-auto rounded-lg border border-slate-200" />;
+  return <img src={url} alt={asset.fileName} className="block w-full h-auto rounded-panel border border-line" />;
 }
 
 export function QuestionDisplay({
@@ -39,33 +39,33 @@ export function QuestionDisplay({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-1 rounded-full bg-slate-100 p-1 text-xs font-medium">
+      <div className="flex gap-1 rounded-full bg-fill p-1 text-sm font-bold">
         <button
           type="button"
           onClick={() => setTab("parsed")}
-          className={`flex-1 rounded-full px-3 py-1 ${tab === "parsed" ? "bg-white text-blue-700 shadow-sm" : "text-slate-600"}`}
+          className={`flex-1 rounded-full px-3 py-1 ${tab === "parsed" ? "bg-card text-pink-deep" : "text-muted"}`}
         >
           Parsed
         </button>
         <button
           type="button"
           onClick={() => setTab("original")}
-          className={`flex-1 rounded-full px-3 py-1 ${tab === "original" ? "bg-white text-blue-700 shadow-sm" : "text-slate-600"}`}
+          className={`flex-1 rounded-full px-3 py-1 ${tab === "original" ? "bg-card text-pink-deep" : "text-muted"}`}
         >
           Original
         </button>
       </div>
 
       {tab === "parsed" ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-          <MathText text={parsedQuestionMarkdown} className="text-sm leading-relaxed text-slate-800" />
+        <div className="rounded-panel border border-line bg-card p-3">
+          <MathText text={parsedQuestionMarkdown} className="text-sm leading-relaxed text-ink" />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {questionText && <p className="whitespace-pre-wrap text-sm text-slate-700">{questionText}</p>}
+          {questionText && <p className="whitespace-pre-wrap text-sm text-ink">{questionText}</p>}
           {attachments.length > 0 && (
             <div className="flex flex-col gap-2">
-              <ul className="flex flex-wrap gap-2 text-xs">
+              <ul className="flex flex-wrap gap-2 text-sm">
                 {attachments.map((asset, index) => (
                   <li key={asset.id}>
                     <button
@@ -73,8 +73,8 @@ export function QuestionDisplay({
                       onClick={() => setActiveAssetIndex(index)}
                       className={`rounded-full border px-2 py-1 ${
                         activeAssetIndex === index
-                          ? "border-blue-400 bg-blue-50 text-blue-700"
-                          : "border-slate-300 text-slate-600"
+                          ? "border-pink bg-wash text-ink"
+                          : "border-connector text-muted"
                       }`}
                     >
                       {asset.fileName}

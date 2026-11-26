@@ -16,10 +16,10 @@ import { LoadingState } from '@/components/shared/LoadingState';
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
 const icon = 'h-4 w-4';
 const SECTIONS: { category: ObservationCategory; title: string; icon: ReactNode; accent: string }[] = [
-  { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-amber-600`} aria-hidden />, accent: 'border-amber-300' },
-  { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-emerald-600`} aria-hidden />, accent: 'border-emerald-300' },
-  { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-blue-600`} aria-hidden />, accent: 'border-blue-300' },
-  { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-slate-500`} aria-hidden />, accent: 'border-slate-300' },
+  { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-ink`} aria-hidden />, accent: 'border-pink' },
+  { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-ink`} aria-hidden />, accent: 'border-line' },
+  { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-pink-deep`} aria-hidden />, accent: 'border-pink' },
+  { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-muted`} aria-hidden />, accent: 'border-connector' },
 ];
 
 export default function ProfileScreen() {
@@ -46,16 +46,16 @@ export default function ProfileScreen() {
   }
 
   const empty = sessions?.length === 0 && profile?.items.length === 0 && !profile.nextFocus;
-  return <main className="min-h-screen bg-slate-50">
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-4 sm:p-6">
+  return <main className="min-h-screen bg-ground">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4 sm:p-6 lg:p-12">
       {error && <ErrorBanner message={error} onRetry={() => void load()} />}
       {(!profile || !sessions) && !error && <LoadingState label="Loading learner profile…" />}
       {profile && sessions && <>
         <StudentCard profile={profile} sessionCount={sessions.length} lastSessionDate={sessions.map(s => s.sessionDate).sort().at(-1) ?? null} />
         {empty
-          ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
-            <h2 className="font-medium text-slate-900">No sessions yet</h2>
-            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-medium text-blue-700 hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
+          ? <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
+            <h2 className="font-bold text-ink">No sessions yet</h2>
+            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-bold text-pink-deep hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
           </div>
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />

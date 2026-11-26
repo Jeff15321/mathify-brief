@@ -75,53 +75,53 @@ function FeedbackForm({ reportId }: { reportId: string }) {
   }
 
   return (
-    <section aria-labelledby="tutor-feedback-title" className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-      <h2 id="tutor-feedback-title" className="text-base font-semibold text-slate-900">Tutor feedback</h2>
+    <section aria-labelledby="tutor-feedback-title" className="rounded-card border border-line bg-card p-4 sm:p-5">
+      <h2 id="tutor-feedback-title" className="text-base font-bold text-ink">Tutor feedback</h2>
       {status === "saved" ? (
-        <p role="status" className="mt-2 text-sm text-emerald-800">Thank you — your feedback is saved for this report.</p>
+        <p role="status" className="mt-2 text-sm text-ink">Thank you — your feedback is saved for this report.</p>
       ) : status === "loading" ? (
-        <p role="status" className="mt-2 text-sm text-slate-600">Checking feedback…</p>
+        <p role="status" className="mt-2 text-sm text-muted">Checking feedback…</p>
       ) : status === "load-error" ? (
         <div className="mt-2 text-sm">
           <p role="alert">Could not check saved feedback. Try again before submitting.</p>
-          <button type="button" className="mt-2 font-semibold text-blue-700 underline" onClick={() => { setStatus("loading"); setLoadAttempt((attempt) => attempt + 1); }}>Try again</button>
+          <button type="button" className="mt-2 font-bold text-pink-deep underline" onClick={() => { setStatus("loading"); setLoadAttempt((attempt) => attempt + 1); }}>Try again</button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
-          <p className="text-sm text-slate-600">Rate each item from 1–5. All ratings required.</p>
+          <p className="text-sm text-muted">Rate each item from 1–5. All ratings required.</p>
           <fieldset disabled={status === "saving"} className="space-y-5 disabled:opacity-60">
             <legend className="sr-only">Report ratings</legend>
             {questions.map(({ name, label, description, choices }) => (
               <fieldset key={name} aria-describedby={`${name}-description`}>
-                <legend className="text-sm font-medium text-slate-900">{label}</legend>
-                <p id={`${name}-description`} className="mb-2 text-sm text-slate-600">{description}</p>
+                <legend className="text-sm font-bold text-ink">{label}</legend>
+                <p id={`${name}-description`} className="mb-2 text-sm text-muted">{description}</p>
                 <div className="w-full max-w-72">
                   <div className="grid grid-cols-5 gap-2">
                     {choices.map((choice, index) => (
-                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-lg border border-slate-300 px-1 py-2 text-sm leading-snug text-slate-700 hover:border-blue-400 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:font-medium has-checked:text-blue-900 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600">
-                        <input type="radio" name={name} value={index + 1} required aria-label={`${index + 1} — ${choice}`} className="h-4 w-4 shrink-0 accent-blue-600" />
+                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-panel border border-connector px-1 py-2 text-sm leading-snug text-ink hover:border-pink has-checked:border-pink has-checked:bg-wash has-checked:font-bold has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-pink">
+                        <input type="radio" name={name} value={index + 1} required aria-label={`${index + 1} — ${choice}`} className="h-4 w-4 shrink-0 accent-pink" />
                         <span>{index + 1}</span>
                       </label>
                     ))}
                   </div>
-                  <div className="mt-1 flex justify-between gap-2 text-xs text-slate-500" aria-hidden="true">
+                  <div className="mt-1 flex justify-between gap-2 text-sm text-muted" aria-hidden="true">
                     <span>{choices[0]}</span>
                     <span className="text-right">{choices[4]}</span>
                   </div>
                 </div>
               </fieldset>
             ))}
-            <label className="block text-sm font-medium text-slate-900">
-              What was inaccurate, missing, or unnecessary? <span className="font-normal text-slate-500">(optional)</span>
-              <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-lg border border-slate-300 p-2 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" />
-              <span className="text-xs font-normal text-slate-500">Up to 2,000 characters.</span>
+            <label className="block text-sm font-bold text-ink">
+              What was inaccurate, missing, or unnecessary? <span className="font-normal text-muted">(optional)</span>
+              <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-panel border border-connector p-2 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink" />
+              <span className="text-sm font-normal text-muted">Up to 2,000 characters.</span>
             </label>
-            <button type="submit" className="min-h-11 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-wait">
+            <button type="submit" className="min-h-11 rounded-full bg-pink px-4 py-2 text-sm font-bold text-card hover:bg-pink-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink disabled:cursor-wait">
               {status === "saving" ? "Saving feedback…" : "Save feedback"}
             </button>
           </fieldset>
-          {status === "saving" && <p role="status" className="text-sm text-slate-600">Saving your feedback…</p>}
-          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+          {status === "saving" && <p role="status" className="text-sm text-muted">Saving your feedback…</p>}
+          {error && <p role="alert" className="text-sm text-pink-deep">{error}</p>}
         </form>
       )}
     </section>

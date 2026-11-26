@@ -1,16 +1,80 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-/* Force light theme regardless of OS preference: switch Tailwind's `dark:` variant to a
-   class strategy and never apply the `.dark` class, so dark: utilities stay inert. */
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+/* Web tokens from the Tutor Brief design system. */
+@theme {
+  --color-pink: #d81b72;
+  --color-pink-deep: #b1165d;
+  --color-pale: #f8d6e6;
+  --color-wash: #fcebf2;
+  --color-ink: #121212;
+  --color-muted: #5f6368;
+  --color-ground: #fafafa;
+  --color-card: #ffffff;
+  --color-fill: #f2f2f2;
+  --color-line: #e2e2e2;
+  --color-connector: #b8b8b8;
+  --radius-panel: 12px;
+  --radius-card: 20px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
+@theme inline {
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-ground font-sans text-base text-ink;
+  }
+
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    outline: 2px solid var(--color-pink-deep);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-pale);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  .page-title {
+    font-size: clamp(1.875rem, 2.8vw, 2.5rem);
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .intake-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block: 12px;
+  }
+
+  .intake-cover {
+    width: clamp(76px, 24%, 180px);
+    flex: none;
+  }
+}
+
+/* Theme the editor controls independently of the student's drawing palette. */
+[aria-label="Drawing whiteboard"] .excalidraw {
+  --color-primary: var(--color-pink);
+  --color-primary-darker: var(--color-pink-deep);
+  --color-primary-darkest: var(--color-pink-deep);
+  --color-primary-hover: var(--color-pink-deep);
+  --color-brand-hover: var(--color-pink-deep);
+  --color-brand-active: var(--color-pink-deep);
+  --color-primary-light: var(--color-wash);
+  --color-primary-light-darker: var(--color-pale);
+  --color-surface-primary-container: var(--color-wash);
+  --color-on-primary-container: var(--color-ink);
 }

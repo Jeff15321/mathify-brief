@@ -37,13 +37,13 @@ function PanelHeader({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
-      <h2 className="min-w-0 truncate text-sm font-semibold text-slate-900">{PANEL_TITLES[panel]}</h2>
+    <div className="flex items-center justify-between border-b border-line bg-card px-3 py-2">
+      <h2 className="min-w-0 truncate text-sm font-bold text-ink">{PANEL_TITLES[panel]}</h2>
       <button
         type="button"
         onClick={onToggle}
         aria-label={expanded ? `Restore ${PANEL_TITLES[panel]}` : `Expand ${PANEL_TITLES[panel]}`}
-        className="rounded p-1 text-slate-500 hover:bg-slate-100"
+        className="rounded p-1 text-muted hover:bg-fill"
       >
         {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
       </button>
@@ -85,18 +85,18 @@ export function ThreePanelLayout({
 
   const gridTemplateColumns = PANEL_ORDER.map((panel) => {
     if (expanded === "none") return `${BASE_FR[panel]}fr`;
-    return `${panel === expanded ? EXPANDED_FR : SHRUNK_FR}fr}`;
+    return `${panel === expanded ? EXPANDED_FR : SHRUNK_FR}fr`;
   }).join(" ");
 
   const probingMode = mode === "probing";
   return (
-    <div className="flex h-full flex-col bg-slate-50">
+    <div className="flex h-full flex-col bg-ground">
       {/* The tab-bar slot exists in both modes (null in probing) so the panels grid keeps its
           child index — and the mounted whiteboard inside it — across the split -> probing switch. */}
       {probingMode ? null : narrow && (
-        <div className="flex border-b border-slate-200 bg-white" aria-label="Workspace panels">
+        <div className="flex border-b border-line bg-card" aria-label="Workspace panels">
           {PANEL_ORDER.map(panel => <button key={panel} type="button" aria-pressed={activeTab === panel}
-            onClick={() => setActiveTab(panel)} className={`flex-1 px-3 py-3 text-sm ${activeTab === panel ? 'border-b-2 border-blue-600 text-blue-700' : 'text-slate-600'}`}>{PANEL_TITLES[panel]}</button>)}
+            onClick={() => setActiveTab(panel)} className={`flex-1 px-3 py-3 text-sm ${activeTab === panel ? 'border-b-2 border-pink text-pink-deep' : 'text-muted'}`}>{PANEL_TITLES[panel]}</button>)}
         </div>
       )}
       <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: probingMode || narrow ? '1fr' : gridTemplateColumns }}>
@@ -111,7 +111,7 @@ export function ThreePanelLayout({
               key="whiteboard"
               aria-hidden={!whiteboardOpen}
               inert={!whiteboardOpen}
-              className={`fixed bottom-0 top-0 z-50 flex w-[min(32rem,calc(100vw-3.5rem))] min-w-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 shadow-xl transition-transform duration-200 ease-out left-0 md:left-14 ${
+              className={`fixed bottom-0 top-0 z-50 flex w-[min(32rem,calc(100vw-3.5rem))] min-w-0 flex-col overflow-hidden border-r border-line bg-ground transition-transform duration-200 ease-out left-0 md:left-14 ${
                 // Translate by the drawer's width PLUS the 3.5rem anchor offset: the md+ left
                 // anchor alone would leave a 56px strip on-screen after a plain -100% slide.
                 // Underscores are Tailwind's spaces — calc( needs them around the +.
@@ -120,13 +120,13 @@ export function ThreePanelLayout({
             >
               {/* The header stays mounted so the section's child structure is constant — no
                   child-index shift can ever remount the board. */}
-              <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
-                <h2 className="text-sm font-semibold text-slate-900">Whiteboard</h2>
+              <div className="flex items-center justify-between border-b border-line bg-card px-3 py-2">
+                <h2 className="text-sm font-bold text-ink">Whiteboard</h2>
                 <button
                   type="button"
                   onClick={onCloseWhiteboard}
                   aria-label="Close whiteboard"
-                  className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                  className="rounded p-1 text-muted hover:bg-fill"
                 >
                   <X size={16} />
                 </button>
@@ -143,7 +143,7 @@ export function ThreePanelLayout({
                 onClick={onOpenWhiteboard}
                 aria-label="Open whiteboard"
                 title="Open whiteboard"
-                className="fixed top-1/2 z-40 flex size-9 -translate-y-1/2 items-center justify-center rounded-r-full border border-l-0 border-slate-300 bg-white text-slate-500 shadow-md hover:bg-slate-100 hover:text-slate-700 left-0 md:left-14"
+                className="fixed top-1/2 z-40 flex size-9 -translate-y-1/2 items-center justify-center rounded-r-full border border-l-0 border-connector bg-card text-muted hover:bg-fill hover:text-ink left-0 md:left-14"
               >
                 <PencilLine size={15} />
               </button>
@@ -159,7 +159,7 @@ export function ThreePanelLayout({
           </>
         ) : (
           PANEL_ORDER.map(panel => <section key={panel} hidden={narrow && activeTab !== panel}
-            className={`${narrow && activeTab !== panel ? 'hidden' : 'flex'} min-w-0 min-h-0 flex-col overflow-hidden border-r border-slate-200`}>
+            className={`${narrow && activeTab !== panel ? 'hidden' : 'flex'} min-w-0 min-h-0 flex-col overflow-hidden border-r border-line`}>
             {!narrow && <PanelHeader panel={panel} expanded={expanded === panel} onToggle={() => toggle(panel)} />}
             <div className="min-h-0 flex-1 overflow-hidden p-3">{content[panel]}</div>
           </section>)

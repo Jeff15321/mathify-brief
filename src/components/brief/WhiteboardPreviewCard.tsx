@@ -9,10 +9,10 @@ export function WhiteboardPreviewCard({ assetId }: { assetId: string | null }) {
         <img
           src={`/api/assets/${assetId}`}
           alt="Student's whiteboard"
-          className="max-h-72 w-full rounded-lg border border-slate-200 object-contain"
+          className="max-h-72 w-full rounded-panel border border-line object-contain"
         />
       ) : (
-        <p className="text-sm text-slate-500">No drawing attached. Original sources are shown above.</p>
+        <p className="text-sm text-muted">No drawing attached. Original sources are shown above.</p>
       )}
     </Card>
   );
