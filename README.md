@@ -9,7 +9,7 @@ Tutor Brief dashboard is computed from the stored answers (no AI) plus an option
 See `CLAUDE_CODE_START_HERE.md`, `IMPLEMENTATION_PLAN.md`, and `MVP_DESCRIPTION.md` for the full
 specification, scope, and deferred future work (sessions, Supabase, Vercel deployment, auth).
 
-See the [architecture and review guide](docs/ARCHITECTURE.md) for module responsibilities, dependency rules and code owners.
+See the [architecture guide](docs/ARCHITECTURE.md) for module responsibilities and dependency rules.
 
 ## Setup
 

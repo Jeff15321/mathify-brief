@@ -1,4 +1,4 @@
-# Architecture and review ownership
+# Architecture
 
 Mathify runs as one Next.js application. A screen calls a browser client, the matching route handler parses the HTTP request, and a service coordinates storage and AI. For example, a probe answer travels from `WorkspaceScreen` through `client/workspace.ts` and `app/api/probes/answer/route.ts` to `server/workspace/probes.ts`. The service updates the workspace under the store lock and returns the public probe projection.
 
@@ -25,8 +25,6 @@ Mathify runs as one Next.js application. A screen calls a browser client, the ma
 - ESLint resolves aliases, relative imports, re-exports and literal dynamic imports. Screens depend on browser clients and contracts. HTTP handlers call services. Filesystem access belongs to storage adapters, and Anthropic SDK calls belong to the AI adapter. Next.js also rejects a client build that reaches either server factory.
 - The architecture tests lint permitted and forbidden imports against the real configuration. Pull requests run lint, type checking, unit tests and the production build.
 
-## Reviews
-
-The repository owner is the default reviewer. The student workspace, brief and pilot evaluation have an additional maintainer. GitHub uses the last matching entry in the [ownership file](../.github/CODEOWNERS).
+## Verification
 
 Run `npm test` for service, schema, persistence and component changes. Run `npm run test:e2e` for changes that span a page, its API or recovery flow. The browser suite uses its own mock server and temporary data.
