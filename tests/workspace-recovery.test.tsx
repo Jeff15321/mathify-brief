@@ -79,7 +79,7 @@ it('opens the saved report and removes its draft when Retry recovers a lost Fini
   render(<WorkspacePage />);
   await screen.findByText('Question 1 of 3');
   fireEvent.click(screen.getByDisplayValue('B'));
-  fireEvent.click(screen.getByRole('button', { name: 'DEMO: connect to tutor' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create tutor brief' }));
   await screen.findByText('Response lost');
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   await waitFor(() => expect(screen.getByRole('heading', { name: 'Tutor Brief' })).toBeInTheDocument());
@@ -102,7 +102,7 @@ it('leaves a saved draft untouched after a read failure and restores it on Retry
   await screen.findByText(/Saved drafts could not be read/);
   fireEvent(window, new Event('pagehide'));
   // No editor or answer controls may create a replacement before the checkpoint can be read.
-  expect(screen.queryByRole('button', { name: 'DEMO: connect to tutor' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Create tutor brief' })).not.toBeInTheDocument();
   expect(await drafts.restoreDraft(current.workspaceId, draftId)).toEqual(checkpoint);
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   await waitFor(() => expect(screen.getByDisplayValue('IDK')).toBeChecked());

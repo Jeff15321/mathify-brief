@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ProbeCard } from "@/components/workspace/ProbeCard";
 import { ProbingPanel } from "@/components/workspace/ProbingPanel";
 import { QuestionDisplay } from "@/components/workspace/QuestionDisplay";
-import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
+import { WorkspaceLayout } from "@/components/workspace/WorkspaceLayout";
 import { ProbeTallyCard } from "@/components/brief/ProbeTallyCard";
 import { PriorityStepCard } from "@/components/brief/PriorityStepCard";
 import { ProbingResultsAccordion } from "@/components/brief/ProbingResultsAccordion";
@@ -26,14 +26,14 @@ describe("ProbeCard", () => {
   it("a selected radio choice stays checked and reports the selection", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
-      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
+      <ProbeCard probe={PROBE} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
     );
 
     const optionB = screen.getByDisplayValue("B") as HTMLInputElement;
     fireEvent.click(optionB);
     expect(onSelect).toHaveBeenCalledWith("B");
 
-    rerender(<ProbeCard probe={PROBE} index={0} selected="B" onSelect={onSelect} onNext={() => {}} />);
+    rerender(<ProbeCard probe={PROBE} selected="B" onSelect={onSelect} onNext={() => {}} />);
     expect((screen.getByDisplayValue("B") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByDisplayValue("A") as HTMLInputElement).checked).toBe(false);
   });
@@ -41,13 +41,13 @@ describe("ProbeCard", () => {
   it("offers an \"I don't know\" choice that stays selected", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
-      <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
+      <ProbeCard probe={PROBE} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
     );
 
     fireEvent.click(screen.getByLabelText("I don't know"));
     expect(onSelect).toHaveBeenCalledWith("IDK");
 
-    rerender(<ProbeCard probe={PROBE} index={0} selected="IDK" onSelect={onSelect} onNext={() => {}} />);
+    rerender(<ProbeCard probe={PROBE} selected="IDK" onSelect={onSelect} onNext={() => {}} />);
     expect((screen.getByLabelText("I don't know") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByDisplayValue("B") as HTMLInputElement).checked).toBe(false);
   });
@@ -57,7 +57,7 @@ describe("ProbeCard", () => {
       ...PROBE,
       questionMarkdown: "A very long word problem. ".repeat(20),
     };
-    render(<ProbeCard probe={longProbe} index={0} selected={undefined} onSelect={() => {}} onNext={() => {}} />);
+    render(<ProbeCard probe={longProbe} selected={undefined} onSelect={() => {}} onNext={() => {}} />);
     expect(screen.getByText(/A very long word problem\./)).toBeInTheDocument();
   });
 });
@@ -79,8 +79,6 @@ function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" |
   render(
     <ProbingPanel
       probing={probing} selection={selection} answering={false} submitting={false}
-      submitLabel="DEMO: connect to tutor" submittingLabel="Connecting…"
-      heading={<h1>Answer a few probing questions while you wait</h1>}
       {...handlers}
     />,
   );
@@ -90,7 +88,7 @@ function renderPanel(probing: PublicProbing, selection?: "A" | "B" | "C" | "D" |
 describe("ProbingPanel", () => {
   it("shows the headline, one question with progress, and Next disabled until a choice is selected", () => {
     renderPanel(probingState());
-    expect(screen.getByRole("heading", { name: "Answer a few probing questions while you wait" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your warm-up" })).toBeInTheDocument();
     expect(screen.getByText("Question 1 of 3")).toBeInTheDocument();
     expect(screen.getAllByRole("radio")).toHaveLength(5);
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
@@ -109,7 +107,7 @@ describe("ProbingPanel", () => {
 
   it("offers the DEMO connect button and reports the submit click", () => {
     const { onSubmit } = renderPanel(probingState());
-    fireEvent.click(screen.getByRole("button", { name: "DEMO: connect to tutor" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create tutor brief" }));
     expect(onSubmit).toHaveBeenCalled();
   });
 
@@ -126,52 +124,13 @@ describe("ProbingPanel", () => {
 
   it("shows a sending note when all questions are answered", () => {
     renderPanel(probingState({ current: null, progress: null, finished: true }));
-    expect(screen.getByText("You've answered every question. Sending them to your tutor…")).toBeInTheDocument();
-  });
-
-});
-
-describe("ThreePanelLayout probing mode", () => {
-  it("probing mode shows the probing content full-width without panel headers or tabs", () => {
-    render(
-      <ThreePanelLayout mode="probing" probing={<div>questions here</div>} whiteboard={<div data-testid="wb">board</div>} />,
-    );
-    expect(screen.getByText("questions here")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Whiteboard" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Relevant Concepts" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Whiteboard" })).not.toBeInTheDocument();
-  });
-
-  it("keeps the whiteboard mounted but off-screen while the drawer is closed", () => {
-    const onOpenWhiteboard = vi.fn();
-    render(
-      <ThreePanelLayout mode="probing" onOpenWhiteboard={onOpenWhiteboard}
-        probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
-    );
-    // The drawer is translated off-screen, not unmounted: the board stays in the document but
-    // is removed from the accessibility tree, and the left-edge handle opens it.
-    expect(screen.getByTestId("wb-input")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open whiteboard" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open whiteboard" }));
-    expect(onOpenWhiteboard).toHaveBeenCalled();
-  });
-
-  it("shows the whiteboard drawer with a close control when open", () => {
-    const onCloseWhiteboard = vi.fn();
-    render(
-      <ThreePanelLayout mode="probing" whiteboardOpen onCloseWhiteboard={onCloseWhiteboard}
-        probing={<div>questions</div>} whiteboard={<input data-testid="wb-input" />} />,
-    );
-    expect(screen.getByTestId("wb-input")).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Open whiteboard" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Close whiteboard" }));
-    expect(onCloseWhiteboard).toHaveBeenCalled();
+    expect(screen.getByText("You've answered every question. Preparing your tutor brief…")).toBeInTheDocument();
   });
 
 });
 
 describe("QuestionDisplay", () => {
-  it("defaults to Parsed and toggles to Original on click", () => {
+  it("shows the original problem first and lets the student inspect its interpretation", () => {
     render(
       <QuestionDisplay
         questionText="raw typed text"
@@ -180,34 +139,24 @@ describe("QuestionDisplay", () => {
       />,
     );
 
-    expect(screen.getByText("parsed version")).toBeInTheDocument();
-    expect(screen.queryByText("raw typed text")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Original"));
-
     expect(screen.getByText("raw typed text")).toBeInTheDocument();
     expect(screen.queryByText("parsed version")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Interpreted" }));
+    expect(screen.getByText("parsed version")).toBeInTheDocument();
+    expect(screen.queryByText("raw typed text")).not.toBeInTheDocument();
   });
 });
 
-describe("ThreePanelLayout", () => {
-  it("expanding/restoring a panel does not unmount its children (input state survives)", () => {
-    render(
-      <ThreePanelLayout
-        whiteboard={<input data-testid="wb-input" />}
-        probing={<div>probing</div>}
-      />,
-    );
-
-    const input = screen.getByTestId("wb-input") as HTMLInputElement;
-    fireEvent.change(input, { target: { value: "hello" } });
-    expect(input.value).toBe("hello");
-
-    fireEvent.click(screen.getByLabelText("Expand Whiteboard"));
-    expect((screen.getByTestId("wb-input") as HTMLInputElement).value).toBe("hello");
-
-    fireEvent.click(screen.getByLabelText("Restore Whiteboard"));
-    expect((screen.getByTestId("wb-input") as HTMLInputElement).value).toBe("hello");
+describe("WorkspaceLayout", () => {
+  it("keeps scratch work when a student moves from their problem to the warm-up", () => {
+    const board = <input data-testid="work" />;
+    const { rerender } = render(<WorkspaceLayout whiteboard={board} practicing={false}>Intake</WorkspaceLayout>);
+    expect(screen.getByText("Your problem").closest("li")).toHaveAttribute("aria-current", "step");
+    fireEvent.change(screen.getByTestId("work"), { target: { value: "2x = 8" } });
+    rerender(<WorkspaceLayout whiteboard={board} practicing>Practice</WorkspaceLayout>);
+    expect(screen.getByText("Warm-up").closest("li")).toHaveAttribute("aria-current", "step");
+    expect(screen.getByTestId("work")).toHaveValue("2x = 8");
+    expect(screen.getByRole("button", { name: "Open whiteboard" })).toBeInTheDocument();
   });
 });
 

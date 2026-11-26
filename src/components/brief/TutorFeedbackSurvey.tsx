@@ -76,7 +76,7 @@ function FeedbackForm({ reportId }: { reportId: string }) {
 
   return (
     <section aria-labelledby="tutor-feedback-title" className="rounded-card border border-line bg-card p-4 sm:p-5">
-      <h2 id="tutor-feedback-title" className="text-base font-bold text-ink">Tutor feedback</h2>
+      <h2 id="tutor-feedback-title" className="text-base font-semibold text-ink">Tutor feedback</h2>
       {status === "saved" ? (
         <p role="status" className="mt-2 text-sm text-ink">Thank you — your feedback is saved for this report.</p>
       ) : status === "loading" ? (
@@ -84,7 +84,7 @@ function FeedbackForm({ reportId }: { reportId: string }) {
       ) : status === "load-error" ? (
         <div className="mt-2 text-sm">
           <p role="alert">Could not check saved feedback. Try again before submitting.</p>
-          <button type="button" className="mt-2 font-bold text-pink-deep underline" onClick={() => { setStatus("loading"); setLoadAttempt((attempt) => attempt + 1); }}>Try again</button>
+          <button type="button" className="mt-2 font-semibold text-pink-deep underline" onClick={() => { setStatus("loading"); setLoadAttempt((attempt) => attempt + 1); }}>Try again</button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
@@ -93,12 +93,12 @@ function FeedbackForm({ reportId }: { reportId: string }) {
             <legend className="sr-only">Report ratings</legend>
             {questions.map(({ name, label, description, choices }) => (
               <fieldset key={name} aria-describedby={`${name}-description`}>
-                <legend className="text-sm font-bold text-ink">{label}</legend>
+                <legend className="text-sm font-semibold text-ink">{label}</legend>
                 <p id={`${name}-description`} className="mb-2 text-sm text-muted">{description}</p>
                 <div className="w-full max-w-72">
                   <div className="grid grid-cols-5 gap-2">
                     {choices.map((choice, index) => (
-                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-panel border border-connector px-1 py-2 text-sm leading-snug text-ink hover:border-pink has-checked:border-pink has-checked:bg-wash has-checked:font-bold has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-pink">
+                      <label key={choice} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-panel border border-connector px-1 py-2 text-sm leading-snug text-ink hover:border-pink has-checked:border-pink has-checked:bg-wash has-checked:font-semibold has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-pink">
                         <input type="radio" name={name} value={index + 1} required aria-label={`${index + 1} — ${choice}`} className="h-4 w-4 shrink-0 accent-pink" />
                         <span>{index + 1}</span>
                       </label>
@@ -111,12 +111,12 @@ function FeedbackForm({ reportId }: { reportId: string }) {
                 </div>
               </fieldset>
             ))}
-            <label className="block text-sm font-bold text-ink">
+            <label className="block text-sm font-semibold text-ink">
               What was inaccurate, missing, or unnecessary? <span className="font-normal text-muted">(optional)</span>
               <textarea name="comments" maxLength={2000} rows={2} className="mt-2 block w-full rounded-panel border border-connector p-2 font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink" />
               <span className="text-sm font-normal text-muted">Up to 2,000 characters.</span>
             </label>
-            <button type="submit" className="min-h-11 rounded-full bg-pink px-4 py-2 text-sm font-bold text-card hover:bg-pink-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink disabled:cursor-wait">
+            <button type="submit" className="action-primary">
               {status === "saving" ? "Saving feedback…" : "Save feedback"}
             </button>
           </fieldset>

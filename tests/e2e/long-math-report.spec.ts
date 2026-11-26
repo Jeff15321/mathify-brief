@@ -4,10 +4,10 @@ test('long mathematical problem remains readable on desktop and phone', async ({
   const terms = Array.from({ length: 70 }, (_, index) => `x_{${index + 1}}`).join(' + ');
   const question = `Simplify $${terms}$. Final instruction: preserve every term. LONG_MATH_END.`;
   await page.goto('/workspace?new=1');
-  await page.getByLabel('Question (optional if files provided)').fill(question);
-  await page.getByRole('button', { name: 'Let’s begin' }).click();
+  await page.getByLabel('Your question').fill(question);
+  await page.getByRole('button', { name: 'Start warm-up' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
-  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
+  await page.getByRole('button', { name: 'Create tutor brief' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
 
   const originalProblem = page.getByRole('region', { name: 'Original problem' });

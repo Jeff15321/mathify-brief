@@ -8,13 +8,13 @@ import { Card } from "@/components/shared/Card";
 export function ProbeTallyCard({ title, tally, emptyLabel }: { title: string; tally: ProbeTally; emptyLabel: string }) {
   return (
     <Card>
-      <span className="text-sm font-bold text-muted">{title}</span>
+      <span className="text-sm font-semibold text-muted">{title}</span>
       {tally.total === 0 ? (
         <p className="text-sm text-muted">{emptyLabel}</p>
       ) : (
         <>
           <p className="text-ink">
-            <span className="text-2xl font-bold">
+            <span className="text-2xl font-semibold">
               {tally.correct}/{tally.attempted}
             </span>{" "}
             <span className="text-sm text-muted">correct</span>

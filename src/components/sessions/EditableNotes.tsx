@@ -19,7 +19,7 @@ export function EditableNotes({ notes, onSave }: { notes: string; onSave: (notes
   }
 
   return <Card title="Tutor notes" icon={<NotebookPen className="h-4 w-4 text-muted" aria-hidden />}
-    badge={draft === null && <button type="button" onClick={() => setDraft(notes)} className="rounded-full border border-connector px-3 py-1 text-sm font-bold text-ink hover:bg-fill">Edit</button>}>
+    badge={draft === null && <button type="button" onClick={() => setDraft(notes)} className="action-secondary">Edit</button>}>
     {draft === null
       ? <p className={`whitespace-pre-wrap text-sm ${notes ? 'text-ink' : 'text-muted'}`}>{notes || 'No notes for this session.'}</p>
       : <form onSubmit={e => { e.preventDefault(); void save(draft); }} className="flex flex-col gap-2">
@@ -27,8 +27,8 @@ export function EditableNotes({ notes, onSave }: { notes: string; onSave: (notes
           <textarea aria-label="Tutor notes" value={draft} onChange={e => setDraft(e.target.value)} rows={4} maxLength={MAX_TUTOR_NOTES_LENGTH} autoFocus className="w-full rounded-panel border border-connector bg-card p-3 text-sm" />
           {error && <ErrorBanner message={error} />}
           <div className="flex gap-2">
-            <button type="submit" className="rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-card hover:bg-pink-deep">{busy ? 'Saving…' : 'Save'}</button>
-            <button type="button" onClick={() => { setDraft(null); setError(null); }} className="rounded-full border border-connector px-4 py-1.5 text-sm font-bold text-ink hover:bg-fill">Cancel</button>
+            <button type="submit" className="action-primary">{busy ? 'Saving…' : 'Save'}</button>
+            <button type="button" onClick={() => { setDraft(null); setError(null); }} className="action-secondary">Cancel</button>
           </div>
         </fieldset>
       </form>}

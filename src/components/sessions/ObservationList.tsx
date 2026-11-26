@@ -14,7 +14,7 @@ export function ObservationList({ observations }: { observations: SessionObserva
     {GROUPS.map(({ category, label, className }) => {
       const items = observations.filter(o => o.category === category);
       return items.length > 0 && <section key={category} aria-label={label}>
-        <h3 className="text-sm font-bold uppercase tracking-wide text-muted">{label}</h3>
+        <h3 className="text-sm font-semibold text-muted">{label}</h3>
         <ul className="mt-2 flex flex-col gap-2">
           {items.map((o, i) => <li key={i} className={`border-l-2 pl-3 text-sm text-ink ${className}`}>
             {o.text}

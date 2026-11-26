@@ -11,7 +11,6 @@ import type { ProbeAnswer, PublicProbe } from "@/contracts/probes";
  */
 export function ProbeCard({
   probe,
-  index,
   selected,
   onSelect,
   onNext,
@@ -20,7 +19,6 @@ export function ProbeCard({
   disabled = false,
 }: {
   probe: PublicProbe;
-  index: number;
   selected: ProbeAnswer | undefined;
   onSelect: (answer: ProbeAnswer) => void;
   onNext: () => void;
@@ -46,15 +44,8 @@ export function ProbeCard({
 
   return (
     <div ref={root} className="flex flex-col gap-3 rounded-card border border-line bg-card p-4 sm:p-6">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-bold uppercase tracking-wide text-muted">
-          Question {index + 1}
-        </span>
-        <span className="rounded-full bg-fill px-2 py-0.5 text-sm text-ink">
-          {probe.concept}
-        </span>
-      </div>
-      <MathText text={probe.questionMarkdown} className="text-lg leading-relaxed text-ink" />
+      <p className="text-sm font-medium text-muted">{probe.concept}</p>
+      <MathText text={probe.questionMarkdown} className="text-xl leading-relaxed text-ink" />
       <div className="flex flex-col gap-2">
         {choices.map((choice) => (
           <label
@@ -79,14 +70,14 @@ export function ProbeCard({
         ))}
       </div>
       {probe.hint && <div className="text-sm">
-        {hintOpened ? <div className="rounded bg-wash p-3"><span className="font-bold">Hint: </span><MathText text={probe.hint} /></div>
+        {hintOpened ? <div className="rounded bg-wash p-3"><span className="font-semibold">Hint: </span><MathText text={probe.hint} /></div>
           : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-pink-deep underline">Show a hint</button>}
       </div>}
       <button
         type="button"
         onClick={onNext}
         disabled={!selected || saving || disabled}
-        className="self-end rounded-full bg-pink px-6 py-2 text-sm font-bold text-card hover:bg-pink-deep disabled:opacity-50"
+        className="action-primary self-end"
       >
         {saving ? "Saving…" : "Next"}
       </button>

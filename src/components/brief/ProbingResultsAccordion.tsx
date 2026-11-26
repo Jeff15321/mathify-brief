@@ -21,7 +21,7 @@ export function ProbingResultsAccordion({
     <details className="group rounded-card border border-line bg-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
         <span className="flex flex-col gap-0.5">
-          <span className="text-sm font-bold text-ink">Probing results</span>
+          <span className="text-sm font-semibold text-ink">Probing results</span>
           <span className="text-sm text-muted">
             {conceptCount} concepts · {responseCount} total responses · View questions and selected answers
           </span>

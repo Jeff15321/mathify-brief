@@ -23,7 +23,7 @@ export function ProbeResultItem({ result }: { result: ProbeResult }) {
   const isEasier = result.kind === "easier";
   return (
     <div className={`flex flex-col gap-1 ${isEasier ? "ml-4 border-l-2 border-line pl-3" : ""}`}>
-      <span className="text-sm font-bold uppercase tracking-wide text-muted">
+      <span className="text-sm font-semibold text-muted">
         {isEasier ? "Easier retry" : result.concept}
       </span>
       <MathText text={result.questionMarkdown} className="text-sm text-ink" />

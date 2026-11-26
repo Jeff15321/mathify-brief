@@ -13,7 +13,7 @@ function TranscriptLine({ line }: { line: string }) {
   if (!match) return line;
   return <>
     {match[1] && <span className="text-muted">{match[1]}</span>}
-    <strong className="font-bold text-ink">{match[2]}</strong>
+    <strong className="font-semibold text-ink">{match[2]}</strong>
     {line.slice(match[0].length)}
   </>;
 }
@@ -34,7 +34,7 @@ export function TranscriptViewer({ text, fileName }: { text: string; fileName: s
       {collapsible && !expanded && <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-card" />}
     </div>
     {collapsible && <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}
-      className="self-start rounded-full border border-connector px-4 py-1.5 text-sm font-bold text-ink hover:bg-fill">
+      className="action-secondary self-start">
       {expanded ? 'Collapse' : `Show full transcript (${lines.length} lines)`}
     </button>}
   </Card>;

@@ -57,16 +57,16 @@ export function PriorityStepCard({
       icon={<Target size={16} className="text-pink-deep" aria-hidden="true" />}
       badge={<Badge className="bg-wash text-ink">Needs review</Badge>}
     >
-      <span className="text-sm font-bold uppercase tracking-wide text-muted">{main.concept}</span>
+      <span className="text-sm font-semibold text-muted">{main.concept}</span>
       <MathText text={main.questionMarkdown} className="text-sm text-ink" />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-0.5">
           <span className="text-sm text-muted">{selected.label}</span>
-          <MathText text={selected.text} className="text-sm font-bold text-pink-deep" />
+          <MathText text={selected.text} className="text-sm font-semibold text-pink-deep" />
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-sm text-muted">Correct · {main.correctOptionId}</span>
-          <MathText text={main.correctOptionText} className="text-sm font-bold text-ink" />
+          <MathText text={main.correctOptionText} className="text-sm font-semibold text-ink" />
         </div>
       </div>
       <p className="text-sm text-muted">

@@ -12,7 +12,7 @@ function AttachmentPreview({ asset }: { asset: StoredAsset }) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm font-bold text-pink-deep underline"
+        className="text-sm font-semibold text-pink-deep underline"
       >
         Open {asset.fileName} (PDF)
       </a>
@@ -34,44 +34,44 @@ export function QuestionDisplay({
   parsedQuestionMarkdown: string;
   attachments: StoredAsset[];
 }) {
-  const [tab, setTab] = useState<"parsed" | "original">("parsed");
+  const [tab, setTab] = useState<"parsed" | "original">("original");
   const [activeAssetIndex, setActiveAssetIndex] = useState(0);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex gap-1 rounded-full bg-fill p-1 text-sm font-bold">
+    <div className="flex min-w-0 flex-col gap-3">
+      <div className="flex gap-1 rounded-full bg-fill p-1 text-sm font-semibold">
         <button
           type="button"
-          onClick={() => setTab("parsed")}
-          className={`flex-1 rounded-full px-3 py-1 ${tab === "parsed" ? "bg-card text-pink-deep" : "text-muted"}`}
-        >
-          Parsed
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("original")}
+          aria-pressed={tab === "original"} onClick={() => setTab("original")}
           className={`flex-1 rounded-full px-3 py-1 ${tab === "original" ? "bg-card text-pink-deep" : "text-muted"}`}
         >
           Original
+        </button>
+        <button
+          type="button"
+          aria-pressed={tab === "parsed"} onClick={() => setTab("parsed")}
+          className={`flex-1 rounded-full px-3 py-1 ${tab === "parsed" ? "bg-card text-pink-deep" : "text-muted"}`}
+        >
+          Interpreted
         </button>
       </div>
 
       {tab === "parsed" ? (
         <div className="rounded-panel border border-line bg-card p-3">
-          <MathText text={parsedQuestionMarkdown} className="text-sm leading-relaxed text-ink" />
+          <MathText text={parsedQuestionMarkdown} className="overflow-x-auto text-sm leading-relaxed text-ink" />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {questionText && <p className="whitespace-pre-wrap text-sm text-ink">{questionText}</p>}
+          {questionText && <p className="whitespace-pre-wrap wrap-anywhere text-sm text-ink">{questionText}</p>}
           {attachments.length > 0 && (
             <div className="flex flex-col gap-2">
               <ul className="flex flex-wrap gap-2 text-sm">
                 {attachments.map((asset, index) => (
-                  <li key={asset.id}>
+                  <li key={asset.id} className="min-w-0 max-w-full">
                     <button
                       type="button"
                       onClick={() => setActiveAssetIndex(index)}
-                      className={`rounded-full border px-2 py-1 ${
+                      className={`max-w-full wrap-anywhere rounded-panel border px-2 py-1 ${
                         activeAssetIndex === index
                           ? "border-pink bg-wash text-ink"
                           : "border-connector text-muted"

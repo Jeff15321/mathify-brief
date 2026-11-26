@@ -2,8 +2,7 @@
 
 Local, single-user demo of diagnostic tutoring intake: a student submits one math question,
 Claude generates a student-safe breakdown and a plan of prerequisite multiple-choice probes, the
-student answers them one at a time in a three-panel workspace (whiteboard / relevant concepts /
-breakdown), getting one easier retry on a concept after a wrong or "I don't know" answer, and a
+student answers them one at a time with access to the original problem and a whiteboard, getting one easier retry on a concept after a wrong or "I don't know" answer, and a
 Tutor Brief dashboard is computed from the stored answers (no AI) plus an optional whiteboard snapshot.
 
 See `CLAUDE_CODE_START_HERE.md`, `IMPLEMENTATION_PLAN.md`, and `MVP_DESCRIPTION.md` for the full
@@ -51,11 +50,11 @@ Automated tests never call the paid Anthropic API, regardless of `.env.local`.
 
 1. `npm run dev`, open http://localhost:3000. The entry route opens `/workspace`.
 2. Type a question (e.g. `Solve $2(x + 3) = 14$.`) and/or add its PNG/JPEG/WebP/PDF sources
-   in one batch. Read the purpose and select **Let’s begin** once.
+   in one batch, or use the editable sample problem. Select **Start warm-up**.
 3. Draw in the same workspace while questions are prepared. Answer one check at a time with
    **Next**, or open its optional hint. A wrong or "I don't know" answer shows one simpler
    check on the same concept. On phones, switch between drawing and checks without losing either.
-4. Finish at any point. The current selected answer is included even without pressing Next.
+4. Select **Create tutor brief** at any point. The current selected answer is included even without pressing Next.
    Unreached concepts and shown-but-unanswered questions stay distinct. If drawing export fails,
    retry or explicitly send without the drawing; the report records the omission.
 5. `/brief` shows the original problem, a suggested teaching start, a supporting response and
@@ -130,9 +129,8 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   | GET | `/api/sessions/[id]/assets/[assetId]` | whiteboard image; 404 if not in that session |
 
 - **Navigation:** `AppNav` (`src/components/shared/AppNav.tsx`, rendered from the root layout)
-  links Workspace, Tutor Brief, Sessions and Learner profile. On
-  desktop it is a left sidebar that collapses to an icon rail; it starts collapsed on `/workspace`
-  and remembers the last toggle in `localStorage`. Narrow screens get a top bar with a menu.
+  shows labeled links to Workspace, Sessions and Learner profile at every screen width.
+  The completed tutor brief opens within Workspace.
 - **`/sessions`:** upload a transcript with up to 5 whiteboard images, a session date and optional
   tutor notes, then see every session newest first with its AI title, summary, counts and status.
   The list refreshes every 3 s while a summary is pending, and failed summaries have a Retry
@@ -218,7 +216,7 @@ Historical report migration is not included. The existing AI quality-review gate
 tutor feedback are retained. No human study or live-model efficacy result is implied by tests.
 
 
-The student route is now `/workspace`: add all sources, then select **Let’s begin** once.
+The student workspace is at `/workspace`. Add your sources and select **Start warm-up**.
 Original sources are fixed after Begin; start a new question to correct them. Inserted board
 images are working material and do not regenerate checks. PDFs open separately. Drafts
 (files, scene binaries and the current selection) are saved in IndexedDB on this device,

@@ -6,6 +6,7 @@ import { EvidenceSummary } from "./EvidenceSummary";
 import { PastSessionsCard } from "./PastSessionsCard";
 import type { PublicWorkspace } from "@/contracts/workspace";
 import type { TutorBrief } from "@/contracts/brief";
+import { SessionSteps } from '@/components/shared/SessionSteps';
 import { BriefHeader } from "./BriefHeader";
 import { CurrentQuestionCard } from "./CurrentQuestionCard";
 import { ProbeTallyCard } from "./ProbeTallyCard";
@@ -36,36 +37,24 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
   }, [workspace, brief]);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-4 sm:p-6 lg:p-12">
-      <div className="flex items-start justify-between gap-4">
-        <BriefHeader
-          studentGrade={workspace.profile.grade}
-          questionGrade={analysis.estimatedQuestionGrade}
-          gradeDifficulty={analysis.gradeDifficulty}
-          topic={analysis.topic}
-        />
-        <a
-          href="/workspace?new=1"
-          className="mt-1 shrink-0 rounded-panel border border-connector bg-card px-3 py-1.5 text-sm font-bold text-ink hover:bg-ground"
-        >
-          New question
-        </a>
+    <div className="page-shell flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SessionSteps current={2} />
+        <a href="/workspace?new=1" className="action-secondary">New question</a>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-3">
-          <CurrentQuestionCard parsedQuestionMarkdown={analysis.parsedQuestionMarkdown} questionText={workspace.questionText} attachments={workspace.attachments} />
-          <WhiteboardPreviewCard assetId={workspace.whiteboardAsset?.id ?? null} />
-        </div>
-        <div className="space-y-3">
-          <StartingPointCard brief={brief} />
-          <EvidenceSummary brief={brief} drawingOmitted={workspace.whiteboardState === 'omitted'} />
-        </div>
+      <BriefHeader studentGrade={workspace.profile.grade} questionGrade={analysis.estimatedQuestionGrade}
+        gradeDifficulty={analysis.gradeDifficulty} topic={analysis.topic} />
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div className="lg:row-span-2"><StartingPointCard brief={brief} /></div>
+        <CurrentQuestionCard parsedQuestionMarkdown={analysis.parsedQuestionMarkdown} questionText={workspace.questionText} attachments={workspace.attachments} />
+        <EvidenceSummary brief={brief} drawingOmitted={workspace.whiteboardState === 'omitted'} />
       </div>
+      <WhiteboardPreviewCard assetId={workspace.whiteboardAsset?.id ?? null} />
       <PastSessionsCard workspaceId={workspace.workspaceId} />
       <details className="group rounded-card border border-line bg-card">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
           <span className="flex flex-col gap-0.5">
-            <span className="text-sm font-bold text-ink">Counts and additional concepts</span>
+            <span className="text-sm font-semibold text-ink">Counts and additional concepts</span>
             <span className="text-sm text-muted">Core checks, retries, strengths, and gaps</span>
           </span>
           <ChevronDown size={18} className="shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden="true" />

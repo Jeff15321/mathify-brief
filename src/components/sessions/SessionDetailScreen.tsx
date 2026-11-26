@@ -54,15 +54,15 @@ export default function SessionDetailScreen() {
   async function save(changes: { sessionDate?: string; tutorNotes?: string }) { setSession(await updateSession(id, changes)); }
 
   const status = session && STATUS[session.status];
-  return <main className="min-h-screen bg-ground">
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-6 lg:p-12">
-      <Link href="/sessions" className="inline-flex items-center gap-1 self-start text-sm font-bold text-muted hover:text-pink-deep">
+  return <main className="flex-1 bg-ground">
+    <div className="page-shell flex flex-col gap-5">
+      <Link href="/sessions" className="inline-flex items-center gap-1 self-start text-sm font-semibold text-muted hover:text-pink-deep">
         <ArrowLeft className="h-4 w-4" aria-hidden /> All sessions
       </Link>
       {error && <ErrorBanner message={error} onRetry={() => void load()} />}
       {notFound && <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
         <h1 className="page-title">Session not found</h1>
-        <p className="mt-1">It may have been deleted. <Link href="/sessions" className="font-bold text-pink-deep hover:underline">Back to sessions</Link></p>
+        <p className="mt-1">It may have been deleted. <Link href="/sessions" className="font-semibold text-pink-deep hover:underline">Back to sessions</Link></p>
       </div>}
       {!session && !error && !notFound && <LoadingState label="Loading session…" />}
       {session && status && <>
@@ -78,7 +78,7 @@ export default function SessionDetailScreen() {
           {session.status === 'pending' && <LoadingState label="Summarizing this session…" />}
           {session.status === 'failed' && <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink">
             <p>The AI summary could not be generated.</p>
-            <button type="button" disabled={busy} onClick={() => void retry()} className="rounded-full border border-connector px-3 py-1 font-bold text-ink hover:bg-fill disabled:opacity-60">{busy ? 'Retrying…' : 'Retry'}</button>
+            <button type="button" disabled={busy} onClick={() => void retry()} className="action-secondary">{busy ? 'Retrying…' : 'Retry'}</button>
           </div>}
           {session.status === 'ready' && session.summary && <MathText text={session.summary} className="text-sm leading-6 text-ink" />}
         </Card>
@@ -101,7 +101,7 @@ export default function SessionDetailScreen() {
         <EditableSessionDate key={session.sessionDate} date={session.sessionDate} onSave={sessionDate => save({ sessionDate })} />
         <TranscriptViewer text={session.transcriptText} fileName={session.transcriptFileName} />
         <button type="button" disabled={busy} onClick={() => void remove()}
-          className="inline-flex items-center gap-2 self-start rounded-full border border-pink bg-card px-4 py-2 text-sm font-bold text-pink-deep hover:bg-wash disabled:opacity-60">
+          className="action-secondary self-start">
           <Trash2 className="h-4 w-4" aria-hidden /> Delete session
         </button>
       </>}

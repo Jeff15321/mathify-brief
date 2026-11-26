@@ -10,12 +10,12 @@ test.afterAll(async ({ request }) => { await deleteAllSessions(request); });
 
 async function completeQuestion(page: Page) {
   await page.goto('/workspace?new=1');
-  await page.getByLabel('Question (optional if files provided)').fill('Solve 2(x + 3) = 14.');
-  await page.getByRole('button', { name: 'Let’s begin' }).click();
+  await page.getByLabel('Your question').fill('Solve 2(x + 3) = 14.');
+  await page.getByRole('button', { name: 'Start warm-up' }).click();
   await expect(page.getByText('Question 1 of 3')).toBeVisible();
   await page.locator('input[name="s1-main"][value="A"]').check();
   const history = page.waitForResponse('**/api/brief/history');
-  await page.getByRole('button', { name: 'DEMO: connect to tutor' }).click();
+  await page.getByRole('button', { name: 'Create tutor brief' }).click();
   await expect(page.getByRole('heading', { name: 'Tutor Brief' })).toBeVisible();
   await expect(page).toHaveURL(/\/workspace/);
   expect((await history).status()).toBe(200);

@@ -4,8 +4,7 @@ import { LoadingState } from "@/components/shared/LoadingState";
 import type { ProbeAnswer, PublicProbing } from "@/contracts/probes";
 
 /**
- * The probing column: an optional heading, the current probe card (or a waiting/failed/
- * connecting message) and a submit button that works at any point.
+ * Keeps the original problem and tutor handoff available throughout the warm-up.
  */
 export function ProbingPanel({
   probing,
@@ -16,7 +15,7 @@ export function ProbingPanel({
   answering,
   onSubmit,
   submitting, hintOpened, onHintOpened, onVisible,
-  heading, submitLabel = "Send to tutor", submittingLabel = "Sending…",
+  reference, submitLabel = "Create tutor brief", submittingLabel = "Creating brief…",
 }: {
   probing: PublicProbing;
   selection: ProbeAnswer | undefined;
@@ -29,24 +28,23 @@ export function ProbingPanel({
   onVisible?: () => void;
   hintOpened?: boolean;
   onHintOpened?: () => void;
-  heading?: ReactNode;
+  reference?: ReactNode;
   submitLabel?: string;
   submittingLabel?: string;
 }) {
   const { current, progress, finished, waitingStatus } = probing;
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-hidden">
-      {/* m-auto centers the question block both ways but still lets tall content scroll from the top. */}
-      <div className="flex flex-1 overflow-y-auto pb-4">
-        <div className="m-auto flex w-full max-w-2xl flex-col gap-4">
-          {heading}
+    <>
+      <header className="page-heading"><h1 className="page-title">Your warm-up</h1><p>Try one question at a time. Choosing “I don’t know” helps your tutor, too.</p></header>
+      <div className="study-grid">
+        <div className="min-w-0 space-y-3">
           <div className="flex items-center gap-2">
             <p className="text-sm text-muted">
               {progress ? `Question ${progress.stepNumber} of ${progress.totalSteps}` : "All questions answered"}
             </p>
             {progress?.isEasier && (
-              <span className="rounded-full bg-wash px-2 py-0.5 text-sm font-bold text-ink">
+              <span className="rounded-full bg-wash px-2 py-0.5 text-sm font-semibold text-ink">
                 Easier question
               </span>
             )}
@@ -57,7 +55,6 @@ export function ProbingPanel({
               key={current.id}
               probe={current}
               hintOpened={hintOpened} onHintOpened={onHintOpened} onVisible={onVisible}
-              index={progress.stepNumber - 1}
               selected={selection}
               onSelect={onSelect}
               onNext={onNext}
@@ -73,12 +70,12 @@ export function ProbingPanel({
           )}
 
           {!current && !finished && waitingStatus === "failed" && (
-            <div className="flex flex-col items-start gap-3 rounded-card border border-pink bg-wash p-4 text-sm text-ink">
+            <div className="flex flex-col items-start gap-3 rounded-card border border-alert/30 bg-alert-wash p-4 text-sm text-ink">
               <p>We couldn&apos;t load your next question.</p>
               <button
                 type="button"
                 onClick={onRetry}
-                className="rounded-full border border-pink bg-card px-4 py-1.5 text-sm font-bold text-pink-deep hover:bg-wash"
+                className="action-secondary"
               >
                 Retry
               </button>
@@ -87,29 +84,21 @@ export function ProbingPanel({
 
           {finished && (
             <p className="rounded-card border border-line bg-card p-4 text-sm text-ink">
-              You&apos;ve answered every question. Sending them to your tutor…
+              You&apos;ve answered every question. Preparing your tutor brief…
             </p>
           )}
         </div>
+        <aside className="space-y-4">
+          {reference && <section className="study-sheet space-y-3"><h2 className="section-title">Your original problem</h2>{reference}</section>}
+          <section className="brief-action">
+            <h2 className="section-title">Ready for your tutor?</h2>
+            <p className="field-help">You can finish early. Your brief includes the answers and work you have so far.</p>
+            <button type="button" className="action-secondary mt-4" disabled={submitting || answering} onClick={onSubmit}>
+              {submitting ? submittingLabel : submitLabel}
+            </button>
+          </section>
+        </aside>
       </div>
-
-      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3 border-t border-line bg-ground pt-3">
-        <p className="max-w-sm text-sm text-muted">You can connect now, even if you haven’t answered every check.</p>
-        <div className="w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={submitting || answering}
-            className={`w-full rounded-full px-6 py-3 text-sm font-bold disabled:opacity-50 sm:w-auto ${
-              finished
-                ? "bg-pink text-card hover:bg-pink-deep"
-                : "border border-pink bg-card text-pink-deep hover:bg-wash"
-            }`}
-          >
-            {submitting ? submittingLabel : submitLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
