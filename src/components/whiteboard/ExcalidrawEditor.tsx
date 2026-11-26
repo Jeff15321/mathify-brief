@@ -140,7 +140,7 @@ export default function ExcalidrawEditor({
           type="button"
           disabled={!api || disabled || loadingImages}
           onClick={() => api?.scrollToContent(undefined, { fitToViewport: true })}
-          className="action-secondary shrink-0"
+          className="shrink-0 rounded-panel border border-connector bg-card px-2 py-1 hover:bg-ground disabled:opacity-50"
         >
           Fit to work
         </button>

@@ -33,14 +33,25 @@ describe('AppNav', () => {
     expect(screen.getByRole('link', { name: 'Learner profile' })).toHaveAttribute('href', '/profile');
   });
 
-  it.each(['/workspace', '/sessions/a', '/profile'])('keeps labeled navigation available on %s', pathname => {
-    nav.pathname = pathname;
+  it('remembers the toggle on other pages', () => {
+    nav.pathname = '/sessions';
     render(<AppNav />);
-    const main = within(screen.getByRole('navigation', { name: 'Main' }));
-    expect(main.getAllByRole('link')).toHaveLength(3);
-    const active = main.getAllByRole('link').filter(link => link.getAttribute('aria-current') === 'page');
-    expect(active).toHaveLength(1);
-    expect(pathname.startsWith(active[0].getAttribute('href')!)).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse navigation' }));
+    expect(localStorage.getItem('mathify.navExpanded')).toBe('false');
+    fireEvent.click(screen.getByRole('button', { name: 'Expand navigation' }));
+    expect(localStorage.getItem('mathify.navExpanded')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Collapse navigation' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('always starts collapsed on /workspace and does not save toggles made there', () => {
+    localStorage.setItem('mathify.navExpanded', 'true');
+    nav.pathname = '/workspace';
+    render(<AppNav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand navigation' }));
+    expect(screen.getByRole('button', { name: 'Collapse navigation' })).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse navigation' }));
+    expect(screen.getByRole('button', { name: 'Expand navigation' })).toBeInTheDocument();
+    expect(localStorage.getItem('mathify.navExpanded')).toBe('true');
   });
 });
 

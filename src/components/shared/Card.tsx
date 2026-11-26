@@ -4,7 +4,7 @@ export type CardTone = "neutral" | "strength" | "gap";
 
 const TONE_CLASSES: Record<CardTone, string> = {
   neutral: "border-line bg-card",
-  strength: "border-line bg-fill",
+  strength: "border-line bg-sage-wash",
   gap: "border-line bg-wash",
 };
 
@@ -32,7 +32,7 @@ export function Card({
       {(title || badge) && (
         <div className="flex items-center justify-between gap-2">
           {title && (
-            <h2 className="section-title flex items-center gap-2">
+            <h2 className="flex items-center gap-2 text-lg leading-tight font-semibold text-ink">
               {icon}
               {title}
             </h2>
@@ -47,5 +47,5 @@ export function Card({
 
 /** Small rounded status label used in card headers. */
 export function Badge({ className, children }: { className: string; children: ReactNode }) {
-  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-sm font-semibold ${className}`}>{children}</span>;
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-sm font-bold ${className}`}>{children}</span>;
 }

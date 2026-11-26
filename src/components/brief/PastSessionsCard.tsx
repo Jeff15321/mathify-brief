@@ -36,7 +36,7 @@ export function PastSessionsCard({ workspaceId }: { workspaceId: string }) {
 
   return <section aria-labelledby="past-sessions-title" className="rounded-card border border-line bg-card p-4">
     <div className="flex items-center justify-between gap-2">
-      <h2 id="past-sessions-title" className="flex items-center gap-2 text-sm font-semibold text-ink"><History className="h-4 w-4 text-muted" aria-hidden /> Relevant from past sessions</h2>
+      <h2 id="past-sessions-title" className="flex items-center gap-2 text-sm font-bold text-ink"><History className="h-4 w-4 text-muted" aria-hidden /> Relevant from past sessions</h2>
       <Link href="/profile" className="shrink-0 text-sm text-muted hover:text-pink-deep hover:underline">View learner profile</Link>
     </div>
     <ul className="mt-3 flex flex-col gap-3">

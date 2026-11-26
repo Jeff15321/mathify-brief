@@ -7,10 +7,10 @@ import { viewFor } from './flow';
 import type { PublicWorkspace } from '@/contracts/workspace';
 import type { ProbeAnswer, PublicProbing } from '@/contracts/probes';
 import { restoreDraft, type WorkspaceDraft } from './draft';
-import { WorkspaceLayout } from './WorkspaceLayout';
+import { ThreePanelLayout } from './ThreePanelLayout';
 import { WhiteboardPanel } from './WhiteboardPanel';
 import { ProbingPanel } from './ProbingPanel';
-import { PreparationPanel } from './PreparationPanel';
+import { PreparationPanel, PURPOSE } from './PreparationPanel';
 import { QuestionIntakeForm } from '@/components/intake/QuestionIntakeForm';
 import { TutorBriefView } from '@/components/brief/TutorBriefView';
 import { QuestionDisplay } from './QuestionDisplay';
@@ -27,6 +27,7 @@ export default function WorkspaceScreen() {
   const [workspace, setWorkspace] = useState<PublicWorkspace | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [answering, setAnswering] = useState(false);
@@ -219,27 +220,35 @@ export default function WorkspaceScreen() {
   }
   if (workspace?.brief) return <main className="min-h-screen bg-ground"><TutorBriefView workspace={workspace} brief={workspace.brief} /></main>;
   if (!loaded || !draft) return <main className="max-w-xl mx-auto p-8">{error ? <ErrorBanner message={error} onRetry={() => { setError(null); setLoadAttempt(n => n + 1); }} /> : <LoadingState label="Loading your workspace…" />}<a href="/workspace?new=1" className="text-pink-deep underline">New question</a></main>;
-  return <main data-phase={submitting ? 'submitting' : uploading ? 'uploading' : viewFor(workspace)} className="flex flex-1 flex-col bg-ground">
+  return <main data-phase={submitting ? 'submitting' : uploading ? 'uploading' : viewFor(workspace)} className="flex h-[calc(100dvh-3rem)] flex-col bg-ground md:h-dvh">
     {storageError && <div className="px-3 pt-2"><ErrorBanner message={storageError} onRetry={() => void flush().catch(() => {})} /></div>}
     {error && <div className="px-3 pt-2"><ErrorBanner message={error} onRetry={() => void refresh().then(() => setError(null)).catch(err => setError(message(err)))} /></div>}
     {exportFailed && <div className="flex gap-3 px-3 py-2 text-sm"><span>Your drawing could not be attached.</span><button disabled={submitting} onClick={() => void finish()} className="text-pink-deep underline">Retry drawing export</button><button disabled={submitting} onClick={() => void finish(true)} className="text-pink-deep underline">Send without drawing</button></div>}
     <span role="status" className="sr-only">{probing?.current ? 'Your probing questions are ready.' : ''}</span>
-    <WorkspaceLayout practicing={Boolean(probingPhase)}
-      whiteboard={<WhiteboardPanel ref={board} disabled={submitting} attachments={workspace?.attachments} initialBoard={initialBoard} onBoardChange={boardChanged} onFlush={() => void flush().catch(() => {})} />}>
-      {!workspace && <QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} />}
-      {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
-      {probingPhase && probing && workspace && <ProbingPanel
-        reference={<QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.analysis?.parsedQuestionMarkdown ?? workspace.questionText} attachments={workspace.attachments} />}
-        probing={probing} selection={selection} hintOpened={hintOpened}
-        onVisible={probeVisible}
-        onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }}
-        onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)}
-        onNext={() => void next()}
-        onRetry={prefetch}
-        answering={answering}
-        submitting={submitting}
-        onSubmit={() => void finish()}
-      />}
-    </WorkspaceLayout>
+    <div className="min-h-0 flex-1"><ThreePanelLayout
+      mode={probingPhase ? 'probing' : 'split'}
+      whiteboardOpen={whiteboardOpen}
+      onCloseWhiteboard={() => setWhiteboardOpen(false)}
+      onOpenWhiteboard={() => setWhiteboardOpen(true)}
+      whiteboard={<WhiteboardPanel ref={board} disabled={submitting} attachments={workspace?.attachments} initialBoard={initialBoard} onBoardChange={boardChanged} onFlush={() => void flush().catch(() => {})} />}
+      probing={<div className="flex h-full min-h-0 flex-col gap-3">
+        {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
+        {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
+        {probingPhase && probing && <ProbingPanel
+          heading={<><h1 className="page-title">Answer a few probing questions while you wait</h1><p className="text-sm text-muted">{PURPOSE}</p></>}
+          probing={probing} selection={selection} hintOpened={hintOpened}
+          onVisible={probeVisible}
+          onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }}
+          onSelect={(answer: ProbeAnswer) => changeDraft({ selectedProbeId: probing.current?.id, selection: answer, hintOpened }, true)}
+          onNext={() => void next()}
+          onRetry={prefetch}
+          answering={answering}
+          submitting={submitting}
+          onSubmit={() => void finish()}
+          submitLabel="DEMO: connect to tutor"
+          submittingLabel="Connecting…"
+        />}
+      </div>} />
+    </div>
   </main>;
 }

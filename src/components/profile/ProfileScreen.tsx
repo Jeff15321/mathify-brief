@@ -46,16 +46,16 @@ export default function ProfileScreen() {
   }
 
   const empty = sessions?.length === 0 && profile?.items.length === 0 && !profile.nextFocus;
-  return <main className="flex-1 bg-ground">
-    <div className="page-shell flex flex-col gap-5">
+  return <main className="min-h-screen bg-ground">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4 sm:p-6 lg:p-12">
       {error && <ErrorBanner message={error} onRetry={() => void load()} />}
       {(!profile || !sessions) && !error && <LoadingState label="Loading learner profile…" />}
       {profile && sessions && <>
         <StudentCard profile={profile} sessionCount={sessions.length} lastSessionDate={sessions.map(s => s.sessionDate).sort().at(-1) ?? null} />
         {empty
           ? <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
-            <h2 className="font-semibold text-ink">No sessions yet</h2>
-            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-semibold text-pink-deep hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
+            <h2 className="font-bold text-ink">No sessions yet</h2>
+            <p className="mt-1">The profile is built from past sessions. <Link href="/sessions" className="font-bold text-pink-deep hover:underline">Upload a session</Link> to see struggles, strengths and what works.</p>
           </div>
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />

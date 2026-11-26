@@ -62,11 +62,11 @@ export function PriorityStepCard({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-0.5">
           <span className="text-sm text-muted">{selected.label}</span>
-          <MathText text={selected.text} className="text-sm font-semibold text-pink-deep" />
+          <MathText text={selected.text} className="text-sm font-bold text-pink-deep" />
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-sm text-muted">Correct · {main.correctOptionId}</span>
-          <MathText text={main.correctOptionText} className="text-sm font-semibold text-ink" />
+          <MathText text={main.correctOptionText} className="text-sm font-bold text-ink" />
         </div>
       </div>
       <p className="text-sm text-muted">

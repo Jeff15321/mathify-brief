@@ -13,7 +13,7 @@ test('preparation and rejected-file feedback use accessible live regions', async
     await new Promise(resolve => setTimeout(resolve, 1000));
     await route.continue();
   });
-  await page.getByLabel('Your question').fill('Solve 2(x + 3) = 14.');
-  await page.getByRole('button', { name: 'Start warm-up' }).click();
+  await page.getByLabel('Question (optional if files provided)').fill('Solve 2(x + 3) = 14.');
+  await page.getByRole('button', { name: 'Let’s begin' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Preparing and checking your questions…' })).toBeVisible();
 });

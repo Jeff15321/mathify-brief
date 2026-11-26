@@ -1,13 +1,10 @@
 'use client';
 import { useRef, useState } from 'react';
-import { ArrowRight, Paperclip } from 'lucide-react';
 import { ALLOWED_MIME_TYPES, isAllowedMimeType } from '@/contracts/assets';
 import { MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_QUESTION_TEXT_LENGTH, MAX_TOTAL_SIZE_BYTES } from '@/contracts/limits';
 import { FileAttachmentList } from '@/components/shared/FileAttachmentList';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
-
-const sampleQuestion = 'Solve 2(x + 3) = 14.';
-
+import { PURPOSE } from '@/components/workspace/PreparationPanel';
 export function validateIntake(text: string, files: File[], requireInput = true): string | null {
   if (requireInput && !text.trim() && !files.length) return 'Type a question or add at least one photo or PDF.';
   if (text.length > MAX_QUESTION_TEXT_LENGTH) return 'The question text is too long.';
@@ -21,7 +18,6 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
   questionText: string; files: File[]; onChange: (text: string, files: File[]) => void; onBegin: () => void; busy: boolean; onRejected?: () => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
-  const question = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [duplicate, setDuplicate] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -42,65 +38,31 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
     } catch { setError('These files could not be read. Please select them again.'); }
     finally { addingRef.current = false; setAdding(false); }
   }
-  return <>
-    <header className="page-heading">
-      <h1 className="page-title">What are you working on?</h1>
-      <p>Share your math problem. A few short checks help your tutor find a good place to start.</p>
+  return <form onSubmit={e => { e.preventDefault(); const issue = validateIntake(questionText, files); setError(issue); if (!issue) onBegin(); }}
+    onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void addFiles(Array.from(e.dataTransfer.files)); }}
+    onPaste={e => { if (e.clipboardData.files.length) { e.preventDefault(); void addFiles(Array.from(e.clipboardData.files)); } }} className="flex flex-col gap-4">
+    <header>
+      <h1 className="page-title">Get ready for your tutor</h1>
+      <p className="mt-2 max-w-prose text-base text-muted">{PURPOSE}</p>
     </header>
-    <div className="study-grid">
-      <form className="study-sheet" onSubmit={event => {
-        event.preventDefault();
-        const issue = validateIntake(questionText, files);
-        setError(issue);
-        if (issue) question.current?.focus();
-        else onBegin();
-      }} onDragOver={event => event.preventDefault()} onDrop={event => {
-        event.preventDefault();
-        void addFiles(Array.from(event.dataTransfer.files));
-      }} onPaste={event => {
-        if (event.clipboardData.files.length) {
-          event.preventDefault();
-          void addFiles(Array.from(event.clipboardData.files));
-        }
-      }}>
-        <fieldset disabled={busy || adding} className="flex min-w-0 flex-col gap-5 disabled:opacity-60">
-          <div>
-            <label htmlFor="questionText" className="section-title block">Your question</label>
-            <p className="field-help" id="question-help">Type it here, attach a photo or PDF, or do both.</p>
-            <textarea ref={question} id="questionText" aria-describedby="question-help" value={questionText}
-              onChange={event => { onChange(event.target.value, files); setError(null); }} rows={4}
-              maxLength={MAX_QUESTION_TEXT_LENGTH} placeholder="What problem would you like help with?"
-              className="question-input" />
-          </div>
-          <div>
-            <input ref={input} type="file" aria-label="Problem photos or PDFs" multiple accept={ALLOWED_MIME_TYPES.join(',')}
-              onChange={event => { const selected = Array.from(event.target.files ?? []); event.target.value = ''; void addFiles(selected); }} hidden />
-            <div className="attachment-row">
-              <button type="button" onClick={() => input.current?.click()} className="action-secondary"><Paperclip size={16} aria-hidden />Attach files</button>
-              <span className="text-sm text-muted">{files.length ? `${files.length} file${files.length === 1 ? '' : 's'} chosen` : 'Or drag files here · up to 5'}</span>
-            </div>
-            <FileAttachmentList files={files} onRemove={index => onChange(questionText, files.filter((_, i) => i !== index))}
-              onMove={(index, direction) => { const next = [...files]; [next[index], next[index + direction]] = [next[index + direction], next[index]]; onChange(questionText, next); }} />
-          </div>
-          {duplicate && <p role="status" className="text-sm text-ink">The same file appears more than once. Check the previews and remove any extra copy.</p>}
-          {error && <ErrorBanner message={error} />}
-          <div className="sheet-footer">
-            <button type="submit" className="action-primary">{busy ? 'Saving your problem…' : adding ? 'Reading files…' : 'Start warm-up'}<ArrowRight size={16} aria-hidden /></button>
-          </div>
-        </fieldset>
-      </form>
-      <aside className="sample-sheet" aria-labelledby="sample-heading">
-        <div className="area-example" role="img" aria-label="Area model with height 2 and two widths, x and 3">
-          <div className="area-figure" aria-hidden="true"><span className="area-height">2</span><span className="area-width">x</span><span className="area-width">3</span><span className="area-part">2x</span><span className="area-part">6</span></div>
+    <fieldset disabled={busy || adding} className="flex min-w-0 flex-col gap-4 disabled:opacity-60">
+      <div className="space-y-2 rounded-card border border-dashed border-connector bg-card p-4 sm:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <label htmlFor="fileInput" className="font-bold text-sm">Problem photos or PDFs</label>
+          <span className="text-sm text-muted">{files.length === 0 ? 'No file chosen' : `${files.length} file${files.length === 1 ? '' : 's'} chosen`}</span>
         </div>
-        <div className="p-5">
-          <h2 className="section-title" id="sample-heading">Try a sample problem</h2>
-          <p className="mt-1 text-muted">{sampleQuestion}</p>
-          {(!questionText.trim() && !files.length) && <button className="action-link mt-3" type="button" disabled={busy || adding} onClick={() => {
-            onChange(sampleQuestion, files); setError(null); question.current?.focus();
-          }}>Use this problem <ArrowRight size={15} aria-hidden /></button>}
-        </div>
-      </aside>
-    </div>
-  </>;
+        <input ref={input} id="fileInput" type="file" multiple accept={ALLOWED_MIME_TYPES.join(',')}
+          onChange={e => { const selected = Array.from(e.target.files ?? []); e.target.value = ''; void addFiles(selected); }} className="sr-only" />
+        <button type="button" onClick={() => input.current?.click()} className="self-start text-sm font-bold text-pink-deep underline">Choose files</button>
+        <FileAttachmentList files={files} onRemove={index => { setDuplicate(false); onChange(questionText, files.filter((_, i) => i !== index)); }}
+          onMove={(index, direction) => { const next = [...files]; [next[index], next[index + direction]] = [next[index + direction], next[index]]; onChange(questionText, next); }} />
+      </div>
+      {duplicate && <p role="status" className="text-sm text-ink">The same file appears more than once. Check the previews and remove any extra copy.</p>}
+      <label htmlFor="questionText" className="text-sm font-bold">Question (optional if files provided)</label>
+      <textarea id="questionText" value={questionText} onChange={e => onChange(e.target.value, files)} rows={3} maxLength={MAX_QUESTION_TEXT_LENGTH}
+        placeholder="Type your question here, or add photos above." className="rounded-panel border border-connector bg-card p-3 text-sm" />
+      <button type="submit" className="rounded-full bg-pink px-6 py-3 text-sm font-bold text-card hover:bg-pink-deep">{busy ? 'Saving your problem…' : adding ? 'Reading files…' : "Let’s begin"}</button>
+    </fieldset>
+    {error && <ErrorBanner message={error} />}
+  </form>;
 }

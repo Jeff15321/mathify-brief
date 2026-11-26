@@ -14,7 +14,7 @@ export function ProfileSection({ category, title, icon, accent, items, onSave }:
   const [adding, setAdding] = useState(false);
   return <Card title={<>{title} <span className="font-normal text-muted">{items.length}</span></>} icon={icon}
     badge={!adding && <button type="button" onClick={() => setAdding(true)} aria-label={`Add to ${title}`}
-      className="action-secondary">
+      className="inline-flex items-center gap-1 rounded-full border border-connector px-3 py-1 text-sm font-bold text-ink hover:bg-fill">
       <Plus className="h-3.5 w-3.5" aria-hidden /> Add
     </button>}>
     {items.length === 0 && !adding && <p className="text-sm text-muted">Nothing here yet.</p>}

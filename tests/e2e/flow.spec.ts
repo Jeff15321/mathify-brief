@@ -5,11 +5,11 @@ import { expect, test } from "@playwright/test";
 test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboard -> brief", async ({ page }) => {
   await page.goto("/workspace?new=1");
 
-  await page.getByLabel("Your question").fill("Solve 2(x + 3) = 14.");
-  await page.getByRole("button", { name: "Start warm-up" }).click();
+  await page.getByLabel("Question (optional if files provided)").fill("Solve 2(x + 3) = 14.");
+  await page.getByRole("button", { name: "Let’s begin" }).click();
 
   await page.waitForURL(/\/workspace\?draft=/);
-  await expect(page.getByRole("heading", { name: "Your warm-up" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Answer a few probing questions while you wait" })).toBeVisible();
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
 
   const next = page.getByRole("button", { name: "Next" });
@@ -49,13 +49,18 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await page.getByRole("button", { name: "Open whiteboard" }).click();
   await page.getByRole("button", { name: "Close whiteboard" }).click();
   await expect(page.locator('input[name="s2-easier"][value="B"]')).toBeChecked();
-  await expect(page.getByRole('dialog', { name: 'Whiteboard' })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Open whiteboard' })).toBeFocused();
+  // Desktop drawer check: closed must sit entirely off-screen past the md left anchor —
+  // a broken translate leaves the drawer visible but inert. Poll so the 200ms slide
+  // transition can finish first.
+  await expect.poll(async () => page.evaluate(() => {
+    const el = document.querySelector('section[aria-hidden="true"]');
+    return el ? el.getBoundingClientRect().right : -1;
+  }), { timeout: 2000 }).toBeLessThanOrEqual(0.5);
   await next.click();
 
   // Step 3 shows; submit early without answering it (skip-ahead via the DEMO button).
   await expect(page.getByText("Question 3 of 3")).toBeVisible();
-  await page.getByRole("button", { name: "Create tutor brief" }).click();
+  await page.getByRole("button", { name: "DEMO: connect to tutor" }).click();
 
   await expect(page.getByRole("heading", { name: "Tutor Brief" })).toBeVisible();
   await expect(page).toHaveURL(/\/workspace/);
@@ -97,8 +102,8 @@ test("happy path: intake -> one-at-a-time probes with easier retries -> whiteboa
   await expect(page.getByRole("region", { name: "Tutor feedback" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "New question" }).click();
-  await page.getByLabel("Your question").fill("Solve 4x = 12.");
-  await page.getByRole("button", { name: "Start warm-up" }).click();
+  await page.getByLabel("Question (optional if files provided)").fill("Solve 4x = 12.");
+  await page.getByRole("button", { name: "Let’s begin" }).click();
   await page.waitForURL(/\/workspace\?draft=/);
   await expect(page.getByText("Question 1 of 3")).toBeVisible();
   // Answering every served question (including easier retries) auto-submits: no DEMO click.

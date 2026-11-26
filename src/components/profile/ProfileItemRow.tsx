@@ -10,8 +10,8 @@ import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const ITEM_STATUS: Record<ProfileItemStatus, { label: string; className: string }> = {
   active: { label: 'Active', className: 'bg-fill text-ink' },
-  improving: { label: 'Improving', className: 'bg-sage-wash text-sage' },
-  resolved: { label: 'Resolved', className: 'bg-fill text-muted' },
+  improving: { label: 'Improving', className: 'bg-wash text-ink' },
+  resolved: { label: 'Resolved', className: 'bg-fill text-ink' },
 };
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'The change could not be saved. Please try again.'; }
@@ -40,8 +40,8 @@ export function ItemForm({ initial, onSubmit, onCancel }: {
         <select aria-label="Status" value={status} onChange={e => setStatus(e.target.value as ProfileItemStatus)} className="rounded-panel border border-connector bg-card px-2 py-1.5 text-sm">
           {Object.entries(ITEM_STATUS).map(([value, { label }]) => <option key={value} value={value}>{label}</option>)}
         </select>
-        <button type="submit" disabled={!text.trim()} className="action-primary">{busy ? 'Saving…' : 'Save'}</button>
-        <button type="button" onClick={onCancel} className="action-secondary">Cancel</button>
+        <button type="submit" disabled={!text.trim()} className="rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-card hover:bg-pink-deep disabled:opacity-50">{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" onClick={onCancel} className="rounded-full border border-connector bg-card px-4 py-1.5 text-sm font-bold text-ink hover:bg-fill">Cancel</button>
       </div>
     </fieldset>
     {error && <ErrorBanner message={error} />}

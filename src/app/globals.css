@@ -18,6 +18,7 @@
   --color-sage-wash: #e9f0e9;
   --color-alert: #843d3e;
   --color-alert-wash: #f8eded;
+  --font-weight-bold: 650;
   --radius-panel: 8px;
   --radius-card: 14px;
 }
@@ -47,74 +48,12 @@
 }
 
 @layer components {
-  .site-header {
-    @apply mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-12 gap-y-2 px-5 py-3 sm:px-8;
-  }
-  .brand-link { @apply inline-flex min-h-10 items-center gap-2 text-xl font-semibold tracking-tight; }
-  .brand-link svg { color: var(--color-pink); }
-  .nav-link { @apply inline-flex min-h-10 whitespace-nowrap items-center gap-2 rounded-panel px-3 text-sm font-medium text-muted hover:bg-ground hover:text-ink; }
-  .nav-link[aria-current="page"] { @apply bg-wash text-pink-deep; }
-  .page-shell { @apply mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 sm:py-10; }
-  .page-title { font-size: clamp(1.875rem, 3.1vw, 2.55rem); line-height: 1.14; letter-spacing: -.035em; font-weight: 550; overflow-wrap: anywhere; }
-  .page-heading { @apply mb-6 space-y-2; }
-  .page-heading p { @apply max-w-prose text-base leading-relaxed text-muted; }
-  .section-title { @apply text-lg font-semibold leading-snug tracking-tight text-ink; }
-  .field-help { @apply mt-1 text-sm leading-relaxed text-muted; }
-  .action-primary, .action-secondary, .action-link {
-    @apply inline-flex items-center justify-center gap-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50;
-  }
-  .action-primary, .action-secondary { @apply min-h-10 rounded-panel px-4 py-2; }
-  .action-primary { @apply bg-pink text-card hover:bg-pink-deep; }
-  .action-secondary { @apply border border-connector bg-card text-ink hover:border-muted hover:bg-ground; }
-  .action-link { @apply text-pink-deep underline-offset-4 hover:underline; }
-  .workspace-tools { @apply mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5; }
-  .session-steps { @apply flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted; }
-  .session-steps li { @apply inline-flex items-center gap-1.5; }
-  .step-mark { @apply inline-flex size-5 items-center justify-center rounded-full border border-line bg-card text-xs font-medium; }
-  .session-steps [aria-current="step"] { @apply font-semibold text-ink; }
-  .session-steps [aria-current="step"] .step-mark { @apply border-pink bg-wash text-pink-deep; }
-  .session-steps [data-complete="true"] .step-mark { @apply border-transparent bg-fill text-ink; }
-  .study-grid { @apply grid items-start gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(16rem,1fr)] lg:gap-7; }
-  .study-sheet { @apply min-w-0 rounded-card border border-line bg-card p-5 sm:p-7; }
-  .sample-sheet { @apply overflow-hidden rounded-card border border-line bg-card; }
-  .question-input { @apply mt-3 block min-h-32 w-full resize-y rounded-panel border border-connector bg-card px-4 py-3 text-base; }
-  .attachment-row { @apply flex flex-wrap items-center gap-3; }
-  .sheet-footer { @apply flex justify-end border-t border-line pt-4; }
-  .brief-action { @apply rounded-card border border-line bg-ground p-5; }
-  .area-example {
-    @apply flex h-36 items-center justify-center border-b border-line;
-    background-color: #eef4ed;
-    background-image: radial-gradient(#c6d5c6 1px, transparent 1px);
-    background-size: 12px 12px;
-  }
-  .area-figure {
-    display: grid;
-    grid-template-columns: 18px 94px 48px;
-    grid-template-rows: 24px 56px;
-    text-align: center;
-    align-items: stretch;
-    color: #405b4b;
-    font-variant-numeric: tabular-nums;
-  }
-  .area-height { grid-row: 2; grid-column: 1; align-self: center; }
-  .area-width:nth-child(2) { grid-column: 2; }
-  .area-part { @apply grid place-items-center; border: 1.5px solid #617e69; background: #d9e6d9; }
-  .area-part:last-child { border-left: 0; background: #ecf2e9; }
-  .board-dialog {
-    position: fixed; inset: 0; margin: auto; width: min(60rem, calc(100% - 2rem)); max-width: none;
-    height: min(50rem, 88dvh); max-height: none; overflow: hidden;
-    border: 1px solid var(--color-line); border-radius: var(--radius-card);
-  }
-  .board-dialog:not([open]) { display: block; visibility: hidden; pointer-events: none; transform: translateX(-200vw); }
-  .board-dialog::backdrop { background: rgb(35 47 40 / 32%); }
-  @media (max-width: 40rem) {
-    .site-header { @apply flex-col items-start gap-0 pt-1 pb-2; }
-    .site-header nav { @apply w-full justify-between; }
-    .nav-link svg { display: none; }
-    .nav-link { @apply gap-1.5 px-2; }
-    .board-dialog { width: 100%; height: 100dvh; border: 0; border-radius: 0; }
-    .workspace-tools { @apply mb-5 gap-x-2 pb-3; }
-    .session-steps { @apply gap-x-2; }
+  .page-title {
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    line-height: 1.2;
+    letter-spacing: -.025em;
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
 }
 

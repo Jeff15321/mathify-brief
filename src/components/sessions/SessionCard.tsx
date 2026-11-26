@@ -16,7 +16,7 @@ export function SessionCard({ session, onRetry, retrying = false }: { session: P
   const status = STATUS[session.status];
   return <li className="relative flex flex-col gap-2 rounded-card border border-line bg-card p-4 sm:p-6 hover:border-pink has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-pink">
     <div className="flex items-start justify-between gap-2">
-      <h3 className="text-xl leading-tight font-semibold text-ink">
+      <h3 className="text-xl leading-tight font-bold text-ink">
         <Link href={`/sessions/${session.id}`} className="after:absolute after:inset-0 focus-visible:outline-none">{session.title ?? status.title}</Link>
       </h3>
       <Badge className={status.className}>{status.badge}</Badge>
@@ -26,7 +26,7 @@ export function SessionCard({ session, onRetry, retrying = false }: { session: P
     <div className="flex items-center justify-between gap-2 text-sm text-muted">
       <span>{plural(session.observationCount, 'observation')} · {plural(session.whiteboardCount, 'whiteboard')}</span>
       {session.status === 'failed' && <button type="button" disabled={retrying} onClick={() => onRetry(session.id)}
-        className="action-secondary relative z-10">{retrying ? 'Retrying…' : 'Retry'}</button>}
+        className="relative z-10 rounded-full border border-connector px-3 py-1 font-bold text-ink hover:bg-fill disabled:opacity-60">{retrying ? 'Retrying…' : 'Retry'}</button>}
     </div>
   </li>;
 }

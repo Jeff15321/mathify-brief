@@ -5,7 +5,7 @@ export function CurrentQuestionCard({ parsedQuestionMarkdown, questionText, atta
   parsedQuestionMarkdown: string; questionText: string; attachments: StoredAsset[];
 }) {
   return <section aria-labelledby="original-problem-title" className="rounded-card border border-line bg-card p-4 space-y-3">
-    <h2 id="original-problem-title" className="text-sm font-semibold text-ink">Original problem</h2>
+    <h2 id="original-problem-title" className="text-sm font-bold text-ink">Original problem</h2>
     <MathText text={questionText || parsedQuestionMarkdown} className="text-sm text-ink break-words" />
     {!questionText && <p className="text-sm text-muted">Transcribed from the sources below.</p>}
     <ul className="grid grid-cols-2 gap-2">{attachments.map((asset, index) => <li key={asset.id}>

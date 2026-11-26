@@ -1,29 +1,53 @@
 'use client';
+import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, History, NotebookPen, UserRound } from 'lucide-react';
+import { BookOpen, History, Menu, PanelLeftClose, PanelLeftOpen, PenLine, UserRound, X } from 'lucide-react';
 
-const links = [
-  { href: '/workspace', label: 'Workspace', Icon: NotebookPen },
+const LINKS = [
+  { href: '/workspace', label: 'Workspace', Icon: PenLine },
   { href: '/sessions', label: 'Sessions', Icon: History },
   { href: '/profile', label: 'Learner profile', Icon: UserRound },
 ];
+const STORAGE_KEY = 'mathify.navExpanded';
+function subscribe(onChange: () => void) {
+  window.addEventListener('storage', onChange);
+  return () => window.removeEventListener('storage', onChange);
+}
 
+/** Left sidebar on desktop (collapsible to an icon rail), top bar with a menu on narrow screens. */
 export function AppNav() {
   const pathname = usePathname();
-  return <header className="border-b border-line bg-card">
-    <div className="site-header">
-      <Link href="/workspace" className="brand-link" aria-label="Tutor Brief home">
-        <BookOpen size={24} aria-hidden />Tutor Brief
-      </Link>
-      <nav aria-label="Main" className="flex gap-1">
-        {links.map(({ href, label, Icon }) => {
-          const current = pathname === href || pathname.startsWith(href + '/');
-          return <Link key={href} href={href} aria-current={current ? 'page' : undefined} className="nav-link">
-            <Icon size={17} aria-hidden />{label}
-          </Link>;
-        })}
-      </nav>
+  const stored = useSyncExternalStore(subscribe, () => localStorage.getItem(STORAGE_KEY), () => null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // /workspace always starts as a rail so its panels keep their width; toggles there are not saved.
+  const onWorkspace = pathname.startsWith('/workspace');
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
+  const expanded = onWorkspace ? workspaceExpanded : stored !== 'false';
+  function toggle() {
+    if (onWorkspace) { setWorkspaceExpanded(!expanded); return; }
+    localStorage.setItem(STORAGE_KEY, String(!expanded));
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
+  }
+  return <nav aria-label="Main" className={`relative z-50 flex shrink-0 flex-col border-line bg-card md:sticky md:top-0 md:h-dvh md:border-r ${expanded ? 'md:w-52' : 'md:w-14'}`}>
+    <div className={`flex h-12 items-center justify-between gap-2 border-b border-line px-3 md:border-b-0 ${expanded ? '' : 'md:justify-center md:px-0'}`}>
+      <span className={`inline-flex items-center gap-2 text-lg font-bold text-ink ${expanded ? '' : 'md:hidden'}`}>
+        <BookOpen size={20} aria-hidden="true" className="shrink-0 text-pink" />
+        Tutor Brief
+      </span>
+      <button type="button" onClick={() => setMenuOpen(open => !open)} aria-expanded={menuOpen} aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        className="rounded p-1 text-muted hover:bg-fill md:hidden">{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>
+      <button type="button" onClick={toggle} aria-expanded={expanded} aria-label={expanded ? 'Collapse navigation' : 'Expand navigation'}
+        className="hidden rounded p-1 text-muted hover:bg-fill md:block">{expanded ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}</button>
     </div>
-  </header>;
+    <ul className={`${menuOpen ? 'flex' : 'hidden'} absolute inset-x-0 top-12 flex-col gap-1 border-b border-line bg-card p-2 md:static md:flex md:border-0`}>
+      {LINKS.map(({ href, label, Icon }) => {
+        const active = pathname === href || pathname.startsWith(`${href}/`);
+        return <li key={href}><Link href={href} onClick={() => { setMenuOpen(false); setWorkspaceExpanded(false); }} aria-current={active ? 'page' : undefined} title={expanded ? undefined : label}
+          className={`flex items-center gap-3 rounded-panel px-3 py-2 text-sm ${expanded ? '' : 'md:justify-center md:px-0'} ${active ? 'bg-wash font-bold text-ink' : 'text-ink hover:bg-fill'}`}>
+          <Icon size={18} className="shrink-0" aria-hidden="true" /><span className={expanded ? '' : 'md:sr-only'}>{label}</span>
+        </Link></li>;
+      })}
+    </ul>
+  </nav>;
 }

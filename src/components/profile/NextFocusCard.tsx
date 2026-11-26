@@ -6,7 +6,7 @@ import { MAX_PROFILE_TEXT_LENGTH } from '@/schemas/profile';
 import { Badge } from '@/components/shared/Card';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
-const secondary = 'action-secondary';
+const secondary = 'rounded-full border border-line bg-card px-3 py-1 text-sm font-bold text-pink-deep hover:bg-wash disabled:opacity-60';
 
 /** The one thing to work on next; `onSave('')` hands it back to the AI. `onSave` rejects to keep the editor open. */
 export function NextFocusCard({ profile, onSave }: { profile: Pick<LearnerProfile, 'nextFocus' | 'nextFocusSource'>; onSave: (nextFocus: string) => Promise<void> }) {
@@ -22,14 +22,14 @@ export function NextFocusCard({ profile, onSave }: { profile: Pick<LearnerProfil
     finally { setBusy(false); }
   }
 
-  return <section aria-label="Next session focus" className="flex flex-col gap-3 rounded-card border border-line bg-card p-4 sm:p-5">
+  return <section aria-label="Next session focus" className="flex flex-col gap-3 rounded-card border border-line bg-wash p-4 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h2 className="flex items-center gap-2 text-xl leading-tight font-semibold text-ink"><Target className="h-4 w-4 text-pink-deep" aria-hidden /> Next session focus</h2>
+      <h2 className="flex items-center gap-2 text-xl leading-tight font-bold text-ink"><Target className="h-4 w-4 text-pink-deep" aria-hidden /> Next session focus</h2>
       <Badge className={byTutor ? 'bg-fill text-ink' : 'bg-card text-pink-deep'}>{byTutor ? 'Written by tutor' : 'Suggested by AI'}</Badge>
     </div>
     {draft === null
       ? <>
-        <p className={profile.nextFocus ? 'text-lg font-semibold leading-7 text-ink' : 'text-sm text-muted'}>
+        <p className={profile.nextFocus ? 'text-lg font-bold leading-7 text-ink' : 'text-sm text-muted'}>
           {profile.nextFocus || 'No focus yet. Write your own, or add a session for an AI suggestion.'}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -41,8 +41,8 @@ export function NextFocusCard({ profile, onSave }: { profile: Pick<LearnerProfil
         <fieldset disabled={busy} className="flex min-w-0 flex-col gap-2 disabled:opacity-60">
           <textarea aria-label="Next session focus" value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={MAX_PROFILE_TEXT_LENGTH} autoFocus className="w-full rounded-panel border border-line bg-card p-3 text-sm" />
           <div className="flex gap-2">
-            <button type="submit" disabled={!draft.trim()} className="action-primary">{busy ? 'Saving…' : 'Save'}</button>
-            <button type="button" onClick={() => { setDraft(null); setError(null); }} className="action-secondary">Cancel</button>
+            <button type="submit" disabled={!draft.trim()} className="rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-card hover:bg-pink-deep disabled:opacity-50">{busy ? 'Saving…' : 'Save'}</button>
+            <button type="button" onClick={() => { setDraft(null); setError(null); }} className="rounded-full border border-connector bg-card px-4 py-1.5 text-sm font-bold text-ink hover:bg-fill">Cancel</button>
           </div>
         </fieldset>
       </form>}
