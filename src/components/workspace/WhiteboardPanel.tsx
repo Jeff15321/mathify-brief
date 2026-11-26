@@ -1,14 +1,11 @@
 import { forwardRef, useMemo } from "react";
 import { SimpleWhiteboard, type WhiteboardProps, type SimpleWhiteboardHandle } from "@/components/whiteboard/SimpleWhiteboard";
-import type { StoredAsset } from "@/types/domain";
-
-/** Filter attachments to image types that can be rendered as canvas backgrounds. */
-const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+import { isImageMimeType, type StoredAsset } from "@/contracts/assets";
 
 export const WhiteboardPanel = forwardRef<SimpleWhiteboardHandle, WhiteboardProps & { attachments?: StoredAsset[] }>(
   function WhiteboardPanel({ disabled, attachments = [], ...props }, ref) {
     const bgImages = useMemo(() => attachments
-      .filter((a) => IMAGE_MIME_TYPES.has(a.mimeType))
+      .filter((a) => isImageMimeType(a.mimeType))
       .map((a) => ({ id: a.id, url: `/api/assets/${a.id}` })), [attachments]);
 
     return (

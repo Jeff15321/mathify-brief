@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import type { ProbeResult } from "@/types/domain";
+import type { ProbeResult } from "@/contracts/brief";
 import { ProbeResultItem } from "./ProbeResultItem";
 
 /**

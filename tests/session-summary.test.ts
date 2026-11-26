@@ -5,9 +5,9 @@ import path from "node:path";
 import { modelSessionSummarySchema } from "@/schemas/session";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
 import { SESSION_SUMMARY_PROMPT_VERSION } from "@/server/ai/prompts";
-import { summarizeStoredSession } from "@/server/session-summary-service";
+import { summarizeStoredSession } from "@/server/sessions/summary";
 import { createStores } from "@/server/storage";
-import type { TutorSession } from "@/types/domain";
+import type { TutorSession } from "@/contracts/sessions";
 
 const { create } = vi.hoisted(() => ({ create: vi.fn() }));
 vi.mock("@anthropic-ai/sdk", () => ({ default: class { messages = { create }; } }));

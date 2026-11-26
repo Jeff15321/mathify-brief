@@ -1,4 +1,4 @@
-import { getSessionAsset } from '@/server/session-service';
+import { getSessionAsset } from '@/server/sessions/service';
 import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

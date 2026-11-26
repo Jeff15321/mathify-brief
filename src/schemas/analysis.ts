@@ -1,6 +1,6 @@
 import { z } from 'zod';
-
-export const optionIdSchema = z.enum(['A', 'B', 'C', 'D']);
+import { OPTION_IDS } from '@/contracts/probes';
+import { optionIdSchema } from './probes';
 
 export const probeOptionSchema = z.object({
   id: optionIdSchema,
@@ -31,6 +31,8 @@ export const probePlanItemSchema = z.object({
   intent: z.string().min(1),
 });
 
+export type ProbePlanItem = z.infer<typeof probePlanItemSchema>;
+
 export const breakdownStepSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
@@ -55,8 +57,6 @@ export const modelAnalysisSchema = z.object({
 
 export type ModelAnalysis = z.infer<typeof modelAnalysisSchema>;
 
-const ALL_OPTION_IDS = ['A', 'B', 'C', 'D'] as const;
-
 /**
  * Code-level checks for one generated probe beyond Zod shape validation.
  * @param label - Prefix used in error messages, e.g. "firstPair.main".
@@ -66,7 +66,7 @@ export function validateProbe(probe: ModelProbe, label: string): string[] {
   const errors: string[] = [];
   const ids = probe.options.map((option) => option.id);
   const uniqueIds = new Set(ids);
-  if (ids.length !== 4 || uniqueIds.size !== 4 || !ALL_OPTION_IDS.every((id) => uniqueIds.has(id))) {
+  if (ids.length !== 4 || uniqueIds.size !== 4 || !OPTION_IDS.every((id) => uniqueIds.has(id))) {
     errors.push(`${label} must have exactly four unique options A-D`);
   }
   const optionTexts = probe.options.map(option => option.textMarkdown.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase());

@@ -3,9 +3,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createStores } from "@/server/storage";
-import { startWorkspace } from "@/server/workspace-service";
+import { startWorkspace } from "@/server/workspace/service";
 import { ApiError } from "@/server/errors";
-import { MAX_FILES, MAX_FILE_SIZE_BYTES } from "@/lib/constants";
+import { MAX_FILES, MAX_FILE_SIZE_BYTES } from "@/contracts/limits";
 
 const PNG_BYTES = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 const PDF_BYTES = Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.from([1, 2, 3])]);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { summarizeBrief } from "@/server/helpers/brief-summary-helper";
-import type { ProbeKind, ProbeOutcome, ProbeResult } from "@/types/domain";
+import { summarizeBrief } from "@/server/brief/scoring";
+import type { ProbeKind } from "@/contracts/probes";
+import type { ProbeOutcome, ProbeResult } from "@/contracts/brief";
 
 function result(stepIndex: number, kind: ProbeKind, outcome: ProbeOutcome): ProbeResult {
   return {

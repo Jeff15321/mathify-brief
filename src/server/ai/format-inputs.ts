@@ -1,5 +1,5 @@
 import type Anthropic from '@anthropic-ai/sdk';
-import type { MimeType } from '@/types/domain';
+import type { MimeType } from '@/contracts/assets';
 
 export interface StoredFileInput {
   fileName: string;

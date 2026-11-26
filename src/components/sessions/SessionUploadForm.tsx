@@ -1,13 +1,13 @@
 'use client';
 import { useRef, useState, useSyncExternalStore } from 'react';
-import { MAX_SESSION_WHITEBOARDS, MAX_TUTOR_NOTES_LENGTH, TRANSCRIPT_EXTENSIONS } from '@/lib/constants';
-import { uploadSession } from '@/lib/api-client';
+import { IMAGE_MIME_TYPES, isImageMimeType } from '@/contracts/assets';
+import { MAX_SESSION_WHITEBOARDS, MAX_TUTOR_NOTES_LENGTH, TRANSCRIPT_EXTENSIONS } from '@/contracts/limits';
+import { uploadSession } from '@/client/sessions';
 import { localToday } from '@/schemas/session';
-import type { TutorSession } from '@/types/domain';
-import { FileAttachmentList } from '@/components/intake/FileAttachmentList';
+import type { TutorSession } from '@/contracts/sessions';
+import { FileAttachmentList } from '@/components/shared/FileAttachmentList';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
-const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const subscribeNever = () => () => {};
 const FILE_INPUT = 'block w-full text-sm text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100';
 
@@ -24,7 +24,7 @@ export function SessionUploadForm({ onUploaded }: { onUploaded: (session: TutorS
 
   function addWhiteboards(incoming: File[]) {
     if (whiteboards.length + incoming.length > MAX_SESSION_WHITEBOARDS) { setError(`You can add up to ${MAX_SESSION_WHITEBOARDS} whiteboard images. No images from this selection were added.`); return; }
-    if (incoming.some(f => !IMAGE_TYPES.includes(f.type))) { setError('Whiteboards must be PNG, JPEG or WebP images. No images from this selection were added.'); return; }
+    if (incoming.some(f => !isImageMimeType(f.type))) { setError('Whiteboards must be PNG, JPEG or WebP images. No images from this selection were added.'); return; }
     setError(null);
     setWhiteboards([...whiteboards, ...incoming]);
   }
@@ -55,7 +55,7 @@ export function SessionUploadForm({ onUploaded }: { onUploaded: (session: TutorS
       </div>
       <div className="space-y-2">
         <label htmlFor="sessionWhiteboards" className="block text-sm font-medium">Whiteboard images (optional)</label>
-        <input id="sessionWhiteboards" type="file" multiple accept={IMAGE_TYPES.join(',')}
+        <input id="sessionWhiteboards" type="file" multiple accept={IMAGE_MIME_TYPES.join(',')}
           onChange={e => { const selected = Array.from(e.target.files ?? []); e.target.value = ''; addWhiteboards(selected); }} className={FILE_INPUT} />
         <p className="text-xs text-slate-500">Up to {MAX_SESSION_WHITEBOARDS} PNG, JPEG or WebP images.</p>
         <FileAttachmentList files={whiteboards} onRemove={index => setWhiteboards(whiteboards.filter((_, i) => i !== index))} />

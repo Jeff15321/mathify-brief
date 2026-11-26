@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { answerCurrentProbe, generateNextProbePair } from "@/server/probe-service";
-import { submitBrief } from "@/server/brief-service";
+import { answerCurrentProbe, generateNextProbePair } from "@/server/workspace/probes";
+import { submitBrief } from "@/server/brief/service";
 import { setupWorkspace, type Stores } from "./helpers";
 
 // Mock keys: s1-main B, s1-easier B, s2-main C, s2-easier B, s3-main B.

@@ -9,6 +9,8 @@ Tutor Brief dashboard is computed from the stored answers (no AI) plus an option
 See `CLAUDE_CODE_START_HERE.md`, `IMPLEMENTATION_PLAN.md`, and `MVP_DESCRIPTION.md` for the full
 specification, scope, and deferred future work (sessions, Supabase, Vercel deployment, auth).
 
+See the [architecture guide](docs/ARCHITECTURE.md) for module responsibilities and dependency rules.
+
 ## Setup
 
 ```bash
@@ -37,7 +39,7 @@ Open http://localhost:3000.
 npm run dev         # start Next.js dev server
 npm run build        # production build
 npm run start         # start production server (after build)
-npm run typecheck   # tsc --noEmit
+npm run typecheck   # generate Next.js route types, then run tsc --noEmit
 npm run lint         # eslint
 npm run test          # vitest unit/component tests (always mocked AI, isolated temp storage)
 npm run test:e2e   # production build + isolated Playwright journeys (mocked AI)
@@ -110,12 +112,12 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   turns. Unlabelled text is also accepted. See [`docs/TRANSCRIPT_FORMAT.md`](docs/TRANSCRIPT_FORMAT.md).
 - **Samples:** four Grade 9 algebra sessions and three whiteboard images that tell one story,
   in [`samples/sessions/`](samples/sessions/README.md).
-- **Summaries:** `summarizeStoredSession` (`src/server/session-summary-service.ts`) sends one
+- **Summaries:** `summarizeStoredSession` (`src/server/sessions/summary.ts`) sends one
   session (transcript, tutor notes, whiteboards) to `ANTHROPIC_SUMMARY_MODEL` and stores a title,
   a 2-4 sentence summary and up to 8 observations (struggle, strength, what works, habit). The
   session is `pending` while it runs, then `ready` or `failed`; a claim older than 2 minutes can
   be retried. Transcripts over 120,000 characters are truncated. Mock mode returns a fixed summary.
-- **API** (`src/server/session-service.ts`, client functions in `src/lib/api-client.ts`):
+- **API** (`src/server/sessions/service.ts`, client functions in `src/client/sessions.ts`):
 
   | Method | Path | Behaviour |
   | --- | --- | --- |
@@ -141,7 +143,7 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   new tab, editable tutor notes and session date, and the transcript, collapsed to a 15-line
   preview with speaker labels in bold. Delete session asks for confirmation, then returns to
   `/sessions`. Unknown ids show "Session not found".
-- **Learner profile** (`src/server/learner-profile-service.ts`): one profile for the demo student
+- **Learner profile** (`src/server/profile/service.ts`): one profile for the demo student
   in `LOCAL_DATA_DIR/learner-profile.json` (`profileStore`; empty until the first rebuild, atomic,
   serialized writes). `rebuildProfile` sends every `ready` session's observations, plus the tutor's
   items and notes as read-only context, to `ANTHROPIC_SUMMARY_MODEL` (`profile-v2`), which returns
@@ -178,7 +180,7 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
 - **Relevant from past sessions** (`PastSessionsCard`, right column of the Tutor Brief after
   "Confidence on the report"): the deterministic brief renders first and is unchanged; the card
   then calls `POST /api/brief/history` (header `x-workspace-id`), showing "Checking past
-  sessions…" meanwhile. `getBriefHistory` (`src/server/brief-service.ts`) sends the question,
+  sessions…" meanwhile. `getBriefHistory` (`src/server/brief/service.ts`) sends the question,
   topic, probe results, steps not reached and the learner profile (items with status and evidence
   dates, next focus, tutor notes) to `ANTHROPIC_SUMMARY_MODEL` (`history-v1`), which returns 0-4
   one-sentence bullets citing evidence dates. The result is saved once on the brief as optional
@@ -187,7 +189,7 @@ Work in progress: tutors will upload past tutoring sessions and see patterns acr
   call; a report replaced during the call returns 409 and is not updated. `history` is left out of
   the feedback report id. The card renders nothing for empty bullets or a failure, and links to
   `/profile`. Mock mode cites the first three profile items with their dates.
-- **Profile-aware probing** (`src/server/helpers/learner-context-helper.ts`): analysis and each
+- **Profile-aware probing** (`src/server/profile/learner-context.ts`): analysis and each
   probe pair read the learner profile and send a tutor-only `learnerContext` (active/improving
   struggles, then what works, one line each with the latest evidence date, at most 1500 chars)
   to generation and review; an empty profile sends nothing. The prompts (`analysis-v4`,

@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { TutorSession } from '@/types/domain';
-import * as api from '@/lib/api-client';
+import type { TutorSession } from '@/contracts/sessions';
+import { ApiClientError } from '@/client/http';
+import * as api from '@/client/sessions';
 import { TranscriptViewer } from '@/components/sessions/TranscriptViewer';
 import { EditableNotes } from '@/components/sessions/EditableNotes';
 import SessionDetailPage from '@/app/sessions/[id]/page';
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'a' }), useRouter: () => router }));
-vi.mock('@/lib/api-client', async importOriginal => ({
-  ApiClientError: (await importOriginal<typeof api>()).ApiClientError,
+vi.mock('@/client/sessions', () => ({
   fetchSession: vi.fn(), updateSession: vi.fn(), deleteSession: vi.fn(), retrySessionSummary: vi.fn(),
 }));
 
@@ -122,7 +122,7 @@ describe('SessionDetailPage', () => {
   });
 
   it('shows a friendly message when the session does not exist', async () => {
-    vi.mocked(api.fetchSession).mockRejectedValue(new api.ApiClientError('Session not found', 'NOT_FOUND'));
+    vi.mocked(api.fetchSession).mockRejectedValue(new ApiClientError('Session not found', 'NOT_FOUND'));
     render(<SessionDetailPage />);
     expect(await screen.findByRole('heading', { name: 'Session not found' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to sessions' })).toHaveAttribute('href', '/sessions');

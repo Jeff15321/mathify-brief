@@ -1,4 +1,4 @@
-import type { ObservationCategory, SessionObservation } from '@/types/domain';
+import type { ObservationCategory, SessionObservation } from '@/contracts/sessions';
 
 const GROUPS: { category: ObservationCategory; label: string; className: string }[] = [
   { category: 'struggle', label: 'Struggles', className: 'border-amber-300' },

@@ -1,5 +1,6 @@
 "use client";
 
+import { hasSavedFeedback, saveFeedback } from "@/client/feedback";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 const questions = [
@@ -36,11 +37,9 @@ function FeedbackForm({ reportId }: { reportId: string }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/feedback?reportId=${encodeURIComponent(reportId)}`, { cache: "no-store", signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Could not check whether feedback has already been saved.");
-        const data = await response.json();
-        if (!controller.signal.aborted) setStatus(data.feedback ? "saved" : "ready");
+    hasSavedFeedback(reportId, controller.signal)
+      .then(saved => {
+        if (!controller.signal.aborted) setStatus(saved ? "saved" : "ready");
       })
       .catch(() => {
         if (!controller.signal.aborted) setStatus("load-error");
@@ -52,7 +51,11 @@ function FeedbackForm({ reportId }: { reportId: string }) {
     event.preventDefault();
     if (submitting.current || status !== "ready") return;
     const form = new FormData(event.currentTarget);
-    const ratings = Object.fromEntries(questions.map(({ name }) => [name, Number(form.get(name))]));
+    const ratings = {
+      accuracy: Number(form.get("accuracy")),
+      clarity: Number(form.get("clarity")),
+      startingPointUsefulness: Number(form.get("startingPointUsefulness")),
+    };
     if (Object.values(ratings).some((rating) => rating < 1 || rating > 5)) {
       setError("Choose a rating for all three questions.");
       return;
@@ -61,13 +64,7 @@ function FeedbackForm({ reportId }: { reportId: string }) {
     setStatus("saving");
     setError(null);
     try {
-      const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId, ...ratings, comments: String(form.get("comments") ?? "") }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message ?? "Feedback could not be saved. Please try again.");
+      await saveFeedback({ reportId, ...ratings, comments: String(form.get("comments") ?? "") });
       setStatus("saved");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Feedback could not be saved. Please try again.");

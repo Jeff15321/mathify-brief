@@ -2,8 +2,8 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ApiError } from '../errors';
 import crypto from 'node:crypto';
-import { CURRENT_SCHEMA_VERSION, currentWorkspaceSchema } from '@/schemas/workspace';
-import type { CurrentWorkspace } from '@/types/domain';
+import { CURRENT_SCHEMA_VERSION, currentWorkspaceSchema } from '@/server/workspace/schema';
+import type { CurrentWorkspace } from '@/server/workspace/schema';
 import type { CurrentWorkspaceStore, WorkspaceUpdater } from './contracts';
 
 // Per-file write locks live on globalThis so every route bundle in the same Node process shares
@@ -50,7 +50,7 @@ export class LocalWorkspaceStore implements CurrentWorkspaceStore {
     if (!parsed.success) {
       throw new Error(`workspace.json is corrupt: ${parsed.error.message}`);
     }
-    return parsed.data as CurrentWorkspace;
+    return parsed.data;
   }
 
   async write(workspace: CurrentWorkspace): Promise<void> {

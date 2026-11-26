@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getBriefHistory, submitBrief } from "@/server/brief-service";
-import { updateProfile } from "@/server/learner-profile-service";
-import { startWorkspace, getPublicWorkspace } from "@/server/workspace-service";
+import { getBriefHistory, submitBrief } from "@/server/brief/service";
+import { updateProfile } from "@/server/profile/service";
+import { startWorkspace, getPublicWorkspace } from "@/server/workspace/service";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
 import { HISTORY_PROMPT_VERSION } from "@/server/ai/prompts";
 import { setupWorkspace, type Stores } from "./helpers";

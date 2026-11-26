@@ -1,0 +1,151 @@
+import { ANALYSIS_PROMPT_VERSION } from '@/server/ai/prompts';
+import { randomUUID } from 'node:crypto';
+import { assertWorkspaceId } from './identity';
+import { analysisModel, modelLabel } from '@/server/ai/models';
+import { modelAnalysisSchema, validateAnalysisStructure } from '@/schemas/analysis';
+import type { CurrentWorkspace, ProbeStep, QuestionAnalysisStored } from './schema';
+import type { QuestionAnalysisPublic } from '@/contracts/workspace';
+import { toPublicAnalysis } from './projections';
+import { getStores, type Stores } from '@/server/storage';
+import { getAnalysisProvider } from '@/server/ai';
+import { analysisReviewSchema, reviewApproved } from '@/schemas/review';
+import { ApiError } from '@/server/errors';
+import { toPrivateProbe } from './probe-flow';
+import { buildLearnerContext } from '@/server/profile/learner-context';
+
+/**
+ * Runs Stage A once: parses the question, plans the probe steps and generates the first step's
+ * main + easier probes. Later steps start as `pending` and are generated on demand.
+ * @returns The public analysis (no probes or keys).
+ */
+export async function analyzeCurrentWorkspace(stores: Stores = getStores(), workspaceId?: string): Promise<QuestionAnalysisPublic | null> {
+  const operationId = randomUUID();
+  let ownsClaim = false;
+  const workspace = await stores.workspaceStore.update(current => {
+    assertWorkspaceId(current, workspaceId);
+    if (!current) throw new ApiError(404, 'NOT_FOUND', 'No current workspace to analyze');
+    if (current.phase !== 'intake' || current.analysis) throw new ApiError(409, 'INVALID_STATE', 'Workspace has already been analyzed');
+    const operation = current.analysisOperation;
+    if (operation?.status === 'generating' && Date.now() - Date.parse(operation.startedAt) < 120_000) return current;
+    ownsClaim = true;
+    return { ...current, analysisOperation: { id: operationId, startedAt: new Date().toISOString(), status: 'generating' } };
+  });
+  if (!ownsClaim) return null; // The browser observes the existing operation via GET.
+  try {
+    return await runAnalysis(workspace, stores, operationId);
+  } catch (error) {
+    await stores.workspaceStore.update(current => {
+      if (!current) throw error;
+      if (current.workspaceId !== workspace.workspaceId || current.analysisOperation?.id !== operationId) return current;
+      return { ...current, analysisOperation: { ...current.analysisOperation, status: 'failed' } };
+    }).catch(() => {});
+    throw error;
+  }
+}
+
+async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operationId: string): Promise<QuestionAnalysisPublic> {
+  const started = performance.now();
+  const { workspaceStore, assetStore, profileStore } = stores;
+  const files = [];
+  for (const attachment of workspace.attachments) {
+    const loaded = await assetStore.get(attachment.id);
+    if (!loaded) {
+      throw new ApiError(500, 'INTERNAL_ERROR', `Attachment ${attachment.id} is missing from storage`);
+    }
+    files.push({ fileName: loaded.meta.fileName, mimeType: loaded.meta.mimeType, bytes: loaded.bytes });
+  }
+
+  const provider = getAnalysisProvider();
+  const profile = await profileStore.read();
+  const learnerContext = buildLearnerContext(profile);
+  const input = {
+    grade: workspace.demoProfile.grade,
+    questionText: workspace.questionText,
+    files,
+    ...(learnerContext ? { learnerContext } : {}),
+  };
+
+  let rawResult;
+  try {
+    rawResult = await provider.analyzeQuestion(input);
+  } catch {
+    throw new ApiError(
+      502,
+      'AI_PROVIDER_ERROR',
+      'AI analysis could not be completed. Please retry analysis.',
+    );
+  }
+
+  const parsed = modelAnalysisSchema.safeParse(rawResult);
+  if (!parsed.success) {
+    throw new ApiError(502, 'AI_PROVIDER_ERROR', 'AI analysis could not be validated. Please retry analysis.');
+  }
+
+  const structuralErrors = validateAnalysisStructure(parsed.data);
+  if (structuralErrors.length > 0) {
+    throw new ApiError(502, 'AI_PROVIDER_ERROR', 'AI analysis could not be validated. Please retry analysis.');
+  }
+
+  // Image reviews are the flakiest leg (a strict or malformed verdict rejects otherwise-fine
+  // content), so retry the review — never regenerate silently — before surfacing the failure.
+  // Parse failures count as failed attempts too; only a consistently rejected candidate fails.
+  let reviewApprovedOnce = false;
+  for (let attempt = 0; attempt < 3 && !reviewApprovedOnce; attempt += 1) {
+    try {
+      const verdict = analysisReviewSchema.parse(await provider.reviewAnalysis(input, parsed.data));
+      reviewApprovedOnce = reviewApproved(verdict);
+    } catch {
+      // Swallow: a malformed or thrown verdict is one flaky attempt, not a verdict.
+    }
+  }
+  if (!reviewApprovedOnce) {
+    throw new ApiError(502, 'AI_PROVIDER_ERROR', 'The generated content could not pass quality review. Please retry analysis.');
+  }
+
+  const now = new Date().toISOString();
+  const stored: QuestionAnalysisStored = {
+    preparationDurationMs: performance.now() - started,
+    parsedQuestionMarkdown: parsed.data.parsedQuestionMarkdown,
+    topic: parsed.data.topic,
+    estimatedQuestionGrade: parsed.data.estimatedQuestionGrade,
+    gradeDifficulty: parsed.data.gradeDifficulty,
+    breakdown: parsed.data.breakdown,
+    probePlan: parsed.data.probePlan,
+    generatedAt: now,
+    model: modelLabel(analysisModel()),
+    promptVersion: ANALYSIS_PROMPT_VERSION,
+    analysisVersion: 1,
+    ...(learnerContext ? { profileUpdatedAt: profile.updatedAt } : {}),
+  };
+
+  const probeSteps: ProbeStep[] = parsed.data.probePlan.map((item, index) => ({
+    index,
+    concept: item.concept,
+    promptVersion: index === 0 ? ANALYSIS_PROMPT_VERSION : undefined,
+    status: index === 0 ? 'ready' : 'pending',
+    generationStartedAt: null,
+    main: index === 0 ? toPrivateProbe(parsed.data.firstPair.main, 0, 'main') : null,
+    easier: index === 0 ? toPrivateProbe(parsed.data.firstPair.easier, 0, 'easier') : null,
+    mainAnswer: null,
+    easierAnswer: null,
+    easierServed: false,
+    mainHintOpened: false, easierHintOpened: false,
+  }));
+
+  await workspaceStore.update((current) => {
+    if (!current || current.workspaceId !== workspace.workspaceId || current.analysis !== null || current.analysisOperation?.id !== operationId) {
+      throw new ApiError(409, 'INVALID_STATE', 'The workspace changed while it was being analyzed');
+    }
+    return {
+      ...current,
+      analysis: stored,
+      analysisOperation: null,
+      probeSteps,
+      cursor: { stepIndex: 0, kind: 'main' },
+      phase: 'ready',
+      updatedAt: now,
+    };
+  });
+
+  return toPublicAnalysis(stored);
+}

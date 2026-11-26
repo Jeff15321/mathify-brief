@@ -7,7 +7,8 @@ import { ThreePanelLayout } from "@/components/workspace/ThreePanelLayout";
 import { ProbeTallyCard } from "@/components/brief/ProbeTallyCard";
 import { PriorityStepCard } from "@/components/brief/PriorityStepCard";
 import { ProbingResultsAccordion } from "@/components/brief/ProbingResultsAccordion";
-import type { ProbeOutcome, ProbeResult, PublicProbe, PublicProbing } from "@/types/domain";
+import type { ProbeOutcome, ProbeResult } from "@/contracts/brief";
+import type { PublicProbe, PublicProbing } from "@/contracts/probes";
 
 const PROBE: PublicProbe = {
   id: "q1",

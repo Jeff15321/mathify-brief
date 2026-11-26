@@ -1,3 +1,4 @@
+import 'server-only';
 import type { MathAnalysisProvider } from './provider';
 import { MockAnalysisProvider } from './mock-provider';
 import { AnthropicAnalysisProvider } from './anthropic-provider';

@@ -13,7 +13,8 @@ import {
 import type { BinaryFileData, ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import type { FileId } from "@excalidraw/excalidraw/element/types";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
-import { MAX_WHITEBOARD_SIZE_BYTES } from "@/lib/constants";
+import { isImageMimeType } from "@/contracts/assets";
+import { MAX_WHITEBOARD_SIZE_BYTES } from "@/contracts/limits";
 import type { SimpleWhiteboardHandle, WhiteboardProps } from "./SimpleWhiteboard";
 
 declare global {
@@ -58,7 +59,7 @@ export default function ExcalidrawEditor({
         if (!response.ok) throw new Error("Could not load an uploaded image onto the whiteboard.");
         const blob = await response.blob();
         const mimeType = blob.type;
-        if (mimeType !== "image/png" && mimeType !== "image/jpeg" && mimeType !== "image/webp") {
+        if (!isImageMimeType(mimeType)) {
           throw new Error("An uploaded whiteboard image has an unsupported format.");
         }
         const bitmap = await createImageBitmap(blob);

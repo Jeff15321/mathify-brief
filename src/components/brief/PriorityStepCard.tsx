@@ -1,7 +1,7 @@
 import { CheckCircle2, Target } from "lucide-react";
 import { MathText } from "@/components/shared/MathText";
-import type { ProbeOutcome, ProbeResult } from "@/types/domain";
-import { BriefBadge, BriefCard } from "./BriefCard";
+import type { ProbeOutcome, ProbeResult } from "@/contracts/brief";
+import { Badge, Card } from "@/components/shared/Card";
 
 const RETRY_LINE: Record<ProbeOutcome, string> = {
   correct: "Easier retry correct",
@@ -34,14 +34,14 @@ export function PriorityStepCard({
   if (!main) {
     const anyAttempted = results.some((r) => r.outcome !== "unanswered");
     return (
-      <BriefCard
+      <Card
         title="Priority · Key incorrect step"
         icon={<CheckCircle2 size={16} className="text-emerald-600" aria-hidden="true" />}
       >
         <p className="text-sm text-slate-600">
           {anyAttempted ? "No incorrect answers were recorded. Check coverage before drawing conclusions." : "Not enough evidence yet."}
         </p>
-      </BriefCard>
+      </Card>
     );
   }
 
@@ -52,10 +52,10 @@ export function PriorityStepCard({
   const selected = selectedAnswer(main);
 
   return (
-    <BriefCard
+    <Card
       title="Priority · Key incorrect step"
       icon={<Target size={16} className="text-red-600" aria-hidden="true" />}
-      badge={<BriefBadge className="bg-red-100 text-red-700">Needs review</BriefBadge>}
+      badge={<Badge className="bg-red-100 text-red-700">Needs review</Badge>}
     >
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{main.concept}</span>
       <MathText text={main.questionMarkdown} className="text-sm text-slate-900" />
@@ -72,6 +72,6 @@ export function PriorityStepCard({
       <p className="text-xs text-slate-500">
         {easier ? RETRY_LINE[easier.outcome] : "No easier retry served"} · {correct}/{attempted} correct for this concept
       </p>
-    </BriefCard>
+    </Card>
   );
 }

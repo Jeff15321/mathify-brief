@@ -1,5 +1,5 @@
-import { requestWorkspaceId } from '@/server/workspace-identity';
-import { generateNextProbePair } from '@/server/probe-service';
+import { requestWorkspaceId } from '@/server/workspace/identity';
+import { generateNextProbePair } from '@/server/workspace/probes';
 import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

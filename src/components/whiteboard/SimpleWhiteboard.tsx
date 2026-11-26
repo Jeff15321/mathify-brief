@@ -1,6 +1,6 @@
 "use client";
 
-import type { BoardSnapshot } from "@/lib/workspace-draft";
+import type { BoardSnapshot } from "@/components/workspace/draft";
 import dynamic from "next/dynamic";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { LoadingState } from "@/components/shared/LoadingState";

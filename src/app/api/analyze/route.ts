@@ -1,5 +1,5 @@
-import { requestWorkspaceId } from '@/server/workspace-identity';
-import { analyzeCurrentWorkspace } from '@/server/analysis-service';
+import { requestWorkspaceId } from '@/server/workspace/identity';
+import { analyzeCurrentWorkspace } from '@/server/workspace/analysis';
 import { toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';

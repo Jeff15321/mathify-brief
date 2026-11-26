@@ -1,5 +1,5 @@
-import type { MimeType } from '@/types/domain';
-import { ALLOWED_MIME_TYPES, MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_TOTAL_SIZE_BYTES } from '@/lib/constants';
+import { isAllowedMimeType, type MimeType } from '@/contracts/assets';
+import { MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_TOTAL_SIZE_BYTES } from '@/contracts/limits';
 
 const SIGNATURE_CHECKS: Record<MimeType, (bytes: Buffer) => boolean> = {
   'image/png': (bytes) =>
@@ -16,10 +16,6 @@ const SIGNATURE_CHECKS: Record<MimeType, (bytes: Buffer) => boolean> = {
     bytes.subarray(8, 12).toString('ascii') === 'WEBP',
   'application/pdf': (bytes) => bytes.length >= 4 && bytes.subarray(0, 4).toString('ascii') === '%PDF',
 };
-
-export function isAllowedMimeType(mime: string): mime is MimeType {
-  return (ALLOWED_MIME_TYPES as readonly string[]).includes(mime);
-}
 
 export interface UploadCandidate {
   fileName: string;

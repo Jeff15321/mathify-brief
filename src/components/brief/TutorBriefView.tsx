@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
+import { recordPilotEvent } from '@/client/measurement';
 import { ChevronDown } from "lucide-react";
 import { StartingPointCard } from "./StartingPointCard";
 import { EvidenceSummary } from "./EvidenceSummary";
 import { PastSessionsCard } from "./PastSessionsCard";
-import type { PublicWorkspace, TutorBrief } from "@/types/domain";
+import type { PublicWorkspace } from "@/contracts/workspace";
+import type { TutorBrief } from "@/contracts/brief";
 import { BriefHeader } from "./BriefHeader";
 import { CurrentQuestionCard } from "./CurrentQuestionCard";
 import { ProbeTallyCard } from "./ProbeTallyCard";
@@ -17,6 +20,20 @@ import { ProbingResultsAccordion } from "./ProbingResultsAccordion";
  */
 export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspace; brief: TutorBrief }) {
   const analysis = workspace.analysis!;
+  useEffect(() => {
+    let cancelled = false;
+    let ready = false;
+    let recorded = false;
+    const announce = () => {
+      if (cancelled || !ready || recorded || document.visibilityState !== 'visible') return;
+      recorded = true;
+      recordPilotEvent('brief_visible', { attemptId: workspace.draftId, workspaceId: workspace.workspaceId, mode: workspace.generationMode, promptVersion: workspace.promptVersion }, { coreAnswered: brief.core.attempted, corePlanned: brief.core.total });
+    };
+    const fontsReady = document.fonts?.ready ?? Promise.resolve();
+    void Promise.all([fontsReady, ...Array.from(document.images).map(img => img.decode())]).then(() => { ready = true; announce(); }).catch(() => {});
+    document.addEventListener('visibilitychange', announce);
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', announce); };
+  }, [workspace, brief]);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-3 p-4 sm:p-6">

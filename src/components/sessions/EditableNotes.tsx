@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { NotebookPen } from 'lucide-react';
-import { MAX_TUTOR_NOTES_LENGTH } from '@/lib/constants';
-import { BriefCard } from '@/components/brief/BriefCard';
+import { MAX_TUTOR_NOTES_LENGTH } from '@/contracts/limits';
+import { Card } from '@/components/shared/Card';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 /** Tutor notes with an Edit mode; `onSave` rejects to keep the editor open with the error. */
@@ -18,7 +18,7 @@ export function EditableNotes({ notes, onSave }: { notes: string; onSave: (notes
     finally { setBusy(false); }
   }
 
-  return <BriefCard title="Tutor notes" icon={<NotebookPen className="h-4 w-4 text-slate-500" aria-hidden />}
+  return <Card title="Tutor notes" icon={<NotebookPen className="h-4 w-4 text-slate-500" aria-hidden />}
     badge={draft === null && <button type="button" onClick={() => setDraft(notes)} className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">Edit</button>}>
     {draft === null
       ? <p className={`whitespace-pre-wrap text-sm ${notes ? 'text-slate-700' : 'text-slate-500'}`}>{notes || 'No notes for this session.'}</p>
@@ -32,5 +32,5 @@ export function EditableNotes({ notes, onSave }: { notes: string; onSave: (notes
           </div>
         </fieldset>
       </form>}
-  </BriefCard>;
+  </Card>;
 }

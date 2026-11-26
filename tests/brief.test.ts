@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { submitBrief } from "@/server/brief-service";
-import { answerCurrentProbe } from "@/server/probe-service";
-import { startWorkspace } from "@/server/workspace-service";
+import { submitBrief } from "@/server/brief/service";
+import { answerCurrentProbe } from "@/server/workspace/probes";
+import { startWorkspace } from "@/server/workspace/service";
 import { ApiError } from "@/server/errors";
 import { MockAnalysisProvider } from "@/server/ai/mock-provider";
-import { probeAnswerSchema } from "@/schemas/workspace";
+import { answerRequestSchema, pendingAnswerSchema, probeAnswerSchema } from "@/schemas/probes";
 import { setupWorkspace, type Stores } from "./helpers";
 
 const TINY_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
@@ -75,6 +75,12 @@ describe("Brief submission (mocked AI provider, isolated temp storage)", () => {
 });
 
 describe("Answer schema", () => {
+  it("allows a hint without a selection only when finishing the brief", () => {
+    const hintOnly = { probeId: "s1-main", answer: null, hintOpened: true };
+    expect(pendingAnswerSchema.parse(hintOnly)).toEqual(hintOnly);
+    expect(answerRequestSchema.safeParse(hintOnly).success).toBe(false);
+  });
+
   it("accepts A-D and IDK answers, rejects anything else", () => {
     expect(probeAnswerSchema.safeParse("A").success).toBe(true);
     expect(probeAnswerSchema.safeParse("IDK").success).toBe(true);

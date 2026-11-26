@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { setupWorkspace, type Stores } from './helpers';
-import { submitBrief } from '@/server/brief-service';
-import { answerCurrentProbe, generateNextProbePair } from '@/server/probe-service';
-import { startWorkspace } from '@/server/workspace-service';
-import { analyzeCurrentWorkspace } from '@/server/analysis-service';
+import { submitBrief } from '@/server/brief/service';
+import { answerCurrentProbe, generateNextProbePair } from '@/server/workspace/probes';
+import { startWorkspace } from '@/server/workspace/service';
+import { analyzeCurrentWorkspace } from '@/server/workspace/analysis';
 import { MockAnalysisProvider } from '@/server/ai/mock-provider';
 let stores: Stores;
 let cleanup: () => Promise<void>;

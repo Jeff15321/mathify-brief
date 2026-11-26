@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { analyzeCurrentWorkspace } from "@/server/analysis-service";
-import { getPublicWorkspace } from "@/server/workspace-service";
+import { analyzeCurrentWorkspace } from "@/server/workspace/analysis";
+import { getPublicWorkspace } from "@/server/workspace/service";
 import { ApiError } from "@/server/errors";
 import { setupWorkspace, type Stores } from "./helpers";
 

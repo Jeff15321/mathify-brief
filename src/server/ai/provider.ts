@@ -1,9 +1,13 @@
-import type { ModelAnalysis, ModelProbePair } from '@/schemas/analysis';
+import type { ModelAnalysis, ModelProbePair, ProbePlanItem } from '@/schemas/analysis';
 import type { AnalysisReview, ProbeReview } from '@/schemas/review';
 import type { ModelBrief, ModelHistory } from '@/schemas/brief';
 import type { ModelSessionSummary } from '@/schemas/session';
 import type { ModelLearnerProfile } from '@/schemas/profile';
-import type { LearnerProfile, LearnerProfileItem, MimeType, ProbePlanItem, ProbeResult, QuestionAnalysisStored, SessionObservation } from '@/types/domain';
+import type { LearnerProfile, LearnerProfileItem } from '@/contracts/profile';
+import type { MimeType } from '@/contracts/assets';
+import type { ProbeResult } from '@/contracts/brief';
+import type { QuestionAnalysisStored } from '@/server/workspace/schema';
+import type { SessionObservation } from '@/contracts/sessions';
 
 export interface StoredFile {
   fileName: string;

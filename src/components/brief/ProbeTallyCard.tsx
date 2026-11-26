@@ -1,5 +1,5 @@
-import type { ProbeTally } from "@/types/domain";
-import { BriefCard } from "./BriefCard";
+import type { ProbeTally } from "@/contracts/brief";
+import { Card } from "@/components/shared/Card";
 
 /**
  * One tally of probe answers (Core probes or Easier retries).
@@ -7,7 +7,7 @@ import { BriefCard } from "./BriefCard";
  */
 export function ProbeTallyCard({ title, tally, emptyLabel }: { title: string; tally: ProbeTally; emptyLabel: string }) {
   return (
-    <BriefCard>
+    <Card>
       <span className="text-xs font-medium text-slate-500">{title}</span>
       {tally.total === 0 ? (
         <p className="text-sm text-slate-500">{emptyLabel}</p>
@@ -27,6 +27,6 @@ export function ProbeTallyCard({ title, tally, emptyLabel }: { title: string; ta
           </p>
         </>
       )}
-    </BriefCard>
+    </Card>
   );
 }

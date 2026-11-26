@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_TUTOR_NOTES_LENGTH } from '@/lib/constants';
+import { MAX_TUTOR_NOTES_LENGTH } from '@/contracts/limits';
 import { observationCategorySchema } from './session';
 
 export const MAX_PROFILE_TEXT_LENGTH = 300;

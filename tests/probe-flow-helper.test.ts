@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { advance, computeResults, stepToGenerate, STALE_GENERATION_MS, toPublicProbing } from "@/server/helpers/probe-flow-helper";
-import type { PrivateProbe, ProbeCursor, ProbeStep } from "@/types/domain";
+import { advance, computeResults, stepToGenerate, STALE_GENERATION_MS, toPublicProbing } from "@/server/workspace/probe-flow";
+import type { PrivateProbe, ProbeCursor, ProbeStep } from "@/server/workspace/schema";
 
 function probe(id: string, correct: "A" | "B" | "C" | "D" = "B"): PrivateProbe {
   return {

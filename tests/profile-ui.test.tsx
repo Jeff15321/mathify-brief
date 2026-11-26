@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { LearnerProfile, PublicSessionSummary } from '@/types/domain';
-import * as api from '@/lib/api-client';
+import type { LearnerProfile } from '@/contracts/profile';
+import type { PublicSessionSummary } from '@/contracts/sessions';
+import { fetchSessions } from '@/client/sessions';
+import * as api from '@/client/profile';
 import ProfilePage from '@/app/profile/page';
 
-vi.mock('@/lib/api-client', () => ({ fetchProfile: vi.fn(), fetchSessions: vi.fn(), updateProfile: vi.fn(), rebuildProfile: vi.fn() }));
+vi.mock('@/client/sessions', () => ({ fetchSessions: vi.fn() }));
+vi.mock('@/client/profile', () => ({ fetchProfile: vi.fn(), updateProfile: vi.fn(), rebuildProfile: vi.fn() }));
 
 const STRUGGLE_ID = '11111111-1111-4111-8111-111111111111';
 const PROFILE: LearnerProfile = {
@@ -21,7 +24,7 @@ const SESSIONS = [session('b', '2026-11-07'), session('a', '2026-10-17')];
 
 async function renderPage(profile = PROFILE, sessions = SESSIONS) {
   vi.mocked(api.fetchProfile).mockResolvedValue(profile);
-  vi.mocked(api.fetchSessions).mockResolvedValue(sessions);
+  vi.mocked(fetchSessions).mockResolvedValue(sessions);
   render(<ProfilePage />);
   await screen.findByRole('heading', { level: 1, name: 'Demo Student' });
 }
@@ -125,7 +128,7 @@ describe('ProfilePage', () => {
 
   it('shows an error with retry when loading fails', async () => {
     vi.mocked(api.fetchProfile).mockRejectedValueOnce(new Error('Network down')).mockResolvedValue(PROFILE);
-    vi.mocked(api.fetchSessions).mockResolvedValue(SESSIONS);
+    vi.mocked(fetchSessions).mockResolvedValue(SESSIONS);
     render(<ProfilePage />);
     expect(screen.getByText('Loading learner profile…')).toBeInTheDocument();
     expect(await screen.findByRole('alert')).toHaveTextContent('Network down');

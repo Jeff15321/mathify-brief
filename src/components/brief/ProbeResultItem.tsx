@@ -1,5 +1,5 @@
 import { MathText } from "@/components/shared/MathText";
-import type { ProbeOutcome, ProbeResult } from "@/types/domain";
+import type { ProbeOutcome, ProbeResult } from "@/contracts/brief";
 
 const OUTCOME_COLOR: Record<ProbeOutcome, string> = {
   correct: "text-emerald-600",

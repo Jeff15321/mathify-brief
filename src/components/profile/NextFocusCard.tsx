@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { Target } from 'lucide-react';
-import type { LearnerProfile } from '@/types/domain';
+import type { LearnerProfile } from '@/contracts/profile';
 import { MAX_PROFILE_TEXT_LENGTH } from '@/schemas/profile';
-import { BriefBadge } from '@/components/brief/BriefCard';
+import { Badge } from '@/components/shared/Card';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const secondary = 'rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-60';
@@ -25,7 +25,7 @@ export function NextFocusCard({ profile, onSave }: { profile: Pick<LearnerProfil
   return <section aria-label="Next session focus" className="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-blue-900"><Target className="h-4 w-4 text-blue-600" aria-hidden /> Next session focus</h2>
-      <BriefBadge className={byTutor ? 'bg-violet-100 text-violet-700' : 'bg-white text-blue-700'}>{byTutor ? 'Written by tutor' : 'Suggested by AI'}</BriefBadge>
+      <Badge className={byTutor ? 'bg-violet-100 text-violet-700' : 'bg-white text-blue-700'}>{byTutor ? 'Written by tutor' : 'Suggested by AI'}</Badge>
     </div>
     {draft === null
       ? <>

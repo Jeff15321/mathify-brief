@@ -3,13 +3,12 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { z } from 'zod';
 import { ApiError } from '../errors';
-import type { MimeType, StoredAsset, TutorSession } from '@/types/domain';
+import type { ImageMimeType, StoredAsset } from '@/contracts/assets';
+import type { TutorSession } from '@/contracts/sessions';
 
-export type WhiteboardMimeType = Exclude<MimeType, 'application/pdf'>;
-export interface WhiteboardFile { fileName: string; mimeType: WhiteboardMimeType; bytes: Buffer }
-export type SessionUpdater = (current: TutorSession) => TutorSession | Promise<TutorSession>;
+import type { SessionStore, SessionUpdater, WhiteboardFile } from './contracts';
 
-const EXTENSION_BY_MIME: Record<WhiteboardMimeType, string> = {
+const EXTENSION_BY_MIME: Record<ImageMimeType, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
@@ -23,7 +22,7 @@ const locks = (globalLocks.__mathifySessionLocks ??= new Map<string, Promise<unk
  * Stores each session as `sessions/<id>.json` plus whiteboards in `sessions/<id>/<assetId>.<ext>`.
  * Never goes through AssetStore/workspace.json, so a new intake cannot delete session files.
  */
-export class LocalSessionStore {
+export class LocalSessionStore implements SessionStore {
   private sessionsDir: string;
 
   constructor(dataDir: string) {
@@ -41,7 +40,7 @@ export class LocalSessionStore {
   }
 
   private assetPath(id: string, asset: StoredAsset) {
-    const extension = EXTENSION_BY_MIME[asset.mimeType as WhiteboardMimeType];
+    const extension = EXTENSION_BY_MIME[asset.mimeType as ImageMimeType];
     return path.join(/* turbopackIgnore: true */ this.sessionsDir, this.validId(id), `${this.validId(asset.id)}.${extension}`);
   }
 
