@@ -15,11 +15,15 @@ import { LoadingState } from '@/components/shared/LoadingState';
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
 const icon = 'h-4 w-4';
-const SECTIONS: { category: ObservationCategory; title: string; icon: ReactNode; accent: string }[] = [
-  { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-clay`} aria-hidden />, accent: 'border-clay/60' },
-  { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-sage`} aria-hidden />, accent: 'border-sage/60' },
-  { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-brand-deep`} aria-hidden />, accent: 'border-brand' },
-  { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-muted`} aria-hidden />, accent: 'border-connector' },
+const SECTION_COLUMNS: { category: ObservationCategory; title: string; icon: ReactNode; accent: string }[][] = [
+  [
+    { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-clay`} aria-hidden />, accent: 'border-clay/60' },
+    { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-brand-deep`} aria-hidden />, accent: 'border-brand' },
+  ],
+  [
+    { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-sage`} aria-hidden />, accent: 'border-sage/60' },
+    { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-muted`} aria-hidden />, accent: 'border-connector' },
+  ],
 ];
 
 export default function ProfileScreen() {
@@ -60,7 +64,14 @@ export default function ProfileScreen() {
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />
             <div className="grid items-start gap-4 lg:grid-cols-2">
-              {SECTIONS.map(section => <ProfileSection key={section.category} {...section} items={profile.items.filter(item => item.category === section.category)} onSave={save} />)}
+              {SECTION_COLUMNS.map(column => (
+                <div key={column[0].category} className="flex min-w-0 flex-col gap-4">
+                  {column.map(section => (
+                    <ProfileSection key={section.category} {...section}
+                      items={profile.items.filter(item => item.category === section.category)} onSave={save} />
+                  ))}
+                </div>
+              ))}
             </div>
           </>}
       </>}

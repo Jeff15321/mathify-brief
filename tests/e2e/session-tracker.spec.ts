@@ -56,6 +56,14 @@ test('session upload -> detail -> learner profile -> brief shows relevant past s
   await expect(struggles.getByText('Multiplied only the first term inside brackets.')).toBeVisible();
   await expect(struggles.getByRole('link', { name: 'Oct 3, 2026' }).first()).toBeVisible();
 
+  // Editing the taller left column should leave the right column in place.
+  const habits = page.getByRole('heading', { name: /^Habits/ });
+  const habitsTop = await habits.evaluate(heading => heading.getBoundingClientRect().top);
+  await struggles.getByRole('button', { name: 'Add to Struggles' }).click();
+  await expect(struggles.getByLabel('Item text')).toBeVisible();
+  expect(await habits.evaluate(heading => heading.getBoundingClientRect().top)).toBe(habitsTop);
+  await struggles.getByRole('button', { name: 'Cancel' }).click();
+
   await completeQuestion(page);
   const section = page.getByRole('region', { name: 'Relevant from past sessions' });
   await expect(section).toBeVisible();
