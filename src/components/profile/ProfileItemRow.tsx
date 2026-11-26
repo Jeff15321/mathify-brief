@@ -1,11 +1,10 @@
 'use client';
 import { formatDate } from '@/components/shared/format-date';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { LearnerProfileItem, ProfileItemStatus } from '@/contracts/profile';
-import { MAX_PROFILE_TEXT_LENGTH, type ProfileUpdate } from '@/schemas/profile';
-import { Badge } from '@/components/shared/Card';
+import { MAX_PROFILE_TEXT_LENGTH } from '@/schemas/profile';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 
 const ITEM_STATUS: Record<ProfileItemStatus, { label: string; className: string }> = {
@@ -48,40 +47,40 @@ export function ItemForm({ initial, onSubmit, onCancel }: {
   </form>;
 }
 
-/** One profile item with its status, source and evidence; edits and deletes go through `onSave`. */
-export function ProfileItemRow({ item, accent, onSave }: { item: LearnerProfileItem; accent: string; onSave: (changes: ProfileUpdate) => Promise<void> }) {
-  const [editing, setEditing] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function remove() {
-    if (!window.confirm('Delete this item from the learner profile?')) return;
-    setBusy(true); setError(null);
-    try { await onSave({ deleteItemIds: [item.id] }); }
-    catch (err) { setError(message(err)); setBusy(false); }
-  }
-
-  if (editing) return <li>
-    <ItemForm initial={item} onCancel={() => setEditing(false)}
-      onSubmit={async ({ text, status }) => { await onSave({ upsertItems: [{ id: item.id, category: item.category, text, status }] }); setEditing(false); }} />
-  </li>;
+export function ProfileItemRow({ item, managing, disabled, error, onEdit, onDelete }: {
+  item: LearnerProfileItem;
+  managing: boolean;
+  disabled: boolean;
+  error?: string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const status = ITEM_STATUS[item.status];
-  return <li className={`flex flex-col gap-2 border-l-2 pl-3 ${accent} ${busy ? 'opacity-60' : ''}`}>
+  const tag = 'rounded-[5px] px-1.5 font-semibold';
+  return <>
     <div className="flex items-start justify-between gap-2">
-      <p className="pt-0.5 text-sm text-ink">{item.text}</p>
-      <div className="flex shrink-0">
-        <button type="button" disabled={busy} onClick={() => { setEditing(true); setError(null); }} aria-label="Edit item" title="Edit" className={`${iconButton} hover:text-ink`}><Pencil className="h-3.5 w-3.5" aria-hidden /></button>
-        <button type="button" disabled={busy} onClick={() => void remove()} aria-label="Delete item" title="Delete" className={`${iconButton} hover:text-brand-deep`}><Trash2 className="h-3.5 w-3.5" aria-hidden /></button>
-      </div>
+      <p className="min-w-0 wrap-anywhere text-base leading-6 text-ink">{item.text}</p>
+      {managing && <div className="flex shrink-0">
+        <button id={`edit-${item.id}`} type="button" disabled={disabled} onClick={onEdit}
+          aria-label={`Edit observation: ${item.text}`} title="Edit" className={iconButton}><Pencil className="size-3.5" aria-hidden /></button>
+        <button id={`delete-${item.id}`} type="button" disabled={disabled} onClick={onDelete}
+          aria-label={`Delete observation: ${item.text}`} title="Delete" className={iconButton}><Trash2 className="size-3.5" aria-hidden /></button>
+      </div>}
     </div>
-    <div className="flex flex-wrap items-center gap-1.5">
-      <Badge className={status.className}>{status.label}</Badge>
-      {item.source === 'tutor' && <Badge className="bg-fill text-ink">Tutor</Badge>}
-      {item.evidence.map((evidence, i) => <Link key={`${evidence.sessionId}-${i}`} href={`/sessions/${evidence.sessionId}`} title={evidence.quote}
-        className="rounded-full border border-line px-2 py-0.5 text-sm text-muted hover:border-brand hover:text-brand-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
-        {formatDate(evidence.date)}
-      </Link>)}
+    <div className="mt-[3px] flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-[18px] text-muted">
+      <span className={`${tag} ${status.className}`}>{status.label}</span>
+      {item.source === 'tutor' && <span className={`${tag} bg-fill text-ink`}>Tutor</span>}
+      {item.evidence.length > 0 && <span className="ml-1">Seen in</span>}
+      {item.evidence.map((evidence, i) => (
+        <Fragment key={`${evidence.sessionId}-${i}`}>
+          {i > 0 && <span aria-hidden>·</span>}
+          <Link href={`/sessions/${evidence.sessionId}`} title={evidence.quote}
+            className="whitespace-nowrap text-brand-deep underline decoration-brand-deep/35 underline-offset-2 hover:decoration-current">
+            {formatDate(evidence.date)}
+          </Link>
+        </Fragment>
+      ))}
     </div>
     {error && <ErrorBanner message={error} />}
-  </li>;
+  </>;
 }

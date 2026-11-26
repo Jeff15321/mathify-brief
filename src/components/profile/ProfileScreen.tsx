@@ -1,30 +1,18 @@
 'use client';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Lightbulb, Repeat, Sprout, TriangleAlert } from 'lucide-react';
 import { fetchProfile, rebuildProfile, updateProfile } from '@/client/profile';
 import { fetchSessions } from '@/client/sessions';
 import type { ProfileUpdate } from '@/schemas/profile';
 import type { LearnerProfile } from '@/contracts/profile';
-import type { ObservationCategory, PublicSessionSummary } from '@/contracts/sessions';
+import type { PublicSessionSummary } from '@/contracts/sessions';
 import { StudentCard } from './StudentCard';
 import { NextFocusCard } from './NextFocusCard';
-import { ProfileSection } from './ProfileSection';
+import { SessionObservations } from './SessionObservations';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { LoadingState } from '@/components/shared/LoadingState';
 
 function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong. Please try again.'; }
-const icon = 'h-4 w-4';
-const SECTION_COLUMNS: { category: ObservationCategory; title: string; icon: ReactNode; accent: string }[][] = [
-  [
-    { category: 'struggle', title: 'Struggles', icon: <TriangleAlert className={`${icon} text-clay`} aria-hidden />, accent: 'border-clay/60' },
-    { category: 'what_works', title: 'What works when teaching', icon: <Lightbulb className={`${icon} text-brand-deep`} aria-hidden />, accent: 'border-brand' },
-  ],
-  [
-    { category: 'strength', title: 'Strengths', icon: <Sprout className={`${icon} text-sage`} aria-hidden />, accent: 'border-sage/60' },
-    { category: 'habit', title: 'Habits', icon: <Repeat className={`${icon} text-muted`} aria-hidden />, accent: 'border-connector' },
-  ],
-];
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
@@ -63,16 +51,7 @@ export default function ProfileScreen() {
           </div>
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />
-            <div className="grid items-start gap-4 lg:grid-cols-2">
-              {SECTION_COLUMNS.map(column => (
-                <div key={column[0].category} className="flex min-w-0 flex-col gap-4">
-                  {column.map(section => (
-                    <ProfileSection key={section.category} {...section}
-                      items={profile.items.filter(item => item.category === section.category)} onSave={save} />
-                  ))}
-                </div>
-              ))}
-            </div>
+            <SessionObservations items={profile.items} onSave={save} />
           </>}
       </>}
     </div>
