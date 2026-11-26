@@ -8,7 +8,8 @@ import type { StoredAsset } from '@/contracts/assets';
 import { validateFileCandidate, type UploadCandidate } from '@/server/upload-validation';
 import { summarizeStoredSession } from './summary';
 import { rebuildProfile } from '@/server/profile/service';
-import type { WhiteboardMimeType } from '@/server/storage/contracts';
+import { isAllowedMimeType, isImageMimeType } from '@/contracts/assets';
+import type { WhiteboardFile } from '@/server/storage/contracts';
 import { ApiError } from '@/server/errors';
 import { getStores, type Stores } from '@/server/storage';
 
@@ -41,11 +42,11 @@ function decodeTranscript(file: UploadCandidate | null): string {
   return text;
 }
 
-function validateWhiteboards(files: UploadCandidate[]): void {
+function validateWhiteboards(files: UploadCandidate[]): asserts files is WhiteboardFile[] {
   const errors: string[] = [];
   if (files.length > MAX_SESSION_WHITEBOARDS) errors.push(`At most ${MAX_SESSION_WHITEBOARDS} whiteboards are allowed per session`);
   for (const file of files) {
-    if (file.mimeType === 'application/pdf') errors.push(`${file.fileName}: whiteboards must be PNG, JPEG or WebP images`);
+    if (isAllowedMimeType(file.mimeType) && !isImageMimeType(file.mimeType)) errors.push(`${file.fileName}: whiteboards must be PNG, JPEG or WebP images`);
     else errors.push(...validateFileCandidate(file));
   }
   if (errors.length > 0) throw new ApiError(400, 'INVALID_INPUT', errors.join('; '));
@@ -78,7 +79,7 @@ export async function createSession(input: CreateSessionInput, stores: Stores = 
       status: 'pending', summaryStartedAt: null, title: null, summary: null, observations: [],
       model: null, promptVersion: null, summarizedAt: null,
     },
-    input.whiteboards.map((file) => ({ ...file, mimeType: file.mimeType as WhiteboardMimeType })),
+    input.whiteboards,
   );
   try {
     return await summarizeSessionAndNotify(id, stores);

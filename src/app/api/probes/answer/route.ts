@@ -1,16 +1,9 @@
 import { requestWorkspaceId } from '@/server/workspace/identity';
-import { z } from 'zod';
-import { probeAnswerSchema } from '@/server/workspace/schema';
+import { answerRequestSchema } from '@/schemas/probes';
 import { answerCurrentProbe } from '@/server/workspace/probes';
 import { ApiError, toApiErrorResponse } from '@/server/errors';
 
 export const runtime = 'nodejs';
-
-const answerRequestSchema = z.object({
-  probeId: z.string().min(1),
-  answer: probeAnswerSchema,
-  hintOpened: z.boolean().optional(),
-});
 
 /** Records the answer to the current probe and returns the next one (or a waiting state). */
 export async function POST(request: Request) {

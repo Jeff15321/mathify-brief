@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { probeAnswerSchema } from '@/server/workspace/schema';
+import { pendingAnswerSchema, type PendingAnswer } from '@/schemas/probes';
 import { requestWorkspaceId } from '@/server/workspace/identity';
 import { submitBrief } from '@/server/brief/service';
 import { ApiError, toApiErrorResponse } from '@/server/errors';
@@ -23,11 +23,14 @@ export async function POST(request: Request) {
     const workspaceId = requestWorkspaceId(request);
     const submissionId = z.uuid().safeParse(formData.get('submissionId'));
     if (!submissionId.success) throw new ApiError(400, 'INVALID_INPUT', 'A submission identity is required');
-    let pending;
+    let pending: PendingAnswer | undefined;
     const raw = formData.get('pending');
     if (raw) {
-      try { pending = z.object({ probeId: z.string().min(1), answer: probeAnswerSchema.nullable(), hintOpened: z.boolean().optional() }).parse(JSON.parse(String(raw))); }
-      catch { throw new ApiError(400, 'INVALID_INPUT', 'Invalid selected answer'); }
+      try {
+        pending = pendingAnswerSchema.parse(JSON.parse(String(raw)));
+      } catch {
+        throw new ApiError(400, 'INVALID_INPUT', 'Invalid selected answer');
+      }
     }
     const brief = await submitBrief({ workspaceId, submissionId: submissionId.data, pending, whiteboardPng, exportOmitted: formData.get('exportOmitted') === 'true' });
     return Response.json({ brief }, { headers: { 'Cache-Control': 'no-store' } });

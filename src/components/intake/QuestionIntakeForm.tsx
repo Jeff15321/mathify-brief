@@ -1,15 +1,15 @@
 'use client';
 import { useRef, useState } from 'react';
+import { ALLOWED_MIME_TYPES, isAllowedMimeType } from '@/contracts/assets';
 import { MAX_FILES, MAX_FILE_SIZE_BYTES, MAX_QUESTION_TEXT_LENGTH, MAX_TOTAL_SIZE_BYTES } from '@/contracts/limits';
 import { FileAttachmentList } from '@/components/shared/FileAttachmentList';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { PURPOSE } from '@/components/workspace/PreparationPanel';
-const TYPES = ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'];
 export function validateIntake(text: string, files: File[], requireInput = true): string | null {
   if (requireInput && !text.trim() && !files.length) return 'Type a question or add at least one photo or PDF.';
   if (text.length > MAX_QUESTION_TEXT_LENGTH) return 'The question text is too long.';
   if (files.length > MAX_FILES) return `You can add up to ${MAX_FILES} files. No files from this selection were added.`;
-  if (files.some(f => !TYPES.includes(f.type))) return 'Use PNG, JPEG, WebP or PDF. No files from this selection were added.';
+  if (files.some(f => !isAllowedMimeType(f.type))) return 'Use PNG, JPEG, WebP or PDF. No files from this selection were added.';
   if (files.some(f => f.size > MAX_FILE_SIZE_BYTES)) return 'Each file must be 10 MB or smaller. No files from this selection were added.';
   if (files.reduce((sum, f) => sum + f.size, 0) > MAX_TOTAL_SIZE_BYTES) return 'Keep the combined files under 20 MB. No files from this selection were added.';
   return null;
@@ -48,7 +48,7 @@ export function QuestionIntakeForm({ questionText, files, onChange, onBegin, bus
           <label htmlFor="fileInput" className="font-medium text-sm">Problem photos or PDFs</label>
           <span className="text-sm text-slate-600">{files.length === 0 ? 'No file chosen' : `${files.length} file${files.length === 1 ? '' : 's'} chosen`}</span>
         </div>
-        <input ref={input} id="fileInput" type="file" multiple accept={TYPES.join(',')}
+        <input ref={input} id="fileInput" type="file" multiple accept={ALLOWED_MIME_TYPES.join(',')}
           onChange={e => { const selected = Array.from(e.target.files ?? []); e.target.value = ''; void addFiles(selected); }} className="sr-only" />
         <button type="button" onClick={() => input.current?.click()} className="self-start text-sm font-medium text-blue-700 underline">Choose files</button>
         <FileAttachmentList files={files} onRemove={index => { setDuplicate(false); onChange(questionText, files.filter((_, i) => i !== index)); }}

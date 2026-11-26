@@ -1,7 +1,7 @@
 import type { SavedTutorFeedback } from '@/server/storage/contracts';
 import { createHash } from 'node:crypto';
-import { toPublicAnalysis } from '@/server/workspace/projections';
-import type { CurrentWorkspace } from '@/server/workspace/schema';
+import { toPublicAnalysis } from './projections';
+import type { CurrentWorkspace } from './schema';
 
 /** Only the content available on the report, plus its generation identity. */
 export function getFeedbackReport(workspace: CurrentWorkspace): SavedTutorFeedback['report'] {

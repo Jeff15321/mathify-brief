@@ -62,8 +62,24 @@ const eslintConfig = defineConfig([
           },
           {
             target: "./src/app/api",
-            from: ["./src/server/storage", "./src/server/ai"],
-            message: "Call the feature service from the HTTP handler.",
+            from: ["./src/server/storage", "./src/server/ai", "./src/server/workspace/schema.ts"],
+            message: "Parse requests with public schemas and call the feature service.",
+          },
+          {
+            target: "./src/server/workspace",
+            from: ["./src/server/brief", "./src/server/sessions"],
+            message: "Workspace operations are independent of tutor handoff and session workflows.",
+          },
+          {
+            target: ["./src/server/storage", "./src/server/ai"],
+            from: "./src/server/workspace",
+            except: ["schema.ts"],
+            message: "Adapters may read the workspace schema. Services coordinate workflows.",
+          },
+          {
+            target: ["./src/server/storage", "./src/server/ai"],
+            from: ["./src/server/brief", "./src/server/sessions", "./src/server/profile"],
+            message: "Services call adapters. Keep feature workflows in their services.",
           },
           {
             target: ["./src/app/api", "./src/server/!(ai)/**/*", "./src/server/*.{ts,js}"],

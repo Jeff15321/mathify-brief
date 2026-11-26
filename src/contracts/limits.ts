@@ -8,11 +8,4 @@ export const MAX_TRANSCRIPT_BYTES = 1024 * 1024; // 1 MiB
 export const MAX_TUTOR_NOTES_LENGTH = 2000;
 export const TRANSCRIPT_EXTENSIONS = ['.txt', '.md', '.vtt', '.srt'] as const;
 
-export const ALLOWED_MIME_TYPES = [
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'application/pdf',
-] as const;
-
 export const GRADE = 9;

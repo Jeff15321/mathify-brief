@@ -1,6 +1,7 @@
 import { modelProbePairSchema, validateProbePair, type ModelProbePair } from '@/schemas/analysis';
 import type { CurrentWorkspace } from './schema';
-import type { ProbeAnswer, PublicProbing } from '@/contracts/probes';
+import type { PublicProbing } from '@/contracts/probes';
+import type { AnswerRequest } from '@/schemas/probes';
 import { getStores, type Stores } from '@/server/storage';
 import { getAnalysisProvider } from '@/server/ai';
 import { probeReviewSchema, reviewApproved } from '@/schemas/review';
@@ -129,7 +130,7 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
  * @throws ApiError 409 when `probeId` is not the current probe.
  */
 export async function answerCurrentProbe(
-  input: { workspaceId?: string; probeId: string; answer: ProbeAnswer; hintOpened?: boolean },
+  input: AnswerRequest & { workspaceId?: string },
   stores: Stores = getStores(),
 ): Promise<PublicProbing> {
   const saved = await stores.workspaceStore.update((current) => {

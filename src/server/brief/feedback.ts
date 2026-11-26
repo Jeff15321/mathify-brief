@@ -1,6 +1,6 @@
 import { tutorFeedbackSchema, type TutorFeedbackInput } from '@/schemas/feedback';
 import { ApiError } from '@/server/errors';
-import { getFeedbackReport, getFeedbackReportId } from './feedback-report';
+import { getFeedbackReport, getFeedbackReportId } from '@/server/workspace/feedback-report';
 import { getStores, type Stores } from '@/server/storage';
 
 export async function getFeedbackStatus(reportId: string, stores: Stores = getStores()) {

@@ -1,4 +1,5 @@
-export type OptionId = 'A' | 'B' | 'C' | 'D';
+export const OPTION_IDS = ['A', 'B', 'C', 'D'] as const;
+export type OptionId = (typeof OPTION_IDS)[number];
 
 export interface PublicProbe {
   hint?: string;

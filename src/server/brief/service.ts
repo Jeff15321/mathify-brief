@@ -1,7 +1,7 @@
 import { modelLabel, summaryModel } from '@/server/ai/models';
 import { randomUUID } from 'node:crypto';
 import type { BriefHistory, TutorBrief } from '@/contracts/brief';
-import type { ProbeAnswer } from '@/contracts/probes';
+import type { PendingAnswer } from '@/schemas/probes';
 import type { StoredAsset } from '@/contracts/assets';
 import { modelHistorySchema } from '@/schemas/brief';
 import { getAnalysisProvider } from '@/server/ai';
@@ -16,7 +16,7 @@ import { summarizeBrief } from './scoring';
 export interface SubmitBriefInput {
   workspaceId?: string;
   submissionId?: string;
-  pending?: { probeId: string; answer: ProbeAnswer | null; hintOpened?: boolean };
+  pending?: PendingAnswer;
   whiteboardPng: Buffer | null;
   exportOmitted?: boolean;
 }

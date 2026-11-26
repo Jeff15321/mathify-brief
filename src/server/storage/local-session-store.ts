@@ -3,12 +3,12 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { z } from 'zod';
 import { ApiError } from '../errors';
-import type { StoredAsset } from '@/contracts/assets';
+import type { ImageMimeType, StoredAsset } from '@/contracts/assets';
 import type { TutorSession } from '@/contracts/sessions';
 
-import type { SessionStore, SessionUpdater, WhiteboardFile, WhiteboardMimeType } from './contracts';
+import type { SessionStore, SessionUpdater, WhiteboardFile } from './contracts';
 
-const EXTENSION_BY_MIME: Record<WhiteboardMimeType, string> = {
+const EXTENSION_BY_MIME: Record<ImageMimeType, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
@@ -40,7 +40,7 @@ export class LocalSessionStore implements SessionStore {
   }
 
   private assetPath(id: string, asset: StoredAsset) {
-    const extension = EXTENSION_BY_MIME[asset.mimeType as WhiteboardMimeType];
+    const extension = EXTENSION_BY_MIME[asset.mimeType as ImageMimeType];
     return path.join(/* turbopackIgnore: true */ this.sessionsDir, this.validId(id), `${this.validId(asset.id)}.${extension}`);
   }
 

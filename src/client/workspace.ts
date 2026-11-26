@@ -1,5 +1,6 @@
 import type { PublicWorkspace } from '@/contracts/workspace';
 import type { ProbeAnswer, PublicProbing } from '@/contracts/probes';
+import type { PendingAnswer } from '@/schemas/probes';
 import type { BriefHistory, TutorBrief } from '@/contracts/brief';
 import { parseErrorResponse } from './http';
 
@@ -50,7 +51,7 @@ export async function answerProbe(probeId: string, answer: ProbeAnswer, workspac
 }
 
 /** Ends probing and generates the Tutor Brief, attaching the whiteboard PNG when it is not blank. */
-export async function submitBrief(whiteboardPng: Blob | null, workspaceId: string, submissionId: string, pending?: { probeId: string; answer: ProbeAnswer | null; hintOpened?: boolean }, exportOmitted = false): Promise<TutorBrief> {
+export async function submitBrief(whiteboardPng: Blob | null, workspaceId: string, submissionId: string, pending?: PendingAnswer, exportOmitted = false): Promise<TutorBrief> {
   const formData = new FormData();
   if (whiteboardPng) {
     formData.set('whiteboard', whiteboardPng, 'whiteboard.png');

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { getFeedbackReportId } from '@/server/brief/feedback-report';
+import { getFeedbackReportId } from './feedback-report';
 import { DEMO_PROFILE } from '@/contracts/profile';
 import { toPublicAnalysis } from './projections';
 import type { CurrentWorkspace } from './schema';

@@ -1,20 +1,18 @@
 import { z } from 'zod';
+import { ALLOWED_MIME_TYPES, ASSET_KINDS } from '@/contracts/assets';
+import { optionIdSchema, probeAnswerSchema } from '@/schemas/probes';
 import {
   breakdownStepSchema,
   gradeDifficultySchema,
-  optionIdSchema,
   probeOptionSchema,
   probePlanItemSchema,
 } from '@/schemas/analysis';
 
-export const assetKindSchema = z.enum(['attachment', 'whiteboard']);
-export const mimeTypeSchema = z.enum(['image/png', 'image/jpeg', 'image/webp', 'application/pdf']);
-
 export const storedAssetSchema = z.object({
   id: z.string().min(1),
-  kind: assetKindSchema,
+  kind: z.enum(ASSET_KINDS),
   fileName: z.string().min(1),
-  mimeType: mimeTypeSchema,
+  mimeType: z.enum(ALLOWED_MIME_TYPES),
   sizeBytes: z.number().int().nonnegative(),
   createdAt: z.string().min(1),
 });
@@ -48,9 +46,6 @@ export const analysisStoredSchema = z.object({
   analysisVersion: z.literal(1),
   profileUpdatedAt: z.string().optional(),
 });
-
-/** One student answer: a generated option A-D, or "I don't know" (never part of the AI's output format). */
-export const probeAnswerSchema = z.union([optionIdSchema, z.literal('IDK')]);
 
 export const probeKindSchema = z.enum(['main', 'easier']);
 

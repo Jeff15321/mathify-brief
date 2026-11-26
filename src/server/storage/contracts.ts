@@ -2,7 +2,7 @@ import type { LearnerProfile } from '@/contracts/profile';
 import type { TutorSession } from '@/contracts/sessions';
 import type { TutorFeedbackInput } from '@/schemas/feedback';
 import type { PublicWorkspace } from '@/contracts/workspace';
-import type { AssetKind, MimeType, StoredAsset } from '@/contracts/assets';
+import type { AssetKind, ImageMimeType, MimeType, StoredAsset } from '@/contracts/assets';
 import type { CurrentWorkspace } from '@/server/workspace/schema';
 
 /** Updater for `CurrentWorkspaceStore.update`: receives the current workspace and returns the next one. */
@@ -46,8 +46,7 @@ export interface FeedbackStore {
   write(feedback: SavedTutorFeedback): Promise<void>;
 }
 
-export type WhiteboardMimeType = Exclude<MimeType, 'application/pdf'>;
-export interface WhiteboardFile { fileName: string; mimeType: WhiteboardMimeType; bytes: Buffer }
+export interface WhiteboardFile { fileName: string; mimeType: ImageMimeType; bytes: Buffer }
 export type SessionUpdater = (current: TutorSession) => TutorSession | Promise<TutorSession>;
 
 export interface SessionStore {
