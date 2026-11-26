@@ -1,19 +1,19 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-/* Ivory surfaces, plum controls, and terracotta teaching notes. */
+/* Mathify logo pink for primary actions, with darker and lighter shades on ivory. */
 @theme {
-  --color-brand: #694363;
-  --color-brand-deep: #4c3049;
-  --color-pale: #e8cdda;
-  --color-wash: #f2e7ee;
+  --color-brand: #c83aa2;
+  --color-brand-deep: #86236c;
+  --color-pale: #f5cee9;
+  --color-wash: #fbedf7;
   --color-ink: #372e35;
   --color-muted: #695e60;
   --color-ground: #f9f5eb;
-  --color-card: #fffdf8;
-  --color-fill: #eee7da;
-  --color-line: #ddd4c6;
-  --color-connector: #928172;
+  --color-card: #ffffff;
+  --color-fill: #f1eae5;
+  --color-line: #dfd5d4;
+  --color-connector: #918080;
   --color-clay: #94492e;
   --color-clay-wash: #fae8d9;
   --color-sage: #3f644d;

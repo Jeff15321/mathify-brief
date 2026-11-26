@@ -22,10 +22,10 @@ export function NextFocusCard({ profile, onSave }: { profile: Pick<LearnerProfil
     finally { setBusy(false); }
   }
 
-  return <section aria-label="Next session focus" className="flex flex-col gap-3 rounded-card border border-clay/25 bg-clay-wash p-4 sm:p-5">
+  return <section aria-label="Next session focus" className="flex flex-col gap-3 rounded-card border border-pale bg-wash p-4 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h2 className="flex items-center gap-2 text-xl leading-tight font-bold text-ink"><Target className="h-4 w-4 text-clay" aria-hidden /> Next session focus</h2>
-      <Badge className={byTutor ? 'bg-fill text-ink' : 'bg-card text-clay'}>{byTutor ? 'Written by tutor' : 'Suggested by AI'}</Badge>
+      <h2 className="flex items-center gap-2 text-xl leading-tight font-bold text-ink"><Target className="h-4 w-4 text-brand-deep" aria-hidden /> Next session focus</h2>
+      <Badge className={byTutor ? 'bg-fill text-ink' : 'bg-card text-brand-deep'}>{byTutor ? 'Written by tutor' : 'Suggested by AI'}</Badge>
     </div>
     {draft === null
       ? <>

@@ -79,7 +79,7 @@ export function ProbeCard({
         ))}
       </div>
       {probe.hint && <div className="text-sm">
-        {hintOpened ? <div className="rounded bg-clay-wash p-3"><span className="font-bold text-clay">Hint: </span><MathText text={probe.hint} /></div>
+        {hintOpened ? <div className="rounded bg-wash p-3"><span className="font-bold text-brand-deep">Hint: </span><MathText text={probe.hint} /></div>
           : <button type="button" disabled={saving || disabled} onClick={onHintOpened} className="text-brand-deep underline">Show a hint</button>}
       </div>}
       <button

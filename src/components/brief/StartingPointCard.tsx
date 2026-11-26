@@ -12,8 +12,8 @@ function ResponseObservation({ result }: { result: ProbeResult }) {
 const RETRY = { correct: 'Simpler follow-up: correct', incorrect: 'Simpler follow-up: incorrect', dont_know: 'Simpler follow-up: “I don’t know”', unanswered: 'Simpler follow-up: unanswered' };
 export function StartingPointCard({ brief }: { brief: TutorBrief }) {
   const start = suggestedStart(brief);
-  return <section aria-labelledby="suggested-start-title" className="rounded-card border border-clay/25 bg-clay-wash p-4 space-y-3 sm:p-6">
-    <h2 id="suggested-start-title" className="text-sm font-semibold text-clay">Suggested start</h2>
+  return <section aria-labelledby="suggested-start-title" className="rounded-card border border-pale bg-wash p-4 space-y-3 sm:p-6">
+    <h2 id="suggested-start-title" className="text-sm font-semibold text-brand-deep">Suggested start</h2>
     <p className="text-xl font-bold text-ink">{start.title}</p>
     <p className="text-sm text-ink">{start.move}</p>
     <p className="text-sm text-muted">{start.reason}</p>
