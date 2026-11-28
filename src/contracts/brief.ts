@@ -5,6 +5,7 @@ export type ProbeOutcome = 'correct' | 'incorrect' | 'dont_know' | 'unanswered';
 
 export interface ProbeResult {
   hintOpened?: boolean | null;
+  durationMs?: number | null;
   probeId: string;
   stepIndex: number;
   kind: ProbeKind;

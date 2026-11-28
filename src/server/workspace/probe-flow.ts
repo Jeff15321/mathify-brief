@@ -125,6 +125,7 @@ function toResult(step: ProbeStep, probe: PrivateProbe, kind: ProbeKind, answer:
   const selectedOptionId = answer && answer !== 'IDK' ? answer : null;
   return {
     hintOpened: (kind === 'main' ? step.mainHintOpened : step.easierHintOpened) ?? null,
+    durationMs: (kind === 'main' ? step.mainDurationMs : step.easierDurationMs) ?? null,
     probeId: probe.id,
     stepIndex: step.index,
     kind,

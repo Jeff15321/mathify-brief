@@ -141,8 +141,14 @@ export async function answerCurrentProbe(
       throw new ApiError(409, 'INVALID_STATE', 'The practice question has changed. Reload to continue.');
     }
     const hintField = workspace.cursor.kind === 'main' ? 'mainHintOpened' : 'easierHintOpened';
+    const durationField = workspace.cursor.kind === 'main' ? 'mainDurationMs' : 'easierDurationMs';
     const annotated = workspace.probeSteps.map(step => step.index === workspace.cursor!.stepIndex
-      ? { ...step, [hintField]: step[hintField] || input.hintOpened || false } : step);
+      ? {
+          ...step,
+          [hintField]: step[hintField] || input.hintOpened || false,
+          ...(input.durationMs !== undefined ? { [durationField]: input.durationMs } : {}),
+        }
+      : step);
     const { steps, cursor } = advance(annotated, workspace.cursor, input.answer);
     return { ...workspace, probeSteps: steps, cursor, updatedAt: new Date().toISOString() };
   });

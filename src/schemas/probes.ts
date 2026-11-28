@@ -8,6 +8,7 @@ export const answerRequestSchema = z.object({
   probeId: z.string().min(1),
   answer: probeAnswerSchema,
   hintOpened: z.boolean().optional(),
+  durationMs: z.number().int().nonnegative().max(3_600_000).optional(),
 });
 
 // Submitting a brief can record an opened hint without selecting an answer.

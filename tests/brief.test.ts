@@ -86,4 +86,9 @@ describe("Answer schema", () => {
     expect(probeAnswerSchema.safeParse("IDK").success).toBe(true);
     expect(probeAnswerSchema.safeParse("E").success).toBe(false);
   });
+
+  it("validates optional durationMs on answers", () => {
+    expect(answerRequestSchema.safeParse({ probeId: "s1-main", answer: "B", durationMs: 4200 }).success).toBe(true);
+    expect(answerRequestSchema.safeParse({ probeId: "s1-main", answer: "B", durationMs: -1 }).success).toBe(false);
+  });
 });

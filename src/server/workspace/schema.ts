@@ -62,6 +62,8 @@ export const probeStepSchema = z.object({
   easierServed: z.boolean(),
   mainHintOpened: z.boolean().optional(),
   easierHintOpened: z.boolean().optional(),
+  mainDurationMs: z.number().nonnegative().optional(),
+  easierDurationMs: z.number().nonnegative().optional(),
 });
 
 export const probeCursorSchema = z.object({
@@ -73,6 +75,7 @@ export const probeOutcomeSchema = z.enum(['correct', 'incorrect', 'dont_know', '
 
 export const probeResultSchema = z.object({
   hintOpened: z.boolean().nullable().optional(),
+  durationMs: z.number().nonnegative().nullable().optional(),
   probeId: z.string().min(1),
   stepIndex: z.number().int().nonnegative(),
   kind: probeKindSchema,

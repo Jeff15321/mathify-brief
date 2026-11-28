@@ -39,11 +39,11 @@ export async function generateNextProbes(workspaceId: string): Promise<PublicPro
 }
 
 /** Submits the answer to the probe on screen; resolves with the next probing state. */
-export async function answerProbe(probeId: string, answer: ProbeAnswer, workspaceId: string, hintOpened = false): Promise<PublicProbing> {
+export async function answerProbe(probeId: string, answer: ProbeAnswer, workspaceId: string, hintOpened = false, durationMs?: number): Promise<PublicProbing> {
   const res = await fetch('/api/probes/answer', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-workspace-id': workspaceId },
-    body: JSON.stringify({ probeId, answer, hintOpened }),
+    body: JSON.stringify({ probeId, answer, hintOpened, ...(durationMs !== undefined ? { durationMs } : {}) }),
   });
   if (!res.ok) await parseErrorResponse(res);
   const body = await res.json();
