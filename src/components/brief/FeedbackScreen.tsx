@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Frown, Meh, Smile } from 'lucide-react';
 import { fetchWorkspace } from '@/client/workspace';
@@ -27,37 +27,33 @@ export default function FeedbackScreen() {
   const [workspace, setWorkspace] = useState<PublicWorkspace | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'saved' | 'empty' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [accuracy, setAccuracy] = useState<FaceValue | null>(null);
   const [reasons, setReasons] = useState<FeedbackReason[]>([]);
   const submitting = useRef(false);
 
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setStatus('loading');
-    setError(null);
-    try {
-      const current = await fetchWorkspace();
-      if (signal?.aborted) return;
-      if (!current?.brief || !current.feedbackReportId) {
-        setWorkspace(null);
-        setStatus('empty');
-        return;
-      }
-      setWorkspace(current);
-      const alreadySaved = await hasSavedFeedback(current.feedbackReportId, signal ?? new AbortController().signal);
-      if (signal?.aborted) return;
-      setStatus(alreadySaved ? 'saved' : 'ready');
-    } catch (err) {
-      if (signal?.aborted) return;
-      setError(err instanceof Error ? err.message : 'Could not load feedback status. Please try again.');
-      setStatus('error');
-    }
-  }, []);
-
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal);
+    fetchWorkspace()
+      .then(async (current) => {
+        if (controller.signal.aborted) return;
+        if (!current?.brief || !current.feedbackReportId) {
+          setWorkspace(null);
+          setStatus('empty');
+          return;
+        }
+        setWorkspace(current);
+        const alreadySaved = await hasSavedFeedback(current.feedbackReportId, controller.signal);
+        if (controller.signal.aborted) return;
+        setStatus(alreadySaved ? 'saved' : 'ready');
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        setError(err instanceof Error ? err.message : 'Could not load feedback status. Please try again.');
+        setStatus('error');
+      });
     return () => controller.abort();
-  }, [load]);
+  }, [loadAttempt]);
 
   function selectAccuracy(value: FaceValue) {
     setAccuracy(value);
@@ -118,7 +114,7 @@ export default function FeedbackScreen() {
 
         {status === 'loading' && <LoadingState label="Loading brief feedback…" />}
 
-        {status === 'error' && error && <ErrorBanner message={error} onRetry={() => void load()} />}
+        {status === 'error' && error && <ErrorBanner message={error} onRetry={() => { setStatus('loading'); setError(null); setLoadAttempt((n) => n + 1); }} />}
 
         {status === 'empty' && (
           <div className="rounded-card border border-dashed border-connector bg-card p-6 text-sm text-muted">
