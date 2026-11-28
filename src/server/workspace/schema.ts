@@ -42,7 +42,7 @@ export const analysisStoredSchema = z.object({
   probePlan: z.array(probePlanItemSchema),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.enum(['analysis-v2', 'analysis-v3', 'analysis-v4']),
+  promptVersion: z.enum(['analysis-v2', 'analysis-v3', 'analysis-v4', 'analysis-v5']),
   analysisVersion: z.literal(1),
   profileUpdatedAt: z.string().optional(),
 });
@@ -52,7 +52,7 @@ export const probeKindSchema = z.enum(['main', 'easier']);
 export const probeStepSchema = z.object({
   index: z.number().int().nonnegative(),
   concept: z.string().min(1),
-  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3', 'analysis-v4', 'probe-pair-v4']).optional(),
+  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3', 'analysis-v4', 'probe-pair-v4', 'analysis-v5', 'probe-pair-v5']).optional(),
   status: z.enum(['pending', 'generating', 'ready', 'failed']),
   generationStartedAt: z.string().nullable(),
   main: privateProbeSchema.nullable(),
