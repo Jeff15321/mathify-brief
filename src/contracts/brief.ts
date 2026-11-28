@@ -29,6 +29,15 @@ export interface ProbeTally {
   dontKnow: number;
 }
 
+export interface BriefCalibration {
+  ratedCount: number;
+  accurateCount: number;
+  accuracyRate: number;
+  lower: number;
+  upper: number;
+  topReason?: string;
+}
+
 /** The Tutor Brief dashboard, computed entirely from stored answers (no AI). */
 export interface TutorBrief {
   /** Unique generation identity; optional for existing local reports. */
@@ -42,6 +51,7 @@ export interface TutorBrief {
   priorityStepIndex: number | null; // first step whose main answer was incorrect or "I don't know"
   generatedAt: string;
   briefVersion: 6;
+  calibration?: BriefCalibration;
   /** "Relevant from past sessions", added after the brief by `POST /api/brief/history`. */
   history?: BriefHistory;
 }

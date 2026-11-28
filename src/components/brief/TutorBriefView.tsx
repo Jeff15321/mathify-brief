@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { recordPilotEvent } from '@/client/measurement';
 import { ChevronDown } from "lucide-react";
 import { StartingPointCard } from "./StartingPointCard";
@@ -44,12 +45,22 @@ export function TutorBriefView({ workspace, brief }: { workspace: PublicWorkspac
           gradeDifficulty={analysis.gradeDifficulty}
           topic={analysis.topic}
         />
-        <a
-          href="/workspace?new=1"
-          className="mt-1 shrink-0 rounded-panel border border-connector bg-card px-3 py-1.5 text-sm font-bold text-ink hover:bg-fill"
-        >
-          New question
-        </a>
+        <div className="mt-1 flex shrink-0 items-center gap-2">
+          {workspace.feedbackReportId && (
+            <Link
+              href="/feedback"
+              className="rounded-panel border border-brand bg-card px-3 py-1.5 text-sm font-bold text-brand-deep hover:bg-wash"
+            >
+              Rate brief
+            </Link>
+          )}
+          <a
+            href="/workspace?new=1"
+            className="rounded-panel border border-connector bg-card px-3 py-1.5 text-sm font-bold text-ink hover:bg-fill"
+          >
+            New question
+          </a>
+        </div>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-3">

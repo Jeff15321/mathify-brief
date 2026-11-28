@@ -9,6 +9,7 @@ import { ApiError } from '@/server/errors';
 import { assertWorkspaceId } from './identity';
 import { advance, currentProbe, stepToGenerate, toPrivateProbe, toPublicProbing } from './probe-flow';
 import { buildLearnerContext } from '@/server/profile/learner-context';
+import { buildFeedbackContext } from './feedback-calibration';
 import { PROBE_PROMPT_VERSION } from '@/server/ai/prompts';
 
 function requireProbing(workspace: CurrentWorkspace | null): CurrentWorkspace & { analysis: NonNullable<CurrentWorkspace['analysis']> } {
@@ -64,12 +65,14 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
   try {
     const provider = getAnalysisProvider();
     const learnerContext = buildLearnerContext(await stores.profileStore.read());
+    const feedbackContext = buildFeedbackContext(await stores.feedbackStore.list().catch(() => []));
     const input = {
       grade: workspace.demoProfile.grade,
       parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
       plan: analysis.probePlan,
       stepIndex,
       ...(learnerContext ? { learnerContext } : {}),
+      ...(feedbackContext ? { feedbackContext } : {}),
     };
     const raw = await provider.generateProbePair(input);
     const parsed = modelProbePairSchema.safeParse(raw);

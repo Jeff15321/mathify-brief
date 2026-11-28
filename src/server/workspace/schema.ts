@@ -98,6 +98,15 @@ export const probeTallySchema = z.object({
   dontKnow: z.number().int().nonnegative(),
 });
 
+export const briefCalibrationSchema = z.object({
+  ratedCount: z.number().int().positive(),
+  accurateCount: z.number().int().nonnegative(),
+  accuracyRate: z.number().min(0).max(1),
+  lower: z.number().min(0).max(1),
+  upper: z.number().min(0).max(1),
+  topReason: z.string().optional(),
+});
+
 export const tutorBriefSchema = z.object({
   reportId: z.string().uuid().optional(),
   results: z.array(probeResultSchema),
@@ -109,6 +118,7 @@ export const tutorBriefSchema = z.object({
   priorityStepIndex: z.number().int().nonnegative().nullable(),
   generatedAt: z.string().min(1),
   briefVersion: z.literal(6),
+  calibration: briefCalibrationSchema.optional(),
   history: z.discriminatedUnion('status', [
     z.object({ status: z.literal('ready'), bullets: z.array(z.string()), generatedAt: z.string(), model: z.string(), promptVersion: z.string() }),
     z.object({ status: z.literal('failed') }),

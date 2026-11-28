@@ -12,7 +12,7 @@ export async function getFeedbackStatus(reportId: string, stores: Stores = getSt
 export async function submitTutorFeedback(input: unknown, stores: Stores = getStores()) {
   const parsed = tutorFeedbackSchema.safeParse(input);
   if (!parsed.success) {
-    throw new ApiError(400, 'INVALID_INPUT', 'Choose a rating from 1 to 5 for all three questions; comments must be at most 2000 characters.');
+    throw new ApiError(400, 'INVALID_INPUT', 'Select an accuracy rating from 1 to 5; optional ratings must be 1 to 5.');
   }
   const feedback: TutorFeedbackInput = parsed.data;
   let submittedAt = '';
@@ -22,8 +22,10 @@ export async function submitTutorFeedback(input: unknown, stores: Stores = getSt
     }
     const existing = await stores.feedbackStore.read(feedback.reportId);
     if (existing) {
+      const sameReasons = JSON.stringify([...(existing.reasons ?? [])].sort()) === JSON.stringify([...(feedback.reasons ?? [])].sort());
       if (existing.accuracy !== feedback.accuracy || existing.clarity !== feedback.clarity ||
-          existing.startingPointUsefulness !== feedback.startingPointUsefulness || existing.comments !== feedback.comments) {
+          existing.startingPointUsefulness !== feedback.startingPointUsefulness || !sameReasons ||
+          existing.comments !== feedback.comments) {
         throw new ApiError(409, 'INVALID_STATE', 'Feedback has already been saved for this report. Reload to see its saved status.');
       }
       submittedAt = existing.submittedAt;

@@ -8,6 +8,7 @@ import { analyzeCurrentWorkspace } from '@/server/workspace/analysis';
 import { submitBrief } from '@/server/brief/service';
 import { submitTutorFeedback } from '@/server/brief/feedback';
 import { GET, POST } from '@/app/api/feedback/route';
+import { buildFeedbackContext, computeHistoricalCalibration } from '@/server/workspace/feedback-calibration';
 
 let stores: ReturnType<typeof createStores>;
 vi.mock('@/server/storage', async (importOriginal) => ({
@@ -116,11 +117,39 @@ describe('feedback API and persistence', () => {
 
   it.each([
     { accuracy: 0 }, { clarity: 6 }, { startingPointUsefulness: 2.5 },
-    { accuracy: '4' }, { clarity: undefined }, { comments: 'x'.repeat(2001) },
-    { reportId: '../../elsewhere' }, { unexpected: true },
+    { accuracy: '4' }, { accuracy: undefined }, { reasons: ['not_a_reason'] },
+    { comments: 'x'.repeat(2001) }, { reportId: '../../elsewhere' }, { unexpected: true },
   ])('rejects invalid input %j without saving', async (override) => {
     expect((await post({ reportId, ...ratings, ...override })).status).toBe(400);
     expect(await stores.feedbackStore.read(reportId)).toBeNull();
+  });
+
+  it('saves 3-face quick ratings with structured reasons and feeds calibration after 3+ reports', async () => {
+    const res = await post({ reportId, accuracy: 3, reasons: ['questions_too_easy', 'missing_context'] });
+    expect(res.status).toBe(200);
+    const list = await stores.feedbackStore.list();
+    expect(list).toHaveLength(1);
+    expect(list[0].reasons).toEqual(['questions_too_easy', 'missing_context']);
+
+    // Build 2 more rated reports to reach the 3-report calibration threshold.
+    for (const [idx, accuracy] of [5, 1].entries()) {
+      await startWorkspace({ questionText: `Extra ${idx}`, files: [] }, stores);
+      await analyzeCurrentWorkspace(stores);
+      await submitBrief({ whiteboardPng: null }, stores);
+      const id = (await getPublicWorkspace(stores))!.feedbackReportId!;
+      await post({ reportId: id, accuracy, ...(accuracy === 1 ? { reasons: ['questions_too_easy'] } : {}) });
+    }
+
+    const all = await stores.feedbackStore.list();
+    expect(all).toHaveLength(3);
+    const context = buildFeedbackContext(all);
+    expect(context).toContain('1/3 accurate');
+    expect(context).toContain('2x "Questions too easy"');
+
+    const calibration = computeHistoricalCalibration(all);
+    expect(calibration).toMatchObject({ ratedCount: 3, accurateCount: 1, topReason: 'Questions too easy' });
+    expect(calibration!.lower).toBeGreaterThan(0);
+    expect(calibration!.upper).toBeLessThan(1);
   });
 
   it('rejects malformed JSON and invalid lookup IDs', async () => {

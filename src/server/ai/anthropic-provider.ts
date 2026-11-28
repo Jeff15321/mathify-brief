@@ -87,7 +87,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
       content: [
         {
           type: 'text',
-          text: `Grade: ${input.grade}.${textSummary ? ` Typed question: ${textSummary}` : ' No typed question was provided; use the attached files.'}${learnerContextLine(input.learnerContext)}`,
+          text: `Grade: ${input.grade}.${textSummary ? ` Typed question: ${textSummary}` : ' No typed question was provided; use the attached files.'}${learnerContextLine(input.learnerContext)}${feedbackContextLine(input.feedbackContext)}`,
         },
         ...filesToContentBlocks(input.files),
       ],
@@ -119,7 +119,7 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
             `Parsed problem: ${input.parsedQuestionMarkdown}`,
             `Probe plan:\n${planText}`,
             `Write the main and easier probes for step ${input.stepIndex + 1} ("${step.concept}").`,
-          ].join('\n') + learnerContextLine(input.learnerContext),
+          ].join('\n') + learnerContextLine(input.learnerContext) + feedbackContextLine(input.feedbackContext),
         },
       ],
     });
@@ -285,6 +285,10 @@ export class AnthropicAnalysisProvider implements MathAnalysisProvider {
 
 function learnerContextLine(learnerContext: string | undefined): string {
   return learnerContext ? `\nLearner context (tutor-only, from past sessions):\n${learnerContext}` : '';
+}
+
+function feedbackContextLine(feedbackContext: string | undefined): string {
+  return feedbackContext ? `\nTutor feedback calibration (tutor-only, from past briefs; never mention to student):\n${feedbackContext}` : '';
 }
 
 function formatResults(results: ProbeResult[]): string {

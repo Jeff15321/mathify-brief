@@ -39,6 +39,12 @@ export function EvidenceSummary({ brief, drawingOmitted }: { brief: TutorBrief; 
       {facts.rapidResponses > 0 ? ` · ${facts.rapidResponses} rapid (<3s)` : ''}
       {facts.hintUnknown ? ` · hint access unknown for ${facts.hintUnknown} questions` : ''}
     </p>
+    {brief.calibration && (
+      <p className="text-sm text-muted">
+        Historical brief accuracy: {brief.calibration.accurateCount}/{brief.calibration.ratedCount} ({Math.round(brief.calibration.lower * 100)}%–{Math.round(brief.calibration.upper * 100)}% CI)
+        {brief.calibration.topReason ? ` · top note: ${brief.calibration.topReason}` : ''}
+      </p>
+    )}
     <p className="text-sm text-muted">This is a snapshot of responses, not a mastery score. Help outside the app is unknown.</p>
     {drawingOmitted && <p className="text-sm text-ink">The drawing export was omitted from this handoff.</p>}
   </section>;

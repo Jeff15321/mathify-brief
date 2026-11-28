@@ -11,6 +11,7 @@ import { ApiError } from '@/server/errors';
 import { assertWorkspaceId } from '@/server/workspace/identity';
 import { MAX_WHITEBOARD_SIZE_BYTES } from '@/contracts/limits';
 import { computeResults, currentProbe } from '@/server/workspace/probe-flow';
+import { computeHistoricalCalibration } from '@/server/workspace/feedback-calibration';
 import { summarizeBrief } from './scoring';
 
 export interface SubmitBriefInput {
@@ -32,6 +33,8 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
   if (input.whiteboardPng && input.whiteboardPng.byteLength > MAX_WHITEBOARD_SIZE_BYTES) {
     throw new ApiError(400, 'INVALID_INPUT', `Whiteboard image exceeds ${MAX_WHITEBOARD_SIZE_BYTES} bytes`);
   }
+  const feedbacks = await stores.feedbackStore.list().catch(() => []);
+  const calibration = computeHistoricalCalibration(feedbacks);
   let staged: StoredAsset | null = null;
   let referenced = false;
   try {
@@ -61,7 +64,9 @@ export async function submitBrief(input: SubmitBriefInput, stores: Stores = getS
       const { results, notReachedConcepts } = computeResults(steps, current.cursor);
       const brief: TutorBrief = {
         reportId: randomUUID(), results, notReachedConcepts,
-        ...summarizeBrief(results, notReachedConcepts), generatedAt: new Date().toISOString(), briefVersion: 6,
+        ...summarizeBrief(results, notReachedConcepts),
+        ...(calibration ? { calibration } : {}),
+        generatedAt: new Date().toISOString(), briefVersion: 6,
       };
       return { ...current, probeSteps: steps, brief, phase: 'complete',
         submissionId: input.submissionId ?? randomUUID(), whiteboardAsset: staged,

@@ -90,7 +90,13 @@ test("happy path: draw at intake and during practice, answer easier retries, the
 
   await expect(page.getByRole("region", { name: "Tutor feedback" })).toHaveCount(0);
 
-  await page.getByRole("link", { name: "New question" }).click();
+  await page.getByRole("link", { name: "Rate brief" }).click();
+  await expect(page).toHaveURL(/\/feedback/);
+  await page.getByText("Somewhat accurate").click();
+  await page.getByRole("button", { name: "Questions too easy" }).click();
+  await page.getByRole("button", { name: "Save feedback" }).click();
+  await expect(page.getByText(/will calibrate future briefs/)).toBeVisible();
+  await page.getByRole("link", { name: "Start a new question" }).click();
   await page.getByLabel("Question (optional if files provided)").fill("Solve 4x = 12.");
   await page.getByRole("button", { name: "Let’s begin" }).click();
   await page.waitForURL(/\/workspace\?draft=/);
