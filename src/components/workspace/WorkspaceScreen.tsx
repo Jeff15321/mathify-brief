@@ -43,10 +43,28 @@ export default function WorkspaceScreen() {
       mode: observed?.generationMode ?? generationMode, promptVersion: observed?.promptVersion ?? promptVersion }, counts);
   }, [draftRef, generationMode, promptVersion]);
   const currentProbeId = probing?.current?.id;
-  const probeVisible = useCallback(() => { if (currentProbeId) track('probe_visible', { probeId: currentProbeId }); }, [track, currentProbeId]);
+  const probeShownAtRef = useRef<{ probeId: string; at: number } | null>(null);
+  const probeVisible = useCallback(() => {
+    if (!currentProbeId) return;
+    if (probeShownAtRef.current?.probeId !== currentProbeId) {
+      probeShownAtRef.current = { probeId: currentProbeId, at: performance.now() };
+    }
+    track('probe_visible', { probeId: currentProbeId });
+  }, [track, currentProbeId]);
+  const readProbeDurationMs = useCallback((probeId: string) => {
+    const started = probeShownAtRef.current;
+    if (!started || started.probeId !== probeId) return undefined;
+    return Math.min(3_600_000, Math.max(0, Math.round(performance.now() - started.at)));
+  }, []);
   const analysisReady = Boolean(workspace?.analysis);
   const serverDurationMs = workspace?.analysis?.preparationDurationMs;
-  useEffect(() => { if (currentProbeId) track('probe_ready', { probeId: currentProbeId }); }, [currentProbeId, track]);
+  useEffect(() => {
+    if (!currentProbeId) return;
+    if (probeShownAtRef.current?.probeId !== currentProbeId) {
+      probeShownAtRef.current = { probeId: currentProbeId, at: performance.now() };
+    }
+    track('probe_ready', { probeId: currentProbeId });
+  }, [currentProbeId, track]);
   useEffect(() => { if (analysisReady) track('analysis_ready', { serverDurationMs }); }, [analysisReady, workspaceId, track, serverDurationMs]);
   const hintOpened = draft?.selectedProbeId === probing?.current?.id && draft?.hintOpened === true;
   const selection = draft?.selectedProbeId === probing?.current?.id ? draft?.selection : undefined;
@@ -192,8 +210,9 @@ export default function WorkspaceScreen() {
     if (!workspaceId || !probing?.current || !selection || answering) return;
     setAnswering(true); setError(null);
     try {
-      const result = await answerProbe(probing.current.id, selection, workspaceId, hintOpened);
-      track('answer_saved', { probeId: probing.current.id });
+      const durationMs = readProbeDurationMs(probing.current.id);
+      const result = await answerProbe(probing.current.id, selection, workspaceId, hintOpened, durationMs);
+      track('answer_saved', { probeId: probing.current.id, ...(durationMs !== undefined ? { durationMs } : {}) });
       changeDraft({ selectedProbeId: undefined, selection: undefined, hintOpened: false }, true);
       applyProbing(result);
     } catch (err) { setError(message(err)); await refresh().catch(() => {}); }
@@ -211,7 +230,16 @@ export default function WorkspaceScreen() {
         try { if (!board.current) throw new Error('The drawing board is still loading.'); png = await board.current.exportPng(); }
         catch (err) { setExportFailed(true); track('export_failed'); throw err; }
       }
-      const brief = await submitBrief(png, workspaceId, draftRef.current.submissionId!, probing?.current && (selection || hintOpened) ? { probeId: probing.current.id, answer: selection ?? null, hintOpened: hintOpened } : undefined, omit);
+      const pendingDuration = probing?.current ? readProbeDurationMs(probing.current.id) : undefined;
+      const brief = await submitBrief(
+        png,
+        workspaceId,
+        draftRef.current.submissionId!,
+        probing?.current && (selection || hintOpened)
+          ? { probeId: probing.current.id, answer: selection ?? null, hintOpened, ...(pendingDuration !== undefined ? { durationMs: pendingDuration } : {}) }
+          : undefined,
+        omit,
+      );
       track('brief_saved', { coreAnswered: brief.core.attempted, corePlanned: brief.core.total });
       if (selection && probing?.current) track('answer_saved', { probeId: probing.current.id });
       await openReport(draftRef.current.id);
@@ -231,7 +259,7 @@ export default function WorkspaceScreen() {
         {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
         {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
         {probingPhase && probing && <ProbingPanel
-          heading={<><h1 className="page-title">Practice while you wait</h1><p className="text-sm text-muted">Use the whiteboard to work through each question. If you’re unsure, you can choose “I don’t know.”</p></>}
+          heading={<><h1 className="page-title">Practice while you wait</h1><p className="text-sm text-muted">Use the whiteboard to work through each question. If you’re unsure, you can choose “I’m not sure.”</p></>}
           probing={probing} selection={selection} hintOpened={hintOpened}
           onVisible={probeVisible}
           onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }}

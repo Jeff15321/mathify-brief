@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { setupWorkspace } from './helpers';
 import { submitBrief } from '@/server/brief/service';
 import { answerCurrentProbe, generateNextProbePair } from '@/server/workspace/probes';
-import { evidenceSummary, suggestedStart } from '@/components/brief/evidence';
+import { evidenceConfidence, evidenceSummary, suggestedStart } from '@/components/brief/evidence';
 it('partial success states coverage without asserting all planned checks were correct', async () => {
   const { stores, cleanup } = await setupWorkspace('partial-evidence');
   try {
@@ -33,7 +33,23 @@ it('distinguishes no evidence from complete correct coverage', async () => {
       }
       const brief = await submitBrief({ whiteboardPng: null }, stores);
       expect(evidenceSummary(brief).complete).toBe(complete);
+      expect(evidenceConfidence(brief).tier).toBe(complete ? 'strong' : 'limited');
       expect(suggestedStart(brief).reason).toContain(complete ? 'does not establish mastery' : 'Understanding is still unknown');
     } finally { await cleanup(); }
   }
+});
+
+it('discounts hint-assisted and rapid responses in statistical confidence', async () => {
+  const { stores, cleanup } = await setupWorkspace('hint-rapid-confidence');
+  try {
+    await answerCurrentProbe({ probeId: 's1-main', answer: 'B', hintOpened: true, durationMs: 8000 }, stores);
+    await generateNextProbePair(stores);
+    await answerCurrentProbe({ probeId: 's2-main', answer: 'C', hintOpened: false, durationMs: 1200 }, stores);
+    const brief = await submitBrief({ whiteboardPng: null }, stores);
+    const stats = evidenceConfidence(brief);
+    expect(stats.tier).toBe('partial');
+    expect(stats.rapidResponses).toBe(1);
+    expect(stats.posteriorRange).not.toBeNull();
+    expect(stats.guessAdjustedPercent).toBe(100);
+  } finally { await cleanup(); }
 });

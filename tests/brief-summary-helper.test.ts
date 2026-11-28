@@ -53,6 +53,20 @@ describe("summarizeBrief()", () => {
     ).toBe(1);
   });
 
+  it("prioritizes a confirmed gap (both main and easier missed) over a retry-recovered step", () => {
+    expect(
+      summarizeBrief(
+        [
+          result(0, "main", "incorrect"),
+          result(0, "easier", "correct"),
+          result(1, "main", "dont_know"),
+          result(1, "easier", "incorrect"),
+        ],
+        [],
+      ).priorityStepIndex,
+    ).toBe(1);
+  });
+
   it("has no priority when every main answer was correct or nothing was answered", () => {
     expect(summarizeBrief([result(0, "main", "correct"), result(1, "main", "correct")], []).priorityStepIndex).toBeNull();
     const empty = summarizeBrief([result(0, "main", "unanswered")], ["Concept 2"]);

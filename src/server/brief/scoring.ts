@@ -38,7 +38,13 @@ export function summarizeBrief(results: ProbeResult[], notReachedConcepts: strin
     }
   }
 
-  const priority = mains.find((r) => MISSED.has(r.outcome));
+  // Prefer confirmed gaps (both main and easier missed) over partial/unverified misses.
+  const missed = mains.filter((r) => MISSED.has(r.outcome));
+  const confirmedGap = missed.find((r) => {
+    const retry = easierByStep.get(r.stepIndex);
+    return retry !== undefined && MISSED.has(retry.outcome);
+  });
+  const priority = confirmedGap ?? missed[0];
 
   return {
     core: tally(results, 'main', mains.length + notReachedConcepts.length),

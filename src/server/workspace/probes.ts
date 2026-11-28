@@ -9,6 +9,7 @@ import { ApiError } from '@/server/errors';
 import { assertWorkspaceId } from './identity';
 import { advance, currentProbe, stepToGenerate, toPrivateProbe, toPublicProbing } from './probe-flow';
 import { buildLearnerContext } from '@/server/profile/learner-context';
+import { buildFeedbackContext } from './feedback-calibration';
 import { PROBE_PROMPT_VERSION } from '@/server/ai/prompts';
 
 function requireProbing(workspace: CurrentWorkspace | null): CurrentWorkspace & { analysis: NonNullable<CurrentWorkspace['analysis']> } {
@@ -64,12 +65,14 @@ export async function generateNextProbePair(stores: Stores = getStores(), worksp
   try {
     const provider = getAnalysisProvider();
     const learnerContext = buildLearnerContext(await stores.profileStore.read());
+    const feedbackContext = buildFeedbackContext(await stores.feedbackStore.list().catch(() => []));
     const input = {
       grade: workspace.demoProfile.grade,
       parsedQuestionMarkdown: analysis.parsedQuestionMarkdown,
       plan: analysis.probePlan,
       stepIndex,
       ...(learnerContext ? { learnerContext } : {}),
+      ...(feedbackContext ? { feedbackContext } : {}),
     };
     const raw = await provider.generateProbePair(input);
     const parsed = modelProbePairSchema.safeParse(raw);
@@ -141,8 +144,14 @@ export async function answerCurrentProbe(
       throw new ApiError(409, 'INVALID_STATE', 'The practice question has changed. Reload to continue.');
     }
     const hintField = workspace.cursor.kind === 'main' ? 'mainHintOpened' : 'easierHintOpened';
+    const durationField = workspace.cursor.kind === 'main' ? 'mainDurationMs' : 'easierDurationMs';
     const annotated = workspace.probeSteps.map(step => step.index === workspace.cursor!.stepIndex
-      ? { ...step, [hintField]: step[hintField] || input.hintOpened || false } : step);
+      ? {
+          ...step,
+          [hintField]: step[hintField] || input.hintOpened || false,
+          ...(input.durationMs !== undefined ? { [durationField]: input.durationMs } : {}),
+        }
+      : step);
     const { steps, cursor } = advance(annotated, workspace.cursor, input.answer);
     return { ...workspace, probeSteps: steps, cursor, updatedAt: new Date().toISOString() };
   });

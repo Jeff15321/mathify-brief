@@ -1,5 +1,5 @@
 import { LoadingState } from '@/components/shared/LoadingState';
-export const PURPOSE = "Practice questions help your tutor know where to start. It's okay to choose ‘I don't know.’";
+export const PURPOSE = "Practice questions help your tutor know where to start. It's okay to choose ‘I'm not sure.’";
 export function PreparationPanel({ failed, working, onRetry }: { failed: boolean; working: boolean; onRetry: () => void }) {
   return <section className="rounded-card border border-pale bg-wash p-5 space-y-3">
     <h2 className="text-lg font-bold text-ink">Getting your practice questions ready</h2>

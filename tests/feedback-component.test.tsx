@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { TutorFeedbackSurvey } from '@/components/brief/TutorFeedbackSurvey';
+import FeedbackScreen from '@/components/brief/FeedbackScreen';
 
 const reportId = 'a'.repeat(64);
 const response = (value: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(value), { status }));
@@ -112,5 +113,59 @@ describe('tutor survey', () => {
     fireEvent.submit(submit.closest('form')!);
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Choose a rating'));
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('FeedbackScreen (/feedback)', () => {
+  const workspace = {
+    feedbackReportId: reportId,
+    analysis: { topic: 'Linear equations' },
+    brief: {
+      results: [],
+      notReachedConcepts: ['Distributive property'],
+      core: { total: 1, attempted: 0, correct: 0, incorrect: 0, dontKnow: 0 },
+      retries: { total: 0, attempted: 0, correct: 0, incorrect: 0, dontKnow: 0 },
+      strengths: [],
+      gaps: [],
+      priorityStepIndex: null,
+      generatedAt: '2026-11-27T00:00:00.000Z',
+      briefVersion: 6,
+    },
+  };
+
+  it('shows 3 face options without a textbox, reveals reason chips on Medium/Sad, and submits cleanly', async () => {
+    const fetchMock = vi.fn()
+      .mockImplementationOnce(() => response({ workspace }))
+      .mockImplementationOnce(() => response({ feedback: null }))
+      .mockImplementationOnce(() => response({ feedback: { reportId } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<FeedbackScreen />);
+    await screen.findByRole('button', { name: 'Save feedback' });
+
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(3);
+    expect(screen.queryByRole('button', { name: 'Questions too easy' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Somewhat accurate'));
+    const chip = await screen.findByRole('button', { name: 'Questions too easy' });
+    fireEvent.click(chip);
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+
+    // Switching to Happy clears selected reason chips and hides them.
+    fireEvent.click(screen.getByText('Accurate'));
+    expect(screen.queryByRole('button', { name: 'Questions too easy' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Inaccurate'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Wrong starting point' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save feedback' }));
+
+    expect(await screen.findByText(/will calibrate future briefs/)).toBeVisible();
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({
+      reportId,
+      accuracy: 1,
+      reasons: ['wrong_starting_point'],
+      comments: '',
+    });
   });
 });

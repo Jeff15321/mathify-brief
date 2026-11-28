@@ -21,6 +21,8 @@ export interface AnalyzeQuestionInput {
   files: StoredFile[];
   /** Tutor-only learner profile summary (`buildLearnerContext`); absent for an empty profile. */
   learnerContext?: string;
+  /** Tutor-only calibration notes from past brief ratings (`buildFeedbackContext`); absent when none. */
+  feedbackContext?: string;
 }
 
 /** Input for one step's main + easier probes. Deliberately excludes student answers: steps are independent. */
@@ -30,6 +32,7 @@ export interface GenerateProbePairInput {
   plan: ProbePlanItem[];
   stepIndex: number;
   learnerContext?: string;
+  feedbackContext?: string;
 }
 
 /**

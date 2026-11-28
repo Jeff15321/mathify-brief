@@ -41,7 +41,7 @@ export function ProbeCard({
   }, [onVisible, probe.id]);
   const choices: { id: ProbeAnswer; textMarkdown: string }[] = [
     ...probe.options,
-    { id: "IDK", textMarkdown: "I don't know" },
+    { id: "IDK", textMarkdown: "I'm not sure" },
   ];
 
   return (

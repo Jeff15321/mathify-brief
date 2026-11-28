@@ -63,4 +63,10 @@ describe("Deterministic scoring (mocked AI provider, isolated temp storage)", ()
     expect(brief.strengths).toEqual([]);
     expect(brief.priorityStepIndex).toBeNull();
   });
+
+  it("propagates response durationMs into brief results", async () => {
+    await answerCurrentProbe({ probeId: "s1-main", answer: "B", durationMs: 1850 }, stores);
+    const brief = await submitBrief({ whiteboardPng: null }, stores);
+    expect(brief.results[0].durationMs).toBe(1850);
+  });
 });

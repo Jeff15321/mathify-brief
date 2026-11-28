@@ -42,7 +42,7 @@ export const analysisStoredSchema = z.object({
   probePlan: z.array(probePlanItemSchema),
   generatedAt: z.string().min(1),
   model: z.string().min(1),
-  promptVersion: z.enum(['analysis-v2', 'analysis-v3', 'analysis-v4']),
+  promptVersion: z.enum(['analysis-v2', 'analysis-v3', 'analysis-v4', 'analysis-v5']),
   analysisVersion: z.literal(1),
   profileUpdatedAt: z.string().optional(),
 });
@@ -52,7 +52,7 @@ export const probeKindSchema = z.enum(['main', 'easier']);
 export const probeStepSchema = z.object({
   index: z.number().int().nonnegative(),
   concept: z.string().min(1),
-  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3', 'analysis-v4', 'probe-pair-v4']).optional(),
+  promptVersion: z.enum(['analysis-v3', 'probe-pair-v3', 'analysis-v4', 'probe-pair-v4', 'analysis-v5', 'probe-pair-v5']).optional(),
   status: z.enum(['pending', 'generating', 'ready', 'failed']),
   generationStartedAt: z.string().nullable(),
   main: privateProbeSchema.nullable(),
@@ -62,6 +62,8 @@ export const probeStepSchema = z.object({
   easierServed: z.boolean(),
   mainHintOpened: z.boolean().optional(),
   easierHintOpened: z.boolean().optional(),
+  mainDurationMs: z.number().nonnegative().optional(),
+  easierDurationMs: z.number().nonnegative().optional(),
 });
 
 export const probeCursorSchema = z.object({
@@ -73,6 +75,7 @@ export const probeOutcomeSchema = z.enum(['correct', 'incorrect', 'dont_know', '
 
 export const probeResultSchema = z.object({
   hintOpened: z.boolean().nullable().optional(),
+  durationMs: z.number().nonnegative().nullable().optional(),
   probeId: z.string().min(1),
   stepIndex: z.number().int().nonnegative(),
   kind: probeKindSchema,
@@ -95,6 +98,15 @@ export const probeTallySchema = z.object({
   dontKnow: z.number().int().nonnegative(),
 });
 
+export const briefCalibrationSchema = z.object({
+  ratedCount: z.number().int().positive(),
+  accurateCount: z.number().int().nonnegative(),
+  accuracyRate: z.number().min(0).max(1),
+  lower: z.number().min(0).max(1),
+  upper: z.number().min(0).max(1),
+  topReason: z.string().optional(),
+});
+
 export const tutorBriefSchema = z.object({
   reportId: z.string().uuid().optional(),
   results: z.array(probeResultSchema),
@@ -106,6 +118,7 @@ export const tutorBriefSchema = z.object({
   priorityStepIndex: z.number().int().nonnegative().nullable(),
   generatedAt: z.string().min(1),
   briefVersion: z.literal(6),
+  calibration: briefCalibrationSchema.optional(),
   history: z.discriminatedUnion('status', [
     z.object({ status: z.literal('ready'), bullets: z.array(z.string()), generatedAt: z.string(), model: z.string(), promptVersion: z.string() }),
     z.object({ status: z.literal('failed') }),

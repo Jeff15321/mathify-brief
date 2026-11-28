@@ -6,13 +6,13 @@ import { Badge, Card } from "@/components/shared/Card";
 const RETRY_LINE: Record<ProbeOutcome, string> = {
   correct: "Easier retry correct",
   incorrect: "Easier retry also incorrect",
-  dont_know: "Easier retry: I don't know",
+  dont_know: "Easier retry: I'm not sure",
   unanswered: "Easier retry not answered",
 };
 
-/** The option a result's student picked, as "letter" + text, or "I don't know" / "Unanswered". */
+/** The option a result's student picked, as "letter" + text, or "I'm not sure" / "Unanswered". */
 function selectedAnswer(result: ProbeResult): { label: string; text: string } {
-  if (result.outcome === "dont_know") return { label: "Student selected", text: "I don't know" };
+  if (result.outcome === "dont_know") return { label: "Student selected", text: "I'm not sure" };
   if (result.selectedOptionId === null) return { label: "Student selected", text: "Unanswered" };
   return { label: `Student selected · ${result.selectedOptionId}`, text: result.selectedOptionText ?? "" };
 }

@@ -12,6 +12,7 @@ import { analysisReviewSchema, reviewApproved } from '@/schemas/review';
 import { ApiError } from '@/server/errors';
 import { toPrivateProbe } from './probe-flow';
 import { buildLearnerContext } from '@/server/profile/learner-context';
+import { buildFeedbackContext } from './feedback-calibration';
 
 /**
  * Runs Stage A once: parses the question, plans the probe steps and generates the first step's
@@ -58,11 +59,13 @@ async function runAnalysis(workspace: CurrentWorkspace, stores: Stores, operatio
   const provider = getAnalysisProvider();
   const profile = await profileStore.read();
   const learnerContext = buildLearnerContext(profile);
+  const feedbackContext = buildFeedbackContext(await stores.feedbackStore.list().catch(() => []));
   const input = {
     grade: workspace.demoProfile.grade,
     questionText: workspace.questionText,
     files,
     ...(learnerContext ? { learnerContext } : {}),
+    ...(feedbackContext ? { feedbackContext } : {}),
   };
 
   let rawResult;

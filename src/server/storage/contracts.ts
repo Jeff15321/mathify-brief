@@ -44,6 +44,7 @@ export interface SavedTutorFeedback extends TutorFeedbackInput {
 export interface FeedbackStore {
   read(reportId: string): Promise<SavedTutorFeedback | null>;
   write(feedback: SavedTutorFeedback): Promise<void>;
+  list(): Promise<SavedTutorFeedback[]>;
 }
 
 export interface WhiteboardFile { fileName: string; mimeType: ImageMimeType; bytes: Buffer }
