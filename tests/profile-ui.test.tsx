@@ -151,4 +151,21 @@ describe('ProfilePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Demo Student' })).toBeInTheDocument();
   });
+
+  it('shows minimal learning progress metrics across summarized sessions', async () => {
+    const profileWithProgress: LearnerProfile = {
+      ...PROFILE,
+      items: [
+        ...PROFILE.items,
+        { id: '33333333-3333-4333-8333-333333333333', category: 'struggle', text: 'Sign flips.', status: 'resolved', source: 'ai', evidence: [{ sessionId: 'a', date: '2026-10-17' }] },
+        { id: '44444444-4444-4444-8444-444444444444', category: 'what_works', text: 'Area model.', status: 'active', source: 'ai', evidence: [{ sessionId: 'b', date: '2026-11-07' }] },
+      ],
+    };
+    await renderPage(profileWithProgress, SESSIONS);
+    const progress = screen.getByRole('region', { name: 'Learning progress' });
+    expect(within(progress).getByText('1/2')).toBeInTheDocument();
+    expect(within(progress).getByText(/CI/)).toBeInTheDocument();
+    expect(within(progress).getByText('1')).toBeInTheDocument();
+    expect(within(progress).getByText(/Observed across 2 summarized sessions/)).toBeInTheDocument();
+  });
 });

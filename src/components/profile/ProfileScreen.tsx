@@ -8,6 +8,7 @@ import type { LearnerProfile } from '@/contracts/profile';
 import type { PublicSessionSummary } from '@/contracts/sessions';
 import { StudentCard } from './StudentCard';
 import { NextFocusCard } from './NextFocusCard';
+import { LearningProgressCard } from './LearningProgressCard';
 import { SessionObservations } from './SessionObservations';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { LoadingState } from '@/components/shared/LoadingState';
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
           </div>
           : <>
             <NextFocusCard profile={profile} onSave={async nextFocus => { await save({ nextFocus }); if (!nextFocus) void rebuild(); }} />
+            <LearningProgressCard profile={profile} sessions={sessions} />
             <SessionObservations items={profile.items} onSave={save} />
           </>}
       </>}
