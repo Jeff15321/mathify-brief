@@ -13,7 +13,7 @@ function selectedLine(result: ProbeResult): string {
   return {
     correct: `Selected: ${result.selectedOptionText} (correct)`,
     incorrect: `Selected: ${result.selectedOptionText} (incorrect, correct answer: ${result.correctOptionText})`,
-    dont_know: `Selected: I don't know (correct answer: ${result.correctOptionText})`,
+    dont_know: `Selected: I'm not sure (correct answer: ${result.correctOptionText})`,
     unanswered: "Selected: Unanswered",
   }[result.outcome];
 }

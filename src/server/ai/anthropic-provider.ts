@@ -291,7 +291,7 @@ function formatResults(results: ProbeResult[]): string {
   return results
     .map((r) => {
       let answer = 'unanswered';
-      if (r.outcome === 'dont_know') answer = 'selected "I don\'t know"';
+      if (r.outcome === 'dont_know') answer = 'selected "I\'m not sure"';
       else if (r.selectedOptionId) answer = `selected ${r.selectedOptionId} (${r.selectedOptionText})`;
       return `- [${r.probeId}] step=${r.stepIndex + 1} kind=${r.kind} concept="${r.concept}" ${answer}; correct=${r.correctOptionId}; outcome=${r.outcome}`;
     })

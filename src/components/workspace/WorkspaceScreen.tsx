@@ -231,7 +231,7 @@ export default function WorkspaceScreen() {
         {!workspace && <div className="overflow-y-auto"><QuestionIntakeForm questionText={draft.questionText} files={draft.files} busy={uploading} onRejected={() => track('file_rejected')} onChange={(text, files) => { if (files.length > draft.files.length) track('files_added', { fileCount: files.length }); changeDraft({ questionText: text, files }); }} onBegin={() => void begin()} /></div>}
         {workspace && !workspace.analysis && <div className="overflow-y-auto space-y-3"><PreparationPanel failed={workspace.analysisStatus === 'failed'} working={preparing || workspace.analysisStatus === 'generating'} onRetry={() => void prepare(workspace.workspaceId)} /><QuestionDisplay questionText={workspace.questionText} parsedQuestionMarkdown={workspace.questionText || 'Your uploaded problem'} attachments={workspace.attachments} /></div>}
         {probingPhase && probing && <ProbingPanel
-          heading={<><h1 className="page-title">Practice while you wait</h1><p className="text-sm text-muted">Use the whiteboard to work through each question. If you’re unsure, you can choose “I don’t know.”</p></>}
+          heading={<><h1 className="page-title">Practice while you wait</h1><p className="text-sm text-muted">Use the whiteboard to work through each question. If you’re unsure, you can choose “I’m not sure.”</p></>}
           probing={probing} selection={selection} hintOpened={hintOpened}
           onVisible={probeVisible}
           onHintOpened={() => { track('hint_opened', { probeId: probing.current?.id }); changeDraft({ selectedProbeId: probing.current?.id, selection, hintOpened: true }, true); }}

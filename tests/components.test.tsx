@@ -38,17 +38,17 @@ describe("ProbeCard", () => {
     expect((screen.getByDisplayValue("A") as HTMLInputElement).checked).toBe(false);
   });
 
-  it("offers an \"I don't know\" choice that stays selected", () => {
+  it("offers an \"I'm not sure\" choice that stays selected", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
       <ProbeCard probe={PROBE} index={0} selected={undefined} onSelect={onSelect} onNext={() => {}} />,
     );
 
-    fireEvent.click(screen.getByLabelText("I don't know"));
+    fireEvent.click(screen.getByLabelText("I'm not sure"));
     expect(onSelect).toHaveBeenCalledWith("IDK");
 
     rerender(<ProbeCard probe={PROBE} index={0} selected="IDK" onSelect={onSelect} onNext={() => {}} />);
-    expect((screen.getByLabelText("I don't know") as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByLabelText("I'm not sure") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByDisplayValue("B") as HTMLInputElement).checked).toBe(false);
   });
 
@@ -197,7 +197,7 @@ describe("Tutor Brief cards", () => {
     render(<ProbeTallyCard title="Core practice questions" tally={{ total: 4, attempted: 4, correct: 1, incorrect: 2, dontKnow: 1 }} emptyLabel="None" />);
     expect(screen.getByText("1/4")).toBeInTheDocument();
     expect(screen.getByText("4 of 4 attempted")).toBeInTheDocument();
-    expect(screen.getByText("2 incorrect · 1 don't know")).toBeInTheDocument();
+    expect(screen.getByText("2 incorrect · 1 not sure")).toBeInTheDocument();
   });
 
   it("ProbeTallyCard shows its empty label when there are no probes of that kind", () => {

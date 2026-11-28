@@ -230,7 +230,7 @@ export class MockAnalysisProvider implements MathAnalysisProvider {
         })),
         ...dontKnowResults.map((r) => ({
           observation: `Reported being unsure about "${r.concept}".`,
-          evidence: `Practice question ${r.stepIndex + 1} (${r.kind === 'easier' ? 'easier retry' : 'main'}): selected "I don't know".`,
+          evidence: `Practice question ${r.stepIndex + 1} (${r.kind === 'easier' ? 'easier retry' : 'main'}): selected "I'm not sure".`,
         })),
       ],
       whiteboardObservations: input.whiteboardPng ? ['Work shown is legible and follows the expected solution steps.'] : [],

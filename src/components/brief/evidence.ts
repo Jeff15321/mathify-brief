@@ -5,7 +5,7 @@ export function evidenceSummary(brief: TutorBrief) {
   const hintUnknown = brief.results.filter(result => result.hintOpened == null).length;
   return {
     coverage: `${brief.core.attempted} of ${brief.core.total} core practice questions answered`,
-    outcomes: `${brief.core.correct} correct · ${brief.core.incorrect} incorrect · ${brief.core.dontKnow} “I don't know”`,
+    outcomes: `${brief.core.correct} correct · ${brief.core.incorrect} incorrect · ${brief.core.dontKnow} “I'm not sure”`,
     unanswered: brief.results.filter(result => result.outcome === 'unanswered').length,
     notReached: brief.notReachedConcepts.length,
     hintsOpened, hintUnknown,
@@ -18,7 +18,7 @@ export function suggestedStart(brief: TutorBrief) {
   if (main) return {
     title: retry?.outcome === 'correct' ? `Build on the simpler ${main.concept} example` : `Begin with ${main.concept}`,
     move: retry?.outcome === 'correct' ? 'Ask what changed between the two examples, then try a similar practice question together.' : 'Try one small example together and ask the student to explain their first step.',
-    reason: main.outcome === 'dont_know' ? 'First core question where the student chose “I don’t know”.' : 'First core question with an incorrect response.',
+    reason: main.outcome === 'dont_know' ? 'First core question where the student chose “I’m not sure”.' : 'First core question with an incorrect response.',
     observation: main, retry,
   };
   if (brief.core.attempted === 0) return {

@@ -57,11 +57,11 @@ test("happy path: draw at intake and during practice, answer easier retries, the
   await page.screenshot({ path: "artifacts/pilot/tutor-desktop.png", fullPage: true });
   await page.getByText("Counts and additional concepts", { exact: true }).click();
 
-  // Core practice questions: s1 incorrect, s2 don't know, s3 on screen (unanswered). Retries: both correct.
+  // Core practice questions: s1 incorrect, s2 not sure, s3 on screen (unanswered). Retries: both correct.
   const core = page.locator("section", { hasText: "Core practice questions" });
   await expect(core.getByText("0/2")).toBeVisible();
   await expect(core.getByText("2 of 3 attempted")).toBeVisible();
-  await expect(core.getByText("1 incorrect · 1 don't know")).toBeVisible();
+  await expect(core.getByText("1 incorrect · 1 not sure")).toBeVisible();
   const retries = page.locator("section", { hasText: "Easier retries" });
   await expect(retries.getByText("2/2")).toBeVisible();
 

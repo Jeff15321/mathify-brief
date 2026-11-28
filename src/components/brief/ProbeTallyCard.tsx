@@ -23,7 +23,7 @@ export function ProbeTallyCard({ title, tally, emptyLabel }: { title: string; ta
             {tally.attempted} of {tally.total} attempted
           </p>
           <p className="text-sm text-muted">
-            {tally.incorrect} incorrect · {tally.dontKnow} don&apos;t know
+            {tally.incorrect} incorrect · {tally.dontKnow} not sure
           </p>
         </>
       )}
